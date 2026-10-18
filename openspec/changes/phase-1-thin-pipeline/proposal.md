@@ -78,7 +78,7 @@ code"). Its decisions come from the Phase 1 grilling of 2026-10-18, recorded in 
   at close), `uv.lock`, `.gitignore` (`data/`), `scripts/gate.py` (coverage threshold),
   `evals/runner.py` (agent version and null reasons), PROJECT.md, AI_OPS.md, HANDOFF.md.
 - Owner's PC: Microsoft OpenJDK 21 and the Structurizr `-playwright` war outside the repo
-  (owner, grilling Q10); its first export downloads Chromium.
+  (owner, grilling Q10); its first export downloads Playwright's WebKit browser.
 - Constitution: no §5 rule or ⛔ gate is amended. One operator decision is recorded under
   the live-read gate (the five seed home-page checks), which PROJECT.md § Amending the
   constitution says is not an amendment.

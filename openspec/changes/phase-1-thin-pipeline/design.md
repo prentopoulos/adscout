@@ -121,10 +121,11 @@ Owner calls are marked **owner**. Settled answers give their basis, with sources
      cost, null with reasons for stubs.
    - `lead_step_outcomes`: run, lead, step, outcome, exit reason or flag, detail, times.
    - Columns are snake_case. A mapping table in the export module ties them to OpenTelemetry
-     GenAI names (`gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.agent.version`)
-     and to Langfuse (run → session, run × lead → trace, step → span, agent version →
-     release). The GenAI conventions are Development status, so that table is the one place
-     to update.
+     GenAI names (`gen_ai.request.model`, `gen_ai.usage.input_tokens`,
+     `gen_ai.usage.output_tokens`) and to Langfuse (run → `langfuse.session.id`, agent
+     version → `langfuse.release`, cost → `gen_ai.usage.cost`). `gen_ai.agent.version` is not
+     used: the current conventions (checked 2026-10-18) did not confirm it. The GenAI
+     conventions are Development status, so that table is the one place to update.
    - `adscout export` writes JSONL with those names, validated against
      `src/adscout/schemas/run-export.schema.json`. Exports cited as evidence go in
      `evidence/runs/`, extending the owner's Phase 0 rule for evaluation runs.
@@ -198,9 +199,11 @@ Owner calls are marked **owner**. Settled answers give their basis, with sources
 18. **Diagram export (owner, Q10).** Microsoft OpenJDK 21 installed beside Java 11, and
     `structurizr-2026.09.19-playwright.war` downloaded outside the repo; the current war
     requires Java 21 and only the `-playwright` builds export SVG (docs.structurizr.com/
-    binaries). The first export downloads Chromium. Exports: SVG per view and Mermaid. A
-    committed `docs/architecture/export-stamp.json` holds the SHA-256 of `workspace.dsl` at
-    export; a gate test compares it, so the gate needs no Java. No hosted playground.
+    binaries). The JDK is Microsoft's zip unpacked into the owner's user folder (no
+    installer, no PATH change). The first export downloads Playwright's WebKit browser.
+    Exports: SVG per view and Mermaid. A committed `docs/architecture/export-stamp.json`
+    holds the SHA-256 of `workspace.dsl` and of every export, ignoring line endings; a gate
+    test compares them, so the gate needs no Java. No hosted playground.
 19. **Diagram content (owner, Q11).** One model of the whole planned system; planned
     elements tagged `Planned` (dashed, grey, "(planned, Phase N)"); a context view, a
     container view "built, Phase 1" and a container view "target". The person is "Ad sales
@@ -266,7 +269,7 @@ LLM Applications 2025.
   - Live reads: the pipeline and tests make no network call. The home-page checks and the
     desk-research searches ran under the owner's scoped decisions of 2026-10-18 (PROJECT.md
     §6). pip-audit at close runs under the Phase 0 decision.
-  - Spend: none. The JDK, Structurizr war and Chromium are free downloads the owner
+  - Spend: none. The JDK, Structurizr war and Playwright browser are free downloads the owner
     authorized (Q10).
   - Accounts, sends, publishing, deployment: untouched. No hosted diagram editor.
 - **No message to a real person:** no send path exists; approvals record their kind.
@@ -294,7 +297,7 @@ LLM Applications 2025.
   container.
 - **[A lost database file loses uncited runs]** → Accepted; cited runs are committed as
   exports, and upgrades back up first.
-- **[Diagram export needs Java 21 and Chromium]** → Only for re-export; the gate checks the
+- **[Diagram export needs Java 21 and a Playwright browser]** → Only for re-export; the gate checks the
   stamp without Java.
 
 ## Migration Plan
