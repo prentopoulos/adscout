@@ -43,8 +43,10 @@ No limits are enforced yet. Decided by §5: the research agent has a step cap an
 (values TBD in Phase 3), read-only tools, and no send or write access. Playbook proposals to
 confirm: research only for leads above the fit threshold; at most two draft revisions before
 handing to a person. Model, token, time, retry, concurrency and cost bounds are TBD behind the
-spend gate. Data retention: TBD; only public company-level data and synthetic contacts are
-stored (§5).
+spend gate. The model cost and access items in PROJECT.md §4 (access route, tier per step and
+fallback, cost recording from the first call, record-and-replay cache, per-run spend cap,
+prompt caching and batch) are TBD and must be answered in Phase 2 grilling. Data retention:
+TBD; only public company-level data and synthetic contacts are stored (§5).
 
 ## Latest scoped evidence
 
