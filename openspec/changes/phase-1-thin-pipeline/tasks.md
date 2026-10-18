@@ -12,10 +12,10 @@
 
 ## 3. Database
 
-- [ ] 3.1 Connection helper (foreign keys, WAL, `ADSCOUT_DB` and `--db`), migration runner with the checksum table, backup before upgrade, and `adscout db upgrade`
-- [ ] 3.2 Migration `0001_initial.sql` with every table, CHECK lists, immutability triggers and views; committed `schema.sql` with the fresh-migration test
-- [ ] 3.3 Schema tests: foreign keys, immutable-field UPDATE and DELETE refused, triggers present, personal-contact column guard, unknown exit reason refused
-- [ ] 3.4 UUIDv7 helper and agent-version helper (`+g<commit>`, `.dirty`) with tests
+- [x] 3.1 Connection helper (foreign keys, WAL, `ADSCOUT_DB` and `--db`), migration runner with the checksum table, backup before upgrade, and `adscout db upgrade`
+- [x] 3.2 Migration `0001_initial.sql` with every table, CHECK lists, immutability triggers and views; committed `schema.sql` with the fresh-migration test
+- [x] 3.3 Schema tests: foreign keys, immutable-field UPDATE and DELETE refused, triggers present, personal-contact column guard, unknown exit reason refused
+- [x] 3.4 UUIDv7 helper and agent-version helper (`+g<commit>`, `.dirty`) with tests
 
 ## 4. Pipeline run
 
