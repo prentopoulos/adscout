@@ -1,9 +1,10 @@
 """The real `source` step: load seeds, dedupe by domain, apply exclusions and create leads.
 
-Every seed row enters. A row whose domain repeats an earlier row, already has a lead in the
-segment or is already in the CRM exits as `duplicate`; an excluded domain exits as
-`excluded`. A company is stored once; a lead is created once per segment, with its source
-fields fixed at creation (§5).
+Every seed row enters. A row whose domain repeats an earlier row, whose lead a finished run
+already took past sourcing, or that is already in the CRM exits as `duplicate`; an excluded
+domain exits as `excluded`. A lead that no finished run processed (its run failed or was
+interrupted) re-enters with its original ID and source fields. A company is stored once; a
+lead is created once per segment, with its source fields fixed at creation (§5).
 """
 
 import sqlite3
@@ -30,6 +31,17 @@ def existing_lead(
         (segment_id, domain),
     ).fetchone()
     return row
+
+
+def processing_run(connection: sqlite3.Connection, lead_id: str) -> str | None:
+    """A succeeded pipeline run that took this lead past sourcing, if there is one."""
+    row = connection.execute(
+        "SELECT o.run_id FROM lead_step_outcomes AS o JOIN runs AS r ON r.run_id = o.run_id "
+        "WHERE o.lead_id = ? AND r.kind = 'pipeline' AND r.status = 'succeeded' "
+        "AND o.step != 'source' ORDER BY o.outcome_id LIMIT 1",
+        (lead_id,),
+    ).fetchone()
+    return None if row is None else str(row[0])
 
 
 def company_id_for(connection: sqlite3.Connection, run_id: str, domain: str, name: str) -> int:
@@ -74,33 +86,48 @@ def source(
         first_row[row.domain] = number
         found = existing_lead(connection, segment.segment_id, row.domain)
         if found:
-            recorder.outcomes.append(
-                Outcome(
-                    lead_id=found["lead_id"],
-                    outcome="exited",
-                    reason="duplicate",
-                    detail=f"already a lead in this segment since run {found['created_run_id']}",
-                    seed_row=number,
+            processed_by = processing_run(connection, found["lead_id"])
+            if processed_by:
+                recorder.outcomes.append(
+                    Outcome(
+                        lead_id=found["lead_id"],
+                        outcome="exited",
+                        reason="duplicate",
+                        detail=f"already processed by run {processed_by}",
+                        seed_row=number,
+                    )
                 )
+                continue
+            # No finished run took this lead past sourcing (its run failed or was
+            # interrupted, or it was excluded or in the CRM then): it re-enters.
+            lead = Lead(
+                lead_id=found["lead_id"],
+                company_id=found["company_id"],
+                domain=row.domain,
+                name=found["name"],
             )
-            continue
+            kept_detail = f"re-enters; created by run {found['created_run_id']}, not yet processed"
+        else:
+            company_id = company_id_for(connection, run.run_id, row.domain, row.name)
+            lead = Lead(
+                lead_id=str(uuid7()), company_id=company_id, domain=row.domain, name=row.name
+            )
+            connection.execute(
+                "INSERT INTO leads (lead_id, segment_id, company_id, source, prompt_version, "
+                "agent_version, created_run_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    lead.lead_id,
+                    segment.segment_id,
+                    company_id,
+                    lead_source(segment.segment_id, seed_list_hash),
+                    PROMPT_VERSION,
+                    run.agent_version,
+                    run.run_id,
+                    utc_now(),
+                ),
+            )
+            kept_detail = "new lead"
         in_crm = account_exists(connection, row.domain)
-        company_id = company_id_for(connection, run.run_id, row.domain, row.name)
-        lead = Lead(lead_id=str(uuid7()), company_id=company_id, domain=row.domain, name=row.name)
-        connection.execute(
-            "INSERT INTO leads (lead_id, segment_id, company_id, source, prompt_version, "
-            "agent_version, created_run_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                lead.lead_id,
-                segment.segment_id,
-                company_id,
-                lead_source(segment.segment_id, seed_list_hash),
-                PROMPT_VERSION,
-                run.agent_version,
-                run.run_id,
-                utc_now(),
-            ),
-        )
         if row.domain in excluded:
             outcome = Outcome(
                 lead_id=lead.lead_id,
@@ -119,7 +146,7 @@ def source(
             )
         else:
             outcome = Outcome(
-                lead_id=lead.lead_id, outcome="kept", detail="new lead", seed_row=number
+                lead_id=lead.lead_id, outcome="kept", detail=kept_detail, seed_row=number
             )
             survivors.append(lead)
         recorder.outcomes.append(outcome)

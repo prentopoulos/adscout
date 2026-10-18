@@ -105,8 +105,10 @@ class StubScript(BaseModel):
 
     schema_version: Literal["1"]
     segment_id: str = Field(pattern=SLUG)
-    label: str = Field(min_length=1)
-    fail_at_step: PipelineStep | None = None
+    # Every stub outcome's detail is this label; the run check expects it to say "stub:".
+    label: str = Field(pattern=r"^stub: \S")
+    # Only a stub step can be scripted to fail; `source` is real code.
+    fail_at_step: Literal["enrich", "rules", "score", "research", "draft"] | None = None
     leads: dict[str, LeadScript]
 
     @model_validator(mode="after")

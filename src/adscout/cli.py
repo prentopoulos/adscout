@@ -3,6 +3,7 @@
 import argparse
 import json
 import sqlite3
+import subprocess
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -18,6 +19,7 @@ from adscout.pipeline.recorder import RunFailed, RunInProgress
 from adscout.pipeline.run import (
     DatabaseNotReady,
     SegmentFiles,
+    require_migrated,
     run_crm_sync,
     run_pipeline,
     run_stub_approval,
@@ -26,6 +28,19 @@ from adscout.report import funnel, list_runs
 
 Handler = Callable[[argparse.Namespace], int]
 DEFAULT_CONFIG_DIR = Path("config")
+# Failures a command reports in one line: bad config, a database that is missing, unmigrated
+# or locked, another live run, a failed run, a missing file, or no Git checkout to version.
+EXPECTED_ERRORS = (
+    ConfigError,
+    DatabaseNotReady,
+    RunInProgress,
+    RunFailed,
+    ExportRefused,
+    LookupError,
+    OSError,
+    sqlite3.Error,
+    subprocess.CalledProcessError,
+)
 
 
 def fail(command: str, message: object) -> int:
@@ -35,11 +50,13 @@ def fail(command: str, message: object) -> int:
 
 @contextmanager
 def database(args: argparse.Namespace) -> Iterator[sqlite3.Connection]:
+    """An existing, fully migrated database."""
     path = resolve_db_path(args.db)
     if not path.exists():
         raise DatabaseNotReady(f"{path} does not exist; run `adscout db upgrade` first")
     connection = connect(path)
     try:
+        require_migrated(connection)
         yield connection
     finally:
         connection.close()
@@ -49,7 +66,7 @@ def db_upgrade(args: argparse.Namespace) -> int:
     path = resolve_db_path(args.db)
     try:
         names = upgrade(path)
-    except MigrationError as error:
+    except (MigrationError, sqlite3.Error, OSError) as error:
         return fail("db upgrade", error)
     if names:
         print(f"{path}: applied {', '.join(names)}")
@@ -68,7 +85,7 @@ def run(args: argparse.Namespace) -> int:
         files = SegmentFiles.load(args.config_dir, args.segment, args.seeds)
         with database(args) as connection:
             return report(run_pipeline(connection, files), "pipeline")
-    except (ConfigError, DatabaseNotReady, RunInProgress, RunFailed, OSError) as error:
+    except EXPECTED_ERRORS as error:
         return fail("run", error)
 
 
@@ -76,10 +93,12 @@ def approve(args: argparse.Namespace) -> int:
     if not args.stub:
         return fail("approve", "Phase 1 has only the stub approver; pass --stub")
     try:
-        files = SegmentFiles.load(args.config_dir, args.segment)
+        # An approval run reads stored drafts; it needs the stub script, not the seed list.
+        files = SegmentFiles.load(args.config_dir, args.segment, with_seeds=False)
         with database(args) as connection:
-            return report(run_stub_approval(connection, files), "approval")
-    except (ConfigError, DatabaseNotReady, RunInProgress, RunFailed, OSError) as error:
+            run_id = run_stub_approval(connection, files.segment, files.script)
+            return report(run_id, "approval")
+    except EXPECTED_ERRORS as error:
         return fail("approve", error)
 
 
@@ -88,7 +107,7 @@ def sync(args: argparse.Namespace) -> int:
         segment = load_segment(args.config_dir / "segments" / f"{args.segment}.yaml")
         with database(args) as connection:
             return report(run_crm_sync(connection, segment), "CRM sync")
-    except (ConfigError, DatabaseNotReady, RunInProgress, RunFailed, OSError) as error:
+    except EXPECTED_ERRORS as error:
         return fail("sync", error)
 
 
@@ -96,7 +115,7 @@ def runs(args: argparse.Namespace) -> int:
     try:
         with database(args) as connection:
             print(list_runs(connection, args.segment))
-    except DatabaseNotReady as error:
+    except EXPECTED_ERRORS as error:
         return fail("runs", error)
     return 0
 
@@ -105,7 +124,7 @@ def show_funnel(args: argparse.Namespace) -> int:
     try:
         with database(args) as connection:
             print(funnel(connection, args.run_id))
-    except (DatabaseNotReady, LookupError) as error:
+    except EXPECTED_ERRORS as error:
         return fail("funnel", error)
     return 0
 
@@ -114,7 +133,7 @@ def check(args: argparse.Namespace) -> int:
     try:
         with database(args) as connection:
             result = check_run(connection, args.run_id)
-    except (DatabaseNotReady, LookupError) as error:
+    except EXPECTED_ERRORS as error:
         return fail("check", error)
     print(f"run {result.run_id}: {result.outcome}")
     for problem in result.problems:
@@ -130,7 +149,7 @@ def export(args: argparse.Namespace) -> int:
                     print(json.dumps(line, ensure_ascii=False, sort_keys=True))
                 return 0
             path = write_export(connection, args.run_id, args.out)
-    except (DatabaseNotReady, LookupError, ExportRefused, FileExistsError) as error:
+    except EXPECTED_ERRORS as error:
         return fail("export", error)
     print(f"wrote {path}")
     return 0

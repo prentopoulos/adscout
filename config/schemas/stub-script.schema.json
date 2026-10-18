@@ -164,7 +164,7 @@
       "type": "string"
     },
     "label": {
-      "minLength": 1,
+      "pattern": "^stub: \\S",
       "title": "Label",
       "type": "string"
     },
@@ -172,7 +172,6 @@
       "anyOf": [
         {
           "enum": [
-            "source",
             "enrich",
             "rules",
             "score",

@@ -15,7 +15,7 @@ from adscout import cli
 from adscout.config import ConfigError
 from adscout.crm.writer import CrmWriteRefused, write_account
 from adscout.db.connection import connect, utc_now
-from adscout.db.migrate import upgrade
+from adscout.db.migrate import MigrationError, upgrade
 from adscout.pipeline.recorder import RunFailed, RunInProgress, process_alive
 from adscout.pipeline.run import (
     DatabaseNotReady,
@@ -120,9 +120,65 @@ def test_excluded_domain_exits_at_source_only(db: sqlite3.Connection) -> None:
 def test_second_run_records_existing_leads_as_duplicates(db: sqlite3.Connection) -> None:
     run_pipeline(db, synthetic())
     second = run_pipeline(db, synthetic())
-    source = [o for o in outcomes(db, second) if o[1] == "source"]
-    assert {reason for _, _, reason in source} == {"duplicate"}
+    source = {(domain, reason) for domain, step, reason in outcomes(db, second) if step == "source"}
+    # Processed leads are duplicates; the excluded company is checked again, not deduped.
+    assert ("excluded.test", "excluded") in source
+    assert {reason for domain, reason in source if domain != "excluded.test"} == {"duplicate"}
     assert db.execute("SELECT count(*) FROM leads").fetchone()[0] == 9
+    assert outcomes(db, second)[-1][1] == "source"  # nothing went past sourcing
+
+
+def test_leads_of_a_failed_run_re_enter_on_the_next_run(
+    db: sqlite3.Connection, tmp_path: Path
+) -> None:
+    config = tmp_path / "config"
+    shutil.copytree(FIXTURES, config)
+    script = config / "stubs" / f"{SYNTHETIC}.yaml"
+    good = script.read_text("utf-8")
+    failing = good.replace('schema_version: "1"', 'schema_version: "1"\nfail_at_step: score')
+    script.write_text(failing, "utf-8")
+    with pytest.raises(RunFailed):
+        run_pipeline(db, SegmentFiles.load(config, SYNTHETIC))
+    lead_ids = {row[0] for row in rows(db, "SELECT lead_id FROM leads")}
+    script.write_text(good, "utf-8")
+    rerun = run_pipeline(db, SegmentFiles.load(config, SYNTHETIC))
+    assert {row[0] for row in rows(db, "SELECT lead_id FROM leads")} == lead_ids
+    reached_draft = {domain for domain, step, _ in outcomes(db, rerun) if step == "draft"}
+    assert reached_draft == {"alpha.test", "echo.test", "foxtrot.test", "golf.test", "hotel.test"}
+    details = [
+        row[0]
+        for row in rows(
+            db,
+            "SELECT detail FROM lead_step_outcomes WHERE run_id = ? "
+            "AND step = 'source' AND outcome = 'kept'",
+            rerun,
+        )
+    ]
+    assert details and all(detail.startswith("re-enters") for detail in details)
+
+
+def test_step_work_runs_without_holding_the_write_lock(
+    db: sqlite3.Connection, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from adscout.pipeline import run as run_module
+
+    real = run_module.run_stub
+    path = tmp_path / "adscout.db"
+    took_lock: list[bool] = []
+
+    def probing(*args: object, **kwargs: object) -> object:
+        other = sqlite3.connect(path, timeout=0, autocommit=True)
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            other.execute("ROLLBACK")
+            took_lock.append(True)
+        finally:
+            other.close()
+        return real(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(run_module, "run_stub", probing)
+    run_pipeline(db, synthetic())
+    assert took_lock == [True] * 5
 
 
 def test_company_already_in_the_crm_exits_as_duplicate(db: sqlite3.Connection) -> None:
@@ -175,7 +231,7 @@ def test_run_records_the_system_version(db: sqlite3.Connection) -> None:
 
 def test_every_exit_reason_and_flag_is_exercised(db: sqlite3.Connection) -> None:
     files = synthetic()
-    run_ids = [run_pipeline(db, files), run_stub_approval(db, files)]
+    run_ids = [run_pipeline(db, files), run_stub_approval(db, files.segment, files.script)]
     person_edit(db, "hotel.test", "name", "Hotel Gear (edited by sales)")
     run_ids.append(run_crm_sync(db, files.segment))
     seen = {reason for run_id in run_ids for _, _, reason in outcomes(db, run_id)}
@@ -241,7 +297,7 @@ def test_concurrent_run_is_refused_without_writing(db: sqlite3.Connection) -> No
 def test_stub_approval_is_labelled_and_bound_to_the_draft(db: sqlite3.Connection) -> None:
     files = synthetic()
     run_pipeline(db, files)
-    run_stub_approval(db, files)
+    run_stub_approval(db, files.segment, files.script)
     approvals = rows(
         db,
         "SELECT a.*, d.body_sha256, d.status FROM approvals AS a JOIN drafts AS d USING (draft_id)",
@@ -258,7 +314,7 @@ def test_stub_approval_is_labelled_and_bound_to_the_draft(db: sqlite3.Connection
 def test_changed_draft_is_not_synced(db: sqlite3.Connection) -> None:
     files = synthetic()
     run_pipeline(db, files)
-    run_stub_approval(db, files)
+    run_stub_approval(db, files.segment, files.script)
     db.execute(
         "UPDATE drafts SET body = body || ' (edited)' WHERE lead_id = "
         "(SELECT lead_id FROM leads JOIN companies USING (company_id) "
@@ -272,7 +328,7 @@ def test_changed_draft_is_not_synced(db: sqlite3.Connection) -> None:
 def test_only_approved_leads_reach_the_crm(db: sqlite3.Connection) -> None:
     files = synthetic()
     run_pipeline(db, files)
-    run_stub_approval(db, files)
+    run_stub_approval(db, files.segment, files.script)
     run_crm_sync(db, files.segment)
     domains = {row[0] for row in rows(db, "SELECT domain FROM fake_crm_accounts")}
     assert domains == {"alpha.test", "foxtrot.test", "hotel.test"}
@@ -281,7 +337,7 @@ def test_only_approved_leads_reach_the_crm(db: sqlite3.Connection) -> None:
 def test_person_edited_field_is_kept_and_logged(db: sqlite3.Connection) -> None:
     files = synthetic()
     run_pipeline(db, files)
-    run_stub_approval(db, files)
+    run_stub_approval(db, files.segment, files.script)
     person_edit(db, "hotel.test", "name", "Hotel Gear (edited by sales)")
     run_id = run_crm_sync(db, files.segment)
     value = rows(
@@ -300,7 +356,7 @@ def test_person_edited_field_is_kept_and_logged(db: sqlite3.Connection) -> None:
 def test_second_sync_is_idempotent(db: sqlite3.Connection) -> None:
     files = synthetic()
     run_pipeline(db, files)
-    run_stub_approval(db, files)
+    run_stub_approval(db, files.segment, files.script)
     run_crm_sync(db, files.segment)
     second = run_crm_sync(db, files.segment)
     assert db.execute("SELECT count(*) FROM fake_crm_accounts").fetchone()[0] == 3
@@ -337,7 +393,7 @@ def test_no_other_module_writes_crm_tables() -> None:
 
 def test_real_seeds_follow_the_desk_research_script(db: sqlite3.Connection) -> None:
     files = SegmentFiles.load(CONFIG, REAL)
-    run_ids = [run_pipeline(db, files), run_stub_approval(db, files)]
+    run_ids = [run_pipeline(db, files), run_stub_approval(db, files.segment, files.script)]
     run_ids.append(run_crm_sync(db, files.segment))
     final = {
         domain: (step, reason)
@@ -354,6 +410,58 @@ def test_real_seeds_follow_the_desk_research_script(db: sqlite3.Connection) -> N
     assert rows(db, "SELECT DISTINCT source FROM runs")[0][0] == "stub"
     for row in rows(db, "SELECT detail FROM lead_step_outcomes WHERE implementation = 'stub'"):
         assert "not a pipeline assessment" in row["detail"]
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "error"),
+    [
+        ('label: "stub: scripted fixture outcome', 'label: "scripted fixture outcome', "label"),
+        ('schema_version: "1"', 'schema_version: "1"\nfail_at_step: source', "fail_at_step"),
+    ],
+)
+def test_stub_script_refuses_unsafe_settings(
+    tmp_path: Path, old: str, new: str, error: str
+) -> None:
+    script = tmp_path / f"{SYNTHETIC}.yaml"
+    text = (FIXTURES / "stubs" / f"{SYNTHETIC}.yaml").read_text("utf-8")
+    assert old in text
+    script.write_text(text.replace(old, new, 1), "utf-8")
+    with pytest.raises(ConfigError, match=error):
+        load_stub_script(script)
+
+
+def test_approval_does_not_need_the_seed_list(tmp_path: Path) -> None:
+    config = tmp_path / "config"
+    shutil.copytree(FIXTURES, config)
+    path = str(tmp_path / "cli.db")
+    common = ["--segment", SYNTHETIC, "--config-dir", str(config), "--db", path]
+    assert cli.main(["db", "upgrade", "--db", path]) == 0
+    assert cli.main(["run", *common]) == 0
+    (config / "seeds" / f"{SYNTHETIC}.csv").unlink()
+    assert cli.main(["approve", "--stub", *common]) == 0
+
+
+def test_commands_report_database_problems_without_a_traceback(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    unmigrated = tmp_path / "plain.db"
+    sqlite3.connect(unmigrated).close()
+    assert cli.main(["runs", "--db", str(unmigrated)]) == 1
+    assert "db upgrade" in capsys.readouterr().err
+    path = tmp_path / "cli.db"
+    upgrade(path)
+    monkeypatch.setattr(
+        "adscout.pipeline.run.pending",
+        lambda connection: (_ for _ in ()).throw(MigrationError("0001_initial was edited")),
+    )
+    common = ["--segment", SYNTHETIC, "--config-dir", str(FIXTURES), "--db", str(path)]
+    assert cli.main(["run", *common]) == 1
+    assert "0001_initial was edited" in capsys.readouterr().err
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows process access rules")
+def test_process_owned_by_someone_else_counts_as_alive() -> None:
+    assert process_alive(4)  # the System process: it exists, and opening it is denied
 
 
 def test_real_seed_without_a_source_is_refused(tmp_path: Path) -> None:

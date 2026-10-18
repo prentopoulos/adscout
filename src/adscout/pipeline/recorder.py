@@ -12,7 +12,7 @@ import platform
 import sqlite3
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from importlib.metadata import version
@@ -64,11 +64,12 @@ def process_alive(pid: int) -> bool:
     if sys.platform == "win32":
         import ctypes
 
-        query_limited_information, still_active = 0x1000, 259
-        kernel32 = ctypes.windll.kernel32
+        query_limited_information, still_active, access_denied = 0x1000, 259, 5
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         handle = kernel32.OpenProcess(query_limited_information, False, pid)
         if not handle:
-            return False
+            # Access denied means the process exists but belongs to someone else.
+            return ctypes.get_last_error() == access_denied
         try:
             code = ctypes.c_ulong()
             return bool(kernel32.GetExitCodeProcess(handle, ctypes.byref(code))) and (
@@ -91,11 +92,19 @@ def lock_digest() -> str:
 
 @dataclass
 class StepRecorder:
-    """Collects one step's outcomes; the run writes them with the step's counts."""
+    """Collects one step's outcomes and deferred writes; the run commits them together.
+
+    The step does its work, such as a model or network call, outside any transaction, and
+    hands its database writes to `defer`, so the write lock is held only briefly.
+    """
 
     step: Step
     entering: int
     outcomes: list[Outcome] = field(default_factory=list)
+    writes: list[Callable[[], None]] = field(default_factory=list)
+
+    def defer(self, write: Callable[[], None]) -> None:
+        self.writes.append(write)
 
     @property
     def kept(self) -> int:
@@ -203,7 +212,8 @@ class Run:
     def step(
         self, step: Step, implementation: Implementation, entering: int
     ) -> Iterator[StepRecorder]:
-        """Record a step: its row first, then its outputs and outcomes in one transaction."""
+        """Record a step: its row first; then its deferred writes and outcomes in one short
+        transaction after the step's work is done."""
         self.seq += 1
         started_at, clock = utc_now(), time.perf_counter()
         version_label = "stub-1" if implementation == "stub" else "1"
@@ -225,8 +235,10 @@ class Run:
             )
         recorder = StepRecorder(step=step, entering=entering)
         try:
+            yield recorder
             with transaction(self.connection):
-                yield recorder
+                for write in recorder.writes:
+                    write()
                 ended_at = utc_now()
                 for outcome in recorder.outcomes:
                     self.connection.execute(

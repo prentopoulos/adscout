@@ -39,7 +39,7 @@ def flow(db: sqlite3.Connection) -> list[str]:
     files = SegmentFiles.load(FIXTURES, SYNTHETIC)
     return [
         run_pipeline(db, files),
-        run_stub_approval(db, files),
+        run_stub_approval(db, files.segment, files.script),
         run_crm_sync(db, files.segment),
     ]
 
@@ -141,6 +141,12 @@ def test_export_validates_against_the_committed_schema(
     run = export_lines(db, flow[0])[0]
     assert run["adscout.minutes_per_account"] is None
     assert "adscout.minutes_per_account" in run["null_reasons"]
+    approval = export_lines(db, flow[1])[0]
+    assert approval["adscout.seed_list_hash"] is None
+    assert set(approval["null_reasons"]) == {
+        "adscout.seed_list_hash",
+        "adscout.minutes_per_account",
+    }
     assert set(ATTRIBUTES.values()) <= {key for line in export_lines(db, flow[0]) for key in line}
 
 

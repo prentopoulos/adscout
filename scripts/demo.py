@@ -26,7 +26,7 @@ def demo(segment_id: str, config_dir: Path, db: Path) -> list[str]:
     try:
         run_ids = [
             run_pipeline(connection, files),
-            run_stub_approval(connection, files),
+            run_stub_approval(connection, files.segment, files.script),
             run_crm_sync(connection, files.segment),
         ]
         for run_id in run_ids:

@@ -112,17 +112,19 @@ def build[Model: BaseModel](model: type[Model], data: dict[str, Any]) -> Model:
     )
 
 
-def renamed_reasons(reasons: dict[str, str]) -> dict[str, str]:
-    return {ATTRIBUTES.get(name, name): reason for name, reason in reasons.items()}
+def renamed_reasons(model: type[BaseModel], reasons: dict[str, str]) -> dict[str, str]:
+    """Key each null reason by the exported name of the field it explains."""
+    aliases = {name: info.alias for name, info in model.model_fields.items() if info.alias}
+    return {
+        aliases.get(name, ATTRIBUTES.get(name, name)): reason for name, reason in reasons.items()
+    }
 
 
 def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, Any]]:
     run = connection.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
     if run is None:
         raise LookupError(f"no run {run_id}")
-    run_reasons = json.loads(run["null_reasons_json"]) | {
-        "adscout.minutes_per_account": MINUTES_NULL
-    }
+    run_reasons = json.loads(run["null_reasons_json"]) | {"minutes_per_account": MINUTES_NULL}
     records: list[BaseModel] = [
         build(
             RunRecord,
@@ -133,7 +135,7 @@ def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, 
                 "code_dirty": bool(run["code_dirty"]),
                 "budgets": json.loads(run["budgets_json"]),
                 "minutes_per_account": None,
-                "null_reasons": renamed_reasons(run_reasons),
+                "null_reasons": renamed_reasons(RunRecord, run_reasons),
             },
         )
     ]
@@ -147,7 +149,9 @@ def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, 
                 | {
                     "record": "step",
                     "session_id": run_id,
-                    "null_reasons": renamed_reasons(json.loads(step["null_reasons_json"])),
+                    "null_reasons": renamed_reasons(
+                        StepRecord, json.loads(step["null_reasons_json"])
+                    ),
                 },
             )
         )

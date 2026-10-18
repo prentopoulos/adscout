@@ -3,6 +3,9 @@
 A pipeline run stops with drafts waiting for approval; it never waits for a person.
 Approval is its own run, bound to each draft's SHA-256, and CRM sync is its own run over
 drafts whose approval still matches their text (Phase 1 design, decisions 14 and 16).
+
+Each run reads its work list only after it has started, so no other run can change it in
+between; each step does its work first and writes its results in one short transaction.
 """
 
 import hashlib
@@ -14,7 +17,7 @@ from pathlib import Path
 from adscout.config import SeedList, SegmentConfig, load_seeds, load_segment
 from adscout.crm.writer import write_account
 from adscout.db.connection import utc_now
-from adscout.db.migrate import pending
+from adscout.db.migrate import MigrationError, pending
 from adscout.ids import uuid7
 from adscout.pipeline.contracts import STUB_STEPS, Lead, Outcome, StepOutput
 from adscout.pipeline.recorder import Run, RunSource, Snapshot
@@ -30,45 +33,63 @@ class DatabaseNotReady(RuntimeError):
 
 @dataclass(frozen=True)
 class SegmentFiles:
-    """A segment's config, seed list and stub script, loaded and validated."""
+    """A segment's config and stub script, and its seed list when a run needs one."""
 
     segment: SegmentConfig
-    seeds: SeedList
     script: StubScript
+    seeds: SeedList | None = None
 
     @classmethod
-    def load(cls, config_dir: Path, segment_id: str, seeds: Path | None = None) -> "SegmentFiles":
+    def load(
+        cls,
+        config_dir: Path,
+        segment_id: str,
+        seeds: Path | None = None,
+        *,
+        with_seeds: bool = True,
+    ) -> "SegmentFiles":
         segment = load_segment(config_dir / "segments" / f"{segment_id}.yaml")
-        seed_list = load_seeds(seeds or config_dir / "seeds" / f"{segment_id}.csv", segment_id)
         script = load_stub_script(config_dir / "stubs" / f"{segment_id}.yaml")
-        return cls(segment, seed_list, script)
+        seed_list = None
+        if with_seeds:
+            seed_list = load_seeds(seeds or config_dir / "seeds" / f"{segment_id}.csv", segment_id)
+        return cls(segment, script, seed_list)
 
-    def snapshots(self) -> dict[str, Snapshot]:
-        return {
-            "icp_config_hash": segment_snapshot(self.segment),
-            "seed_list_hash": Snapshot(
-                "seed_list",
-                self.seeds.content_hash(),
-                [row.model_dump(mode="json") for row in self.seeds.rows],
-            ),
-            "stub_script_hash": Snapshot(
-                "stub_script", self.script.content_hash(), self.script.model_dump(mode="json")
-            ),
-        }
+    def require_seeds(self) -> SeedList:
+        if self.seeds is None:
+            raise ValueError("this run needs the segment's seed list")
+        return self.seeds
 
 
 def segment_snapshot(segment: SegmentConfig) -> Snapshot:
     return Snapshot("segment", segment.content_hash(), segment.model_dump(mode="json"))
 
 
+def script_snapshot(script: StubScript) -> Snapshot:
+    return Snapshot("stub_script", script.content_hash(), script.model_dump(mode="json"))
+
+
+def seeds_snapshot(seeds: SeedList) -> Snapshot:
+    rows = [row.model_dump(mode="json") for row in seeds.rows]
+    return Snapshot("seed_list", seeds.content_hash(), rows)
+
+
 def require_migrated(connection: sqlite3.Connection) -> None:
-    if pending(connection):
+    try:
+        missing = pending(connection)
+    except MigrationError as error:
+        raise DatabaseNotReady(f"the database and the migrations disagree: {error}") from error
+    if missing:
         raise DatabaseNotReady("the database needs migrations; run `adscout db upgrade` first")
 
 
 def source_label(domains: list[str]) -> RunSource:
     """`fixture` when every company is synthetic; otherwise `stub`, since nothing is live yet."""
     return "fixture" if domains and all(map(is_reserved_domain, domains)) else "stub"
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def store_outputs(connection: sqlite3.Connection, run_id: str, output: StepOutput) -> None:
@@ -127,29 +148,41 @@ def store_outputs(connection: sqlite3.Connection, run_id: str, output: StepOutpu
         )
 
 
-def sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
 def run_pipeline(connection: sqlite3.Connection, files: SegmentFiles) -> str:
     """Source the seeds, run every stub step, and stop with drafts pending approval."""
     require_migrated(connection)
+    seeds = files.require_seeds()
     run = Run(
         connection,
         "pipeline",
         files.segment.segment_id,
-        source_label([row.domain for row in files.seeds.rows]),
-        files.snapshots(),
+        source_label([row.domain for row in seeds.rows]),
+        {
+            "icp_config_hash": segment_snapshot(files.segment),
+            "seed_list_hash": seeds_snapshot(seeds),
+            "stub_script_hash": script_snapshot(files.script),
+        },
         null_reasons={},
     )
     with run.recording():
-        with run.step("source", "real", len(files.seeds.rows)) as recorder:
-            seed_list_hash = files.seeds.content_hash()
-            leads = source(run, recorder, files.segment, files.seeds, seed_list_hash)
+        leads: list[Lead] = []
+        with run.step("source", "real", len(seeds.rows)) as recorder:
+            # Sourcing only touches the local database, so it runs inside the write.
+            recorder.defer(
+                lambda: leads.extend(
+                    source(run, recorder, files.segment, seeds, seeds.content_hash())
+                )
+            )
         for step in STUB_STEPS:
             with run.step(step, "stub", len(leads)) as recorder:
+                # The step's work happens here, outside the write; in later phases it calls a
+                # model. Its outputs are written afterwards in the step's short transaction.
                 output = run_stub(step, leads, files.script)
-                store_outputs(connection, run.run_id, output)
+
+                def write_outputs(output: StepOutput = output) -> None:
+                    store_outputs(connection, run.run_id, output)
+
+                recorder.defer(write_outputs)
                 recorder.outcomes.extend(output.outcomes)
             going_on = {o.lead_id for o in output.outcomes if o.outcome == "kept"}
             leads = [lead for lead in leads if lead.lead_id in going_on]
@@ -165,62 +198,71 @@ def leads_by_id(connection: sqlite3.Connection, segment_id: str) -> dict[str, Le
     return {row["lead_id"]: Lead(**dict(row)) for row in rows}
 
 
-def run_stub_approval(connection: sqlite3.Connection, files: SegmentFiles) -> str:
+def run_stub_approval(
+    connection: sqlite3.Connection, segment: SegmentConfig, script: StubScript
+) -> str:
     """Decide every pending draft as the stub script says, bound to the draft's hash."""
     require_migrated(connection)
-    segment_id = files.segment.segment_id
-    leads = leads_by_id(connection, segment_id)
-    pending_drafts = connection.execute(
-        "SELECT d.draft_id, d.lead_id, d.body FROM drafts AS d JOIN leads AS l "
-        "ON l.lead_id = d.lead_id WHERE l.segment_id = ? AND d.status = 'pending_approval' "
-        "ORDER BY d.draft_id",
-        (segment_id,),
-    ).fetchall()
-    snapshots = files.snapshots()
-    del snapshots["seed_list_hash"]
+    segment_id = segment.segment_id
     run = Run(
         connection,
         "approval",
         segment_id,
-        source_label([lead.domain for lead in leads.values()]),
-        snapshots,
+        source_label([lead.domain for lead in leads_by_id(connection, segment_id).values()]),
+        {"icp_config_hash": segment_snapshot(segment), "stub_script_hash": script_snapshot(script)},
         null_reasons={"seed_list_hash": "an approval run reads stored drafts, not the seed list"},
     )
-    with run.recording(), run.step("approve", "stub", len(pending_drafts)) as recorder:
-        for draft in pending_drafts:
-            lead = leads[draft["lead_id"]]
-            plan = files.script.for_lead(lead)
-            decision = plan.approval or "rejected"
-            reason = None if decision == "approved" else plan.rejection_reason or plan.expected
-            connection.execute(
-                "INSERT INTO approvals (approval_id, run_id, lead_id, draft_id, draft_sha256, "
-                "decision, approver_kind, approver, reason, decided_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, 'stub', ?, ?, ?)",
-                (
-                    str(uuid7()),
-                    run.run_id,
-                    lead.lead_id,
-                    draft["draft_id"],
-                    sha256_text(draft["body"]),
-                    decision,
-                    STUB_APPROVER,
-                    reason,
-                    utc_now(),
-                ),
-            )
-            connection.execute(
-                "UPDATE drafts SET status = ? WHERE draft_id = ?", (decision, draft["draft_id"])
-            )
-            recorder.outcomes.append(
-                Outcome(lead_id=lead.lead_id, outcome="kept", detail=files.script.label)
-                if decision == "approved"
-                else Outcome(
-                    lead_id=lead.lead_id,
-                    outcome="exited",
-                    reason="rejected",
-                    detail=f"{files.script.label}; rejected: {reason}",
+    with run.recording():
+        leads = leads_by_id(connection, segment_id)
+        pending_drafts = connection.execute(
+            "SELECT d.draft_id, d.lead_id, d.body FROM drafts AS d JOIN leads AS l "
+            "ON l.lead_id = d.lead_id WHERE l.segment_id = ? AND d.status = 'pending_approval' "
+            "ORDER BY d.draft_id",
+            (segment_id,),
+        ).fetchall()
+        with run.step("approve", "stub", len(pending_drafts)) as recorder:
+            decisions = []
+            for draft in pending_drafts:
+                lead = leads[draft["lead_id"]]
+                plan = script.for_lead(lead)
+                decision = plan.approval or "rejected"
+                reason = None if decision == "approved" else plan.rejection_reason or plan.expected
+                decisions.append((draft, lead, decision, reason))
+                recorder.outcomes.append(
+                    Outcome(lead_id=lead.lead_id, outcome="kept", detail=script.label)
+                    if decision == "approved"
+                    else Outcome(
+                        lead_id=lead.lead_id,
+                        outcome="exited",
+                        reason="rejected",
+                        detail=f"{script.label}; rejected: {reason}",
+                    )
                 )
-            )
+
+            def record_decisions() -> None:
+                for draft, lead, decision, reason in decisions:
+                    connection.execute(
+                        "INSERT INTO approvals (approval_id, run_id, lead_id, draft_id, "
+                        "draft_sha256, decision, approver_kind, approver, reason, decided_at) "
+                        "VALUES (?, ?, ?, ?, ?, ?, 'stub', ?, ?, ?)",
+                        (
+                            str(uuid7()),
+                            run.run_id,
+                            lead.lead_id,
+                            draft["draft_id"],
+                            sha256_text(draft["body"]),
+                            decision,
+                            STUB_APPROVER,
+                            reason,
+                            utc_now(),
+                        ),
+                    )
+                    connection.execute(
+                        "UPDATE drafts SET status = ? WHERE draft_id = ?",
+                        (decision, draft["draft_id"]),
+                    )
+
+            recorder.defer(record_decisions)
     return run.run_id
 
 
@@ -249,50 +291,59 @@ def latest(connection: sqlite3.Connection, table: str, column: str, lead_id: str
 def run_crm_sync(connection: sqlite3.Connection, segment: SegmentConfig) -> str:
     """Write every validly approved lead to the CRM through the one CRM writer."""
     require_migrated(connection)
-    rows = approved_for_sync(connection, segment.segment_id)
     run = Run(
         connection,
         "crm_sync",
         segment.segment_id,
-        source_label([row["domain"] for row in rows]),
+        source_label([row["domain"] for row in approved_for_sync(connection, segment.segment_id)]),
         {"icp_config_hash": segment_snapshot(segment)},
         null_reasons={
             "seed_list_hash": "a CRM sync reads stored approvals, not the seed list",
             "stub_script_hash": "a CRM sync follows stored approvals, not the stub script",
         },
     )
-    with run.recording(), run.step("crm_sync", "real", len(rows)) as recorder:
-        for row in rows:
-            fields: dict[str, str | None] = {
-                "name": row["name"],
-                "adscout_lead_id": row["lead_id"],
-                "adscout_segment": segment.segment_id,
-                "adscout_source": row["source"],
-                "adscout_agent_version": row["agent_version"],
-                "adscout_prompt_version": row["prompt_version"],
-                "adscout_score": latest(connection, "scores", "score", row["lead_id"]),
-                "adscout_brief_summary": latest(connection, "briefs", "summary", row["lead_id"]),
-                "adscout_draft_subject": row["subject"],
-                "adscout_approval_id": row["approval_id"],
-                "adscout_approver_kind": row["approver_kind"],
-            }
-            result = write_account(
-                connection,
-                run_id=run.run_id,
-                lead_id=row["lead_id"],
-                approval_id=row["approval_id"],
-                domain=row["domain"],
-                fields=fields,
-            )
-            detail = f"{result.operation} on the local fake CRM"
-            if result.skipped:
-                detail += f"; kept the person's value of {', '.join(result.skipped)}"
-            recorder.outcomes.append(
-                Outcome(
-                    lead_id=row["lead_id"],
-                    outcome="kept",
-                    flag="crm_conflict" if result.skipped else None,
-                    detail=detail,
-                )
-            )
+    with run.recording():
+        rows = approved_for_sync(connection, segment.segment_id)
+        with run.step("crm_sync", "real", len(rows)) as recorder:
+
+            def sync() -> None:
+                # The local fake CRM lives in this database, so the writes join the step's
+                # transaction. The Phase 4 sandbox adapter writes outside it.
+                for row in rows:
+                    fields: dict[str, str | None] = {
+                        "name": row["name"],
+                        "adscout_lead_id": row["lead_id"],
+                        "adscout_segment": segment.segment_id,
+                        "adscout_source": row["source"],
+                        "adscout_agent_version": row["agent_version"],
+                        "adscout_prompt_version": row["prompt_version"],
+                        "adscout_score": latest(connection, "scores", "score", row["lead_id"]),
+                        "adscout_brief_summary": latest(
+                            connection, "briefs", "summary", row["lead_id"]
+                        ),
+                        "adscout_draft_subject": row["subject"],
+                        "adscout_approval_id": row["approval_id"],
+                        "adscout_approver_kind": row["approver_kind"],
+                    }
+                    result = write_account(
+                        connection,
+                        run_id=run.run_id,
+                        lead_id=row["lead_id"],
+                        approval_id=row["approval_id"],
+                        domain=row["domain"],
+                        fields=fields,
+                    )
+                    detail = f"{result.operation} on the local fake CRM"
+                    if result.skipped:
+                        detail += f"; kept the person's value of {', '.join(result.skipped)}"
+                    recorder.outcomes.append(
+                        Outcome(
+                            lead_id=row["lead_id"],
+                            outcome="kept",
+                            flag="crm_conflict" if result.skipped else None,
+                            detail=detail,
+                        )
+                    )
+
+            recorder.defer(sync)
     return run.run_id
