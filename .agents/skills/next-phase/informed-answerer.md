@@ -32,7 +32,9 @@ every frontier question:
    (Context7 for libraries), and public pricing, terms and API documentation. Note each source
    with its retrieval date.
 3. Weigh the main alternatives a professional team would consider, including any the question
-   does not list, and check each one's maintenance status (latest release date).
+   does not list, and check each one's maintenance status (latest release date). For a stack
+   or tool choice, also check how it fits the later choices it constrains (later phases'
+   candidates in PROJECT.md) and name them.
 4. Recommend exactly one answer, say why each other alternative loses, and apply the
    owner-call test below.
 5. Split any question that mixes a settleable choice with an owner trigger. Choosing a package
