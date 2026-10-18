@@ -68,5 +68,5 @@ Windows working notes:
 - `python -I` ignores `PYTHONIOENCODING`; add `-X utf8` for UTF-8 output;
 - after starting a local server from a new folder or launcher, confirm it listens on
   127.0.0.1 only (`netstat -ano`); config files are often read beside the script.
-Gate: `TBD in Phase 0`.
+Gate: `uv run --locked python scripts/gate.py`.
 No Git remote: do not run git push or gh.

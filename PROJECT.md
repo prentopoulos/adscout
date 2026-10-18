@@ -113,7 +113,7 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
   (showcase skill).
 - Code review: every change to code is reviewed before merge (WORKFLOW.md).
 
-Gate: `TBD in Phase 0`.
+Gate: `uv run --locked python scripts/gate.py`.
 No Git remote: do not run git push or gh. Follow WORKFLOW.md for phase work.
 
 ## 5. Non-negotiables

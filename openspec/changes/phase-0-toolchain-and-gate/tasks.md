@@ -26,7 +26,7 @@
 
 ## 5. Documents and phase close
 
-- [ ] 5.1 Replace every "TBD in Phase 0" with the gate command (PROJECT.md, AGENTS.md, CLAUDE.md, WORKFLOW.md, `openspec/config.yaml`, AI_OPS.md, next-phase skill) and point AI_OPS.md's evaluation rows at `evals/`.
+- [x] 5.1 Replace every "TBD in Phase 0" with the gate command (PROJECT.md, AGENTS.md, CLAUDE.md, WORKFLOW.md, `openspec/config.yaml`, AI_OPS.md, next-phase skill) and point AI_OPS.md's evaluation rows at `evals/`.
 - [ ] 5.2 Fresh-clone acceptance: clone the branch twice, with `core.autocrlf=true` and `false`; run `uv sync --locked` and the gate in each; record the commands and outcomes in HANDOFF.md.
 - [ ] 5.3 Run `uv run --locked pip-audit` (owner gate decision of 2026-10-17); record the date, result and any ignored finding with its reason and recheck date in HANDOFF.md.
 - [ ] 5.4 Code review of the branch diff against these requirements, tasks and the design's non-negotiables check; fix findings in new commits and record the outcome in HANDOFF.md.

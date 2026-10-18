@@ -30,10 +30,10 @@ Nothing is implemented yet. "Deferred" below means planned in PROJECT.md §6 but
 |---|---|
 | Design choices: autonomy, pattern, framework, model tiers, hosting, fallback | TBD in the Phase 1 design; playbook proposal: workflow with one ReAct research step, evaluator-optimizer drafts, fast tier for scoring, workhorse tier for research and drafts |
 | System bundle and last known-good version | TBD; none exists |
-| Evaluation plan, held-out cases and evaluator | TBD in Phase 5 (PROJECT.md §3 outline); scaffold in Phase 0 |
-| Offline deterministic check command | TBD in Phase 0 |
+| Evaluation plan, held-out cases and evaluator | TBD in Phase 5 (PROJECT.md §3 outline). Harness, case and result formats in `evals/` (Phase 0); only synthetic scaffold cases exist |
+| Offline deterministic check command | `uv run --locked python scripts/gate.py`; its evaluation step is `uv run --locked pytest evals` |
 | Authorized provider-evaluation command and budget | TBD; behind the spend gate |
-| Run records / metrics / alerts | TBD; runs table in Phase 1, tracing with cost per lead in Phase 5 |
+| Run records / metrics / alerts | Evaluation run records in gitignored `evals/runs/`, never deleted; cited runs in `evals/evidence/` (Phase 0). Pipeline runs table in Phase 1, tracing with cost per lead in Phase 5 |
 | Release evidence and stop/recovery runbook | TBD; not planned beyond the portfolio README |
 | Operational owner and maintenance/recheck cadence | Peter Rentopoulos; cadence TBD |
 

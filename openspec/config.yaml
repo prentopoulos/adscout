@@ -10,7 +10,7 @@ context: |
   External services (model API, search/fetch, enrichment, HubSpot, Langfuse, sandbox inbox) sit behind PROJECT.md ⛔ gates for spend, accounts, live reads, sends, publishing and deployment.
   Tests and CI use recorded fixtures and fakes; no credentials or network.
   Evaluation has two layers: offline model-level checks on fixed cases gate changes; business outcomes are simulated and labelled so.
-  Gate command: TBD in Phase 0.
+  Gate command: uv run --locked python scripts/gate.py.
   No Git remote: do not run git push or gh.
 
   Non-negotiables, verbatim from PROJECT.md §5 (the constitution, which governs; only the owner amends it):

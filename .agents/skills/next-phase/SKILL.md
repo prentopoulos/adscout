@@ -106,9 +106,8 @@ Do not treat the roadmap in PROJECT.md as an instruction to build all later phas
 - Skills/planning: frontmatter, local links, routing consistency, source digests where
   carried over, strict OpenSpec validation, whitespace and candidate-file inspection.
   Do not claim runtime verification from these checks.
-- Runtime: run `TBD in Phase 0` once implemented. Before Phase 0 finishes, inspect
-  actual checks rather than assuming this command exists. Run meaningful regression/contract
-  tests for the change.
+- Runtime: run `uv run --locked python scripts/gate.py`. Run meaningful regression/contract tests for the
+  change.
 - Results and claims: check outputs independently of the code that produced them. No
   exception does not prove correctness; a timeout or empty result does not prove a negative.
 - Model/agent behavior: evaluate against cases fixed before measuring. An LLM judge cannot
