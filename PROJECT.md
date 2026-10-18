@@ -226,6 +226,10 @@ their order and boundaries are confirmed in grilling before each phase.
   once to confirm that its domain belongs to that company. Scope: those checks only, done on
   2026-10-18 for six candidates, one of which refused (Phase 1 design); pipeline searches,
   fetches and enrichment stay gated.
+- Decision (owner, 2026-10-18): the agent may run a one-off web search on the five Phase 1
+  seeds to set their scripted stub outcomes from public sources. Scope: that desk research
+  only, done on 2026-10-18 (Phase 1 design); pipeline searches, fetches and enrichment stay
+  gated.
 
 ### ⛔ Before any message is sent
 

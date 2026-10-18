@@ -29,14 +29,20 @@ segment or exists in the CRM, and as `excluded` when the segment config excludes
 The `enrich`, `rules`, `score`, `research` and `draft` steps SHALL be stubs whose outcome per
 lead comes from a committed stub script keyed by domain. Every row a stub writes SHALL be
 labelled `stub`, and no stub output SHALL state a fact about a real company; an exit reason
-SHALL read as a scripted stub reason. The Phase 1 stub script for the real seeds SHALL make at
-least one lead exit before research, one exit as `below_threshold`, one be rejected at approval
-and one be synced to the CRM. Synthetic test fixtures SHALL exercise every exit reason.
+SHALL read as a scripted stub reason that names the stub script. For each real seed, the stub
+script SHALL record the expected outcome, its rationale and at least one source URL with its
+retrieval date. The Phase 1 stub script for the real seeds SHALL make at least one lead exit
+before research, one exit as `below_threshold`, one be rejected at approval and one be synced
+to the CRM. Synthetic test fixtures SHALL exercise every exit reason.
 
 #### Scenario: Stub rows labelled
 - **WHEN** a run on the real seeds finishes
 - **THEN** every enrichment, score, brief and draft row it wrote is labelled `stub`, and
   every brief has no claims
+
+#### Scenario: Stub script without a source
+- **WHEN** a real seed's entry in the stub script has no source URL or retrieval date
+- **THEN** loading the stub script fails and names the seed
 
 #### Scenario: Every exit path covered
 - **WHEN** the synthetic fixture run and its approval and sync runs finish

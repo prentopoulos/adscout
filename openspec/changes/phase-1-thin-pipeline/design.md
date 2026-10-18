@@ -25,6 +25,18 @@ home page once with a page fetch tool:
 SteelSeries (steelseries.com) answered HTTP 403 and was not retried, so it is not a seed. A
 403 says nothing about the domain; it may join the Phase 2 list.
 
+**Desk research for the stub script (owner's request, 2026-10-18).** After reviewing the
+spec, the owner asked for the scripted outcomes to follow what each seed would likely get in
+the real world. The agent ran six web searches on the five seeds, retrieved 2026-10-18:
+
+| Company | Finding | Source |
+|---|---|---|
+| Corsair | Public; 2025 revenue $1,472.5M, up 12% | SEC 8-K exhibit 99.1, sec.gov/Archives/edgar/data/1743759/000119312526048668/crsr-ex99_1.htm |
+| Razer | Taken private in 2022 (94.74% of shareholders in favour); passed US$1B revenue in FY2020; sponsors North American esports teams | vulcanpost.com/786487; businesswire.com/news/home/20210324005217; gamesbeat.com (Denial Esports) |
+| Turtle Beach | Public; 2025 revenue $319.9M; weak fourth quarter blamed on soft North American gaming-accessory demand | SEC 8-K exhibit 99.1, sec.gov/Archives/edgar/data/1493761/000119312526104292/tbch-ex99_1.htm |
+| NZXT | Private, revenue not published; agreed a $3.45M class-action settlement over its Flex PC rental program without admitting wrongdoing, pending court approval | techspot.com/news/112053; consumeraffairs.com (Flex class action) |
+| 8BitDo | Private, Shenzhen, founded 2013; third-party estimate of $5–25M revenue and 250–500 staff (unverified) | owler.com/company/8bitdo |
+
 ## Goals / Non-Goals
 
 **Goals** (acceptance evidence, owner, grilling Q1):
@@ -154,14 +166,24 @@ Owner calls are marked **owner**. Settled answers give their basis, with sources
     bound to the draft's SHA-256, with approver kind `stub` in Phase 1, so the Phase 4 send
     function can refuse stub approvals ("a shared CLI flag is not proof of an authenticated
     approver", agent-runtime reference). CRM sync is its own run over approved drafts.
-15. **Stub script.** `config/stubs/gaming-hardware-na.yaml` scripts each seed's path. Paths
-    are assigned in alphabetical order of domain so the assignment is visibly arbitrary:
-    8bitdo.com exits at `rules` (`out_of_profile`), corsair.com at `score`
-    (`below_threshold`), nzxt.com is rejected at approval, razer.com and turtlebeach.com are
-    approved and synced, turtlebeach.com with `research_partial`. Every stub reason reads
-    "stub: scripted to exercise this exit; not an assessment of the company". Stub briefs
-    carry no claims and stub drafts state no company fact. A separate synthetic fixture covers
-    every reason and flag, including the CRM conflict.
+15. **Stub script from desk research (owner, 2026-10-18, after the spec review).**
+    `config/stubs/gaming-hardware-na.yaml` scripts each seed's path from the desk research
+    above, and records per seed the expected outcome, the rationale and its source URLs with
+    retrieval dates:
+    - corsair.com, razer.com and turtlebeach.com: approved and synced;
+    - nzxt.com: passes to a draft and is rejected at approval (brand-safety hold after the
+      class-action settlement);
+    - 8bitdo.com: exits at `score` as `below_threshold` (smallest marketing footprint; the
+      revenue figure is an unverified estimate).
+
+    No seed realistically exits at `rules` (all five sell in the US and Canada and fit the
+    categories, and the size range is unset) or as a CRM `duplicate` (no CRM data exists).
+    Database rows state no company fact: each stub reason reads "stub: scripted from desk
+    research (config/stubs/gaming-hardware-na.yaml, 2026-10-18); not a pipeline assessment".
+    Stub briefs carry no claims and stub drafts state no company fact. These expectations are
+    the agent's desk-research judgement, not the owner's labels; Phase 2 can compare its real
+    scores against them. A separate synthetic fixture covers every reason and flag, including
+    the CRM conflict.
 16. **CRM writer and fake (owner, Q1).** `src/adscout/crm/writer.py` is the only module that
     writes CRM tables. The fake has `crm_accounts` (by domain), `crm_account_fields` (value
     and owner `adscout` or `person`) and `crm_writes` (operation ID, operation, fields,
@@ -236,13 +258,14 @@ LLM Applications 2025.
 
 - **Secrets:** Phase 1 holds none and needs none; no adapter has a credential.
 - **No fabrication:** every stub row is labelled `stub`; stub reasons say they are not
-  assessments; stub briefs carry no claims; nulls carry reasons; failed runs are kept; the
-  run check is independent of the runner. The seed table above reports what each page showed,
-  including the 403.
+  pipeline assessments; stub briefs carry no claims; nulls carry reasons; failed runs are
+  kept; the run check is independent of the runner. The seed table above reports what each
+  page showed, including the 403, and every desk-research finding carries its source and
+  retrieval date, with estimates marked unverified.
 - **⛔ gates:**
-  - Live reads: the pipeline and tests make no network call. The five home-page checks ran
-    under the owner's scoped decision of 2026-10-18 (PROJECT.md §6). pip-audit at close runs
-    under the Phase 0 decision.
+  - Live reads: the pipeline and tests make no network call. The home-page checks and the
+    desk-research searches ran under the owner's scoped decisions of 2026-10-18 (PROJECT.md
+    §6). pip-audit at close runs under the Phase 0 decision.
   - Spend: none. The JDK, Structurizr war and Chromium are free downloads the owner
     authorized (Q10).
   - Accounts, sends, publishing, deployment: untouched. No hosted diagram editor.
@@ -257,8 +280,11 @@ LLM Applications 2025.
 
 ## Risks / Trade-offs
 
-- **[Scripted stubs drop real companies]** → Reasons say "scripted; not an assessment", the
-  assignment is alphabetical, and the funnel output prints the `stub` label.
+- **[Scripted outcomes for real companies read as verdicts]** → Each outcome rests on cited
+  desk research kept in the stub script; database reasons say "not a pipeline assessment";
+  the funnel output prints the `stub` label; the 8BitDo estimate is marked unverified.
+- **[Desk research goes stale]** → Each source carries its retrieval date; Phase 2 replaces the
+  script with real enrichment and scoring.
 - **[WAL on a network or container-mounted file]** → WAL needs a local filesystem. Phase 6
   runs the dashboard beside the pipeline or reads a snapshot.
 - **[Triggers do not survive a table rebuild]** → The `schema.sql` snapshot test includes

@@ -16,6 +16,9 @@ Phase 1 task is done.
 - Seeds: corsair.com, razer.com, turtlebeach.com, nzxt.com and 8bitdo.com, each checked on its
   home page under the owner's scoped live-read decision (PROJECT.md §6). steelseries.com
   answered HTTP 403 and was left out.
+- The scripted stub outcomes follow one-off desk research the owner asked for (design
+  decision 15, sources in the design): Corsair, Razer and Turtle Beach approved and synced;
+  NZXT rejected at approval; 8BitDo below the score threshold.
 - The owner approved installing Microsoft OpenJDK 21 and the Structurizr `-playwright` war
   for diagram export (task 6.1); not installed yet.
 
