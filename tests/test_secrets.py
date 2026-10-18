@@ -48,20 +48,34 @@ def test_known_key_format_found_without_value(repo: Path, kind: str) -> None:
     assert FAKE_KEYS[kind] not in problems[0]
 
 
+LITERAL = "q8W" * 8
+
+
 @pytest.mark.parametrize(
-    "line",
+    ("name", "line"),
     [
-        'API_TOKEN = "' + "q8W" * 8 + '"',
-        "SERVICE_SECRET=" + "q8W" * 8,
-        '{"password": "' + "q8W" * 8 + '"}',
+        ("config.py", f'API_TOKEN = "{LITERAL}"'),
+        ("config.py", f'SECRET_KEY_BASE="{LITERAL}"'),
+        ("config.py", f'DB_PASSWORD_PROD = "{LITERAL}"'),
+        ("config.py", f'client_secret_value = "{LITERAL}"'),
+        ("config.json", f'{{"password": "{LITERAL}"}}'),
+        ("settings.env", f"SERVICE_SECRET={LITERAL}"),
+        ("settings.env", f"export api_key={LITERAL}"),
+        ("setup.cmd", f"set OPENAI_API_KEY={LITERAL}"),
+        ("config.yaml", f"  password: {LITERAL}"),
     ],
 )
-def test_long_literal_assignment_found(repo: Path, line: str) -> None:
-    plant(repo, "config.py", line)
+def test_long_literal_assignment_found(repo: Path, name: str, line: str) -> None:
+    plant(repo, name, line)
     assert secrets.check(repo) == [
-        "config.py:1: possible long literal assigned to a secret-like name "
+        f"{name}:1: possible long literal assigned to a secret-like name "
         f"(value not shown; line hash {secrets.line_hash(line)})"
     ]
+
+
+def test_unquoted_python_names_pass(repo: Path) -> None:
+    plant(repo, "config.py", "api_key = settings.anthropic_api_key_value")
+    assert secrets.check(repo) == []
 
 
 def test_placeholder_values_pass(repo: Path) -> None:
@@ -73,6 +87,39 @@ def test_ignored_and_binary_files_are_not_scanned(repo: Path) -> None:
     plant(repo, ".env", "ANTHROPIC_API_KEY=" + FAKE_KEYS["Anthropic API key"])
     (repo / "image.bin").write_bytes(b"\0\1" + FAKE_KEYS["AWS access key ID"].encode())
     assert secrets.check(repo) == []
+
+
+@pytest.mark.parametrize("encoding", ["utf-16-le", "utf-16-be", "utf-32-le", "utf-32-be"])
+def test_utf16_and_utf32_files_are_scanned(repo: Path, encoding: str) -> None:
+    # These codecs write no byte-order mark, so the leading U+FEFF becomes it.
+    text = "﻿ANTHROPIC_API_KEY=" + FAKE_KEYS["Anthropic API key"] + "\n"
+    (repo / "notes.txt").write_text(text, encoding=encoding)
+    (problem,) = secrets.check(repo)
+    assert problem.startswith("notes.txt:1: possible Anthropic API key")
+
+
+def test_line_numbers_count_newlines_only(repo: Path) -> None:
+    (repo / "notes.txt").write_text(
+        "title = 'one" + chr(0x2028) + "line'\nvalue = " + FAKE_KEYS["AWS access key ID"] + "\n",
+        encoding="utf-8",
+    )
+    (problem,) = secrets.check(repo)
+    assert problem.startswith("notes.txt:2: possible AWS access key ID")
+
+
+def test_staged_secret_is_found_after_working_copy_is_cleaned(repo: Path) -> None:
+    line = plant(repo, "config.txt", "value = " + FAKE_KEYS["Anthropic API key"])
+    plant(repo, "removed.txt", "value = " + FAKE_KEYS["GitHub token"])
+    run_git(repo, "add", "config.txt", "removed.txt")
+    plant(repo, "config.txt", "value = read from .env")
+    (repo / "removed.txt").unlink()
+    problems = secrets.check(repo)
+    assert problems[0] == (
+        f"config.txt (staged):1: possible Anthropic API key (value not shown; "
+        f"line hash {secrets.line_hash(line)})"
+    )
+    assert problems[1].startswith("removed.txt (staged):1: possible GitHub token")
+    assert len(problems) == 2
 
 
 def test_tracked_env_file_fails(repo: Path) -> None:
