@@ -42,6 +42,17 @@ def test_merge_commits_are_exempt(git_repo: Path) -> None:
     assert commits.check(git_repo) == []
 
 
+def test_subject_with_line_separator_is_checked(git_repo: Path) -> None:
+    commit(git_repo, "chore: initial commit")
+    branch(git_repo, "feature")
+    commit(git_repo, "docs: one" + chr(0x2028) + "line")
+    commit(git_repo, "bad" + chr(0x2028) + "subject")
+    (problem,) = commits.check(git_repo)
+    assert problem.endswith(
+        f": subject {'bad' + chr(0x2028) + 'subject'!r} is not a Conventional Commit"
+    )
+
+
 def test_commits_already_on_main_are_not_checked(git_repo: Path) -> None:
     commit(git_repo, "initial import")
     branch(git_repo, "feature")

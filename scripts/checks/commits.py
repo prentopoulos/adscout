@@ -25,7 +25,8 @@ def check(root: Path) -> list[str]:
     base = git(root, "merge-base", ref, "HEAD").stdout.strip()
     log = git(root, "log", "--no-merges", "--format=%h%x00%s", f"{base}..HEAD").stdout
     problems: list[str] = []
-    for entry in log.splitlines():
+    # Newlines only: str.splitlines would also split a subject at U+2028 and similar characters.
+    for entry in filter(None, log.split("\n")):
         short_hash, subject = entry.split("\0", 1)
         if not SUBJECT.match(subject):
             problems.append(f"{short_hash}: subject {subject!r} is not a Conventional Commit")
