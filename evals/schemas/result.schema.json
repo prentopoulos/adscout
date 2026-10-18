@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Validation": {
+      "additionalProperties": false,
+      "description": "Outcome of checking the output independently of the code that produced it.",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "outcome",
+        "detail"
+      ],
+      "title": "Validation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One case's result in one repetition of one run.",
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "case_set": {
+      "title": "Case Set",
+      "type": "string"
+    },
+    "case_set_version": {
+      "title": "Case Set Version",
+      "type": "string"
+    },
+    "step": {
+      "enum": [
+        "scaffold",
+        "rules",
+        "enrich",
+        "score",
+        "research",
+        "draft",
+        "injection",
+        "cost"
+      ],
+      "title": "Step",
+      "type": "string"
+    },
+    "layer": {
+      "enum": [
+        "deterministic",
+        "judged",
+        "operational"
+      ],
+      "title": "Layer",
+      "type": "string"
+    },
+    "label": {
+      "enum": [
+        "normal",
+        "edge",
+        "deliberately_failing"
+      ],
+      "title": "Label",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "split": {
+      "enum": [
+        "tuning",
+        "held_out"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "repetition": {
+      "minimum": 0,
+      "title": "Repetition",
+      "type": "integer"
+    },
+    "input_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Input Hash",
+      "type": "string"
+    },
+    "code_revision": {
+      "title": "Code Revision",
+      "type": "string"
+    },
+    "code_dirty": {
+      "title": "Code Dirty",
+      "type": "boolean"
+    },
+    "lock_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Lock Digest",
+      "type": "string"
+    },
+    "evaluator": {
+      "title": "Evaluator",
+      "type": "string"
+    },
+    "evaluator_version": {
+      "title": "Evaluator Version",
+      "type": "string"
+    },
+    "config": {
+      "additionalProperties": true,
+      "title": "Config",
+      "type": "object"
+    },
+    "budgets": {
+      "additionalProperties": true,
+      "title": "Budgets",
+      "type": "object"
+    },
+    "platform": {
+      "title": "Platform",
+      "type": "string"
+    },
+    "python_version": {
+      "title": "Python Version",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run",
+        "error"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "validation": {
+      "$ref": "#/$defs/Validation"
+    },
+    "metrics": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "duration_s": {
+      "minimum": 0,
+      "title": "Duration S",
+      "type": "number"
+    },
+    "source": {
+      "enum": [
+        "fixture",
+        "live"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "gen_ai.request.model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Gen Ai.Request.Model"
+    },
+    "prompt_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Prompt Version"
+    },
+    "agent_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Agent Version"
+    },
+    "gen_ai.usage.input_tokens": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Gen Ai.Usage.Input Tokens"
+    },
+    "gen_ai.usage.output_tokens": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Gen Ai.Usage.Output Tokens"
+    },
+    "cost_usd": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Cost Usd"
+    },
+    "segment": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Segment"
+    },
+    "seed_list_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Seed List Hash"
+    },
+    "icp_config_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Icp Config Hash"
+    },
+    "labelled_set_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Labelled Set Version"
+    },
+    "attribution_rule": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Attribution Rule"
+    },
+    "null_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Null Reasons",
+      "type": "object"
+    }
+  },
+  "required": [
+    "run_id",
+    "case_id",
+    "case_set",
+    "case_set_version",
+    "step",
+    "layer",
+    "label",
+    "synthetic",
+    "split",
+    "repetition",
+    "input_hash",
+    "code_revision",
+    "code_dirty",
+    "lock_digest",
+    "evaluator",
+    "evaluator_version",
+    "config",
+    "budgets",
+    "platform",
+    "python_version",
+    "status",
+    "validation",
+    "metrics",
+    "started_at",
+    "duration_s",
+    "source",
+    "gen_ai.request.model",
+    "prompt_version",
+    "agent_version",
+    "gen_ai.usage.input_tokens",
+    "gen_ai.usage.output_tokens",
+    "cost_usd",
+    "segment",
+    "seed_list_hash",
+    "icp_config_hash",
+    "labelled_set_version",
+    "attribution_rule",
+    "null_reasons"
+  ],
+  "title": "ResultRecord",
+  "type": "object"
+}

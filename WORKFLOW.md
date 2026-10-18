@@ -95,8 +95,9 @@ Skills grant no spending, outreach, deployment or real-data transfer authority.
 
 - Planning/skills: frontmatter where relevant, local links, source digests for carryover,
   consistency, strict OpenSpec validation, whitespace and candidate-file inspection.
-- Runtime: `TBD in Phase 0`. It should cover `openspec validate --all --strict` plus the
-  stack's lint, format, type and test checks. Add meaningful affected boundary tests.
+- Runtime: `uv run --locked python scripts/gate.py`. It runs the lockfile, format, lint, type and test checks, the
+  constitution, digest, secrets, commit and documentation checks, the evaluation scaffold
+  and `openspec validate --all --strict`. Add meaningful affected boundary tests.
 - Results and model behavior: independent checks of outputs, cases fixed before measuring,
   honest run records. No fabricated remote results.
   For AI products, apply the AI-ops evaluation procedure and bind evidence to the complete

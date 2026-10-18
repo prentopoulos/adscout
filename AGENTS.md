@@ -20,7 +20,8 @@ qualified lead and funnel or revenue figures.
 - No real outreach, no hosted deployment, no Git remote until the publishing gate is resolved.
 - Multi-agent orchestration, fine-tuning, self-hosted models and the n8n variant are out of
   scope or deferred.
-- The stack is a playbook proposal until Phase 0 grilling decides it.
+- The stack is a playbook proposal; each piece is decided in the grilling of the phase that
+  first needs it (PROJECT.md §4).
 
 ## Non-negotiables
 
@@ -55,8 +56,8 @@ Every change to code gets a code review before it merges (WORKFLOW.md).
 
 ## Development
 
-Runtime, language version, package manager, lockfile and environment bootstrap: TBD in
-Phase 0 (playbook proposal: Python with uv).
+Runtime: Python 3.13 with uv and a committed `uv.lock`; `uv sync --locked` bootstraps the
+environment (decided in Phase 0 grilling, PROJECT.md §4; built in Phase 0).
 Architecture diagrams: C4 as code (Structurizr DSL in `docs/architecture/`, Mermaid in
 READMEs), created in Phase 1; see the showcase skill. Figma is for slides and mocks.
 
@@ -67,5 +68,5 @@ Windows working notes:
 - `python -I` ignores `PYTHONIOENCODING`; add `-X utf8` for UTF-8 output;
 - after starting a local server from a new folder or launcher, confirm it listens on
   127.0.0.1 only (`netstat -ano`); config files are often read beside the script.
-Gate: `TBD in Phase 0`.
+Gate: `uv run --locked python scripts/gate.py`.
 No Git remote: do not run git push or gh.

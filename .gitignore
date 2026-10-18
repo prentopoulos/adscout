@@ -10,3 +10,17 @@ tmp/
 
 # Private job-prep reference (names a real company; keep out of any published repo)
 AI Ops Analyst Job Playbook.pdf
+
+# Codex imports of personal slash commands (already in ~/.agents/skills)
+.agents/skills/source-command-*/
+
+# Python environment and tool caches
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+
+# Evaluation run records: kept locally, never deleted; evidence runs go in evals/evidence/
+evals/runs/
