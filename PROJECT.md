@@ -166,7 +166,7 @@ their order and boundaries are confirmed in grilling before each phase.
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| 0 | Toolchain, lockfile, quality gate (constitution copy check, verbatim digests, secrets scan, no-network tests, commit messages, links), smoke checks; offline AI evaluation scaffold | In progress |
+| 0 | Toolchain, lockfile, quality gate (constitution copy check, verbatim digests, secrets scan, no-network tests, commit messages, links), smoke checks; offline AI evaluation scaffold | Done |
 | 1 | Thin end-to-end pipeline on five seed companies with stub steps: segment and ideal-customer config, seed list, local database schema for companies, scores, briefs, drafts, approvals and runs; C4 architecture diagrams as code | Planned |
 | 2 | Enrichment with field validation, deterministic profile rules and LLM fit scoring with structured output and reasons; answers the model cost and access TBDs in §4 | Planned |
 | 3 | Read-only research agent: search and fetch tools, step cap, page budget, a citation per claim | Planned |
