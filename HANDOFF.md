@@ -4,10 +4,10 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
-Phase 0 (toolchain, local gate, offline evaluation scaffold) is complete on branch
-`phase-0/toolchain-and-gate`, OpenSpec change `phase-0-toolchain-and-gate` (archived), and is
-merged into `main` only on the owner's go-ahead. A `/code-review` of the branch ran on
-2026-10-18 and its findings are resolved (Verification below). Its grilling decisions are in
+Phase 0 (toolchain, local gate, offline evaluation scaffold) is done. OpenSpec change
+`phase-0-toolchain-and-gate` is archived, and branch `phase-0/toolchain-and-gate` was merged
+into `main` on the owner's go-ahead on 2026-10-18 (f5706ec), then deleted. A `/code-review`
+of the branch ran first and its findings are resolved (Verification below). Its grilling decisions are in
 PROJECT.md §4 and the change's design. The local job playbook PDF is the source of the
 project idea and is gitignored.
 
@@ -115,16 +115,15 @@ project idea and is gitignored.
   or PASSWORD, so a long identifier such as a `primary_key` value can be flagged; accept such
   a finding in `.secrets-allowlist` with a reason.
 - **The link check** fails on links to gitignored files, such as the local playbook PDF.
-- **OpenSpec telemetry:** the gate turns it off. Direct `openspec` commands run by agents and
-  skills (`openspec list`, `openspec status` and others) still send a usage event to
-  edge.openspec.dev unless `OPENSPEC_TELEMETRY=0` or `DO_NOT_TRACK=1` is set. Setting it for
-  the user account or in `.claude/settings.json` is the owner's call; not set as of
-  2026-10-18.
+- **OpenSpec telemetry:** OpenSpec sends a usage event to edge.openspec.dev on every command
+  unless `OPENSPEC_TELEMETRY=0` or `DO_NOT_TRACK=1` is set. The gate sets both, and
+  `.claude/settings.json` sets `OPENSPEC_TELEMETRY=0` for Claude Code sessions in this repo
+  (owner, 2026-10-18). Other terminals and harnesses (Codex) still send it unless the
+  variable is set there.
 - **Coverage** has no threshold until Phase 1.
 
 ## Next action
 
-After the owner approves the Phase 0 merge: clear the context and run `/next-phase` to start
-Phase 1 (thin end-to-end pipeline with stub steps, PROJECT.md §6). Its grilling decides the
+Phase 0 is merged. Clear the context and run `/next-phase` to start Phase 1 (thin end-to-end pipeline with stub steps, PROJECT.md §6). Its grilling decides the
 database and run-record design, checking them against the Phase 5 tracing and Phase 6
 dashboard candidates (PROJECT.md §4).
