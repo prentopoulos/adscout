@@ -6,9 +6,9 @@
 
 ## 2. Segment config and seeds
 
-- [ ] 2.1 Segment config and seed row models (strict, null reasons), safe YAML and CSV loaders, domain normalization, and the email/phone value guard, with tests for every segment-config scenario
-- [ ] 2.2 Export `config/schemas/segment.schema.json` and `seed-row.schema.json` with drift tests; canonical-JSON content hashes with the comment-edit and value-edit tests
-- [ ] 2.3 Write `config/segments/gaming-hardware-na.yaml` and `config/seeds/gaming-hardware-na.csv` (the five checked seeds with provenance notes)
+- [x] 2.1 Segment config and seed row models (strict, null reasons), safe YAML and CSV loaders, domain normalization, and the email/phone value guard, with tests for every segment-config scenario
+- [x] 2.2 Export `config/schemas/segment.schema.json` and `seed-row.schema.json` with drift tests; canonical-JSON content hashes with the comment-edit and value-edit tests
+- [x] 2.3 Write `config/segments/gaming-hardware-na.yaml` and `config/seeds/gaming-hardware-na.csv` (the five checked seeds with provenance notes)
 
 ## 3. Database
 
