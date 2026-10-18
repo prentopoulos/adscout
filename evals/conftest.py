@@ -6,19 +6,21 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from evals.runner import CASES, RUNS, SCHEMAS, RunFile, load_cases, new_run_id
+from evals.runner import CASES, RUNS, SCHEMAS, RunFile, case_files, load_cases, new_run_id
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     group = parser.getgroup("adscout evaluation")
-    group.addoption("--cases", default=str(CASES / "scaffold.jsonl"), help="case file to run")
+    group.addoption(
+        "--cases", default=str(CASES), help="case file, or folder of *.jsonl case files, to run"
+    )
     group.addoption("--runs-dir", default=str(RUNS), help="folder for run record files")
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if "case" in metafunc.fixturenames:
         path = Path(str(metafunc.config.getoption("--cases")))
-        cases = load_cases(path)
+        cases = load_cases(*case_files(path))
         if not cases:
             # pytest would skip an empty parameter set and exit 0: a vacuous pass.
             raise pytest.UsageError(f"{path} contains no cases")

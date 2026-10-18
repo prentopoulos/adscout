@@ -1,5 +1,6 @@
 """Load cases, run them through their evaluators and record one result per case."""
 
+import copy
 import hashlib
 import json
 import platform
@@ -35,18 +36,36 @@ NULL_REASONS = {
 }
 
 
-def load_cases(path: Path) -> list[Case]:
-    """Every case in a JSON Lines file; an invalid case fails the load, naming it."""
+def case_files(path: Path) -> list[Path]:
+    """The case file itself, or every `*.jsonl` file in a folder of cases."""
+    return sorted(path.glob("*.jsonl")) if path.is_dir() else [path]
+
+
+def load_cases(*paths: Path) -> list[Case]:
+    """Every case in the JSON Lines files; an invalid or repeated case fails the load, naming it."""
     cases: list[Case] = []
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if not line.strip():
-            continue
-        try:
-            cases.append(Case.model_validate_json(line))
-        except ValidationError as error:
-            raw = json.loads(line)
+    seen: dict[str, str] = {}
+    for path in paths:
+        # Newlines only: str.splitlines also breaks at U+2028 and similar characters, which
+        # JSON allows raw inside a string.
+        for number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), start=1):
+            if not line.strip():
+                continue
+            where = f"{path.name}:{number}"
+            try:
+                raw = json.loads(line)
+            except json.JSONDecodeError as error:
+                raise ValueError(f"{where}: line is not valid JSON: {error}") from error
             name = raw.get("case_id", "?") if isinstance(raw, dict) else "?"
-            raise ValueError(f"{path.name}:{number}: case {name!r} is invalid: {error}") from error
+            try:
+                # Strict, like the committed schema: "yes" is not a boolean.
+                case = Case.model_validate(raw, strict=True)
+            except ValidationError as error:
+                raise ValueError(f"{where}: case {name!r} is invalid: {error}") from error
+            if case.case_id in seen:
+                raise ValueError(f"{where}: case {name!r} repeats the case ID at {seen[name]}")
+            seen[case.case_id] = where
+            cases.append(case)
     return cases
 
 
@@ -61,7 +80,7 @@ def sha256_hex(data: bytes) -> str:
 def code_version(root: Path) -> tuple[str, bool]:
     def git(*args: str) -> str:
         return subprocess.run(
-            ["git", *args], cwd=root, capture_output=True, text=True, check=True
+            ["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True
         ).stdout.strip()
 
     return git("rev-parse", "HEAD"), bool(git("status", "--porcelain"))
@@ -74,18 +93,22 @@ def expected_outcome_met(label: Label, status: Status) -> bool:
 
 def run_case(case: Case, run_id: str, repetition: int, root: Path = ROOT) -> ResultRecord:
     revision, dirty = code_version(root)
+    # Hash the case's inputs before evaluating, and evaluate a copy, so the hash names them.
+    input_hash = sha256_hex(json.dumps(case.inputs, sort_keys=True).encode("utf-8"))
     started = started_now()
     clock = time.perf_counter()
     status: Status
     metrics: dict[str, float | int | None] = {}
+    metric_null_reasons: dict[str, str] = {}
     version = "unknown"
     if case.evaluator not in EVALUATORS:
         status, detail = "error", f"unknown evaluator {case.evaluator!r}"
     else:
         version, evaluate = EVALUATORS[case.evaluator]
         try:
-            outcome = evaluate(case.inputs)
+            outcome = evaluate(copy.deepcopy(case.inputs))
             status, detail, metrics = outcome.status, outcome.detail, outcome.metrics
+            metric_null_reasons = outcome.null_reasons
         except Exception as error:  # an evaluator crash is an error result, not a lost run
             status, detail = "error", repr(error)
     duration = time.perf_counter() - clock
@@ -100,7 +123,7 @@ def run_case(case: Case, run_id: str, repetition: int, root: Path = ROOT) -> Res
         "synthetic": case.synthetic,
         "split": case.split,
         "repetition": repetition,
-        "input_hash": sha256_hex(json.dumps(case.inputs, sort_keys=True).encode("utf-8")),
+        "input_hash": input_hash,
         "code_revision": revision,
         "code_dirty": dirty,
         "lock_digest": sha256_hex((root / "uv.lock").read_bytes()),
@@ -118,10 +141,19 @@ def run_case(case: Case, run_id: str, repetition: int, root: Path = ROOT) -> Res
         "started_at": started,
         "duration_s": duration,
         "source": "fixture",
-        "null_reasons": NULL_REASONS,
+        "null_reasons": NULL_REASONS
+        | {f"metrics.{key}": reason for key, reason in metric_null_reasons.items()},
     }
     fields |= dict.fromkeys(NULL_REASONS)
-    return ResultRecord.model_validate(fields)
+    try:
+        return ResultRecord.model_validate(fields)
+    except ValidationError as error:  # an outcome that cannot be recorded is an error result
+        fields |= {
+            "status": "error",
+            "validation": Validation(outcome="not_run", detail=f"outcome not recordable: {error}"),
+            "metrics": {},
+        }
+        return ResultRecord.model_validate(fields)
 
 
 class RunFile:

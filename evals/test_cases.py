@@ -9,9 +9,9 @@ from evals.runner import RunFile, expected_outcome_met, run_case
 
 
 def unexplained_nulls(record: dict[str, Any]) -> list[str]:
-    return [
-        key for key, value in record.items() if value is None and key not in record["null_reasons"]
-    ]
+    fields = [key for key, value in record.items() if value is None]
+    metrics = [f"metrics.{key}" for key, value in record["metrics"].items() if value is None]
+    return [key for key in fields + metrics if key not in record["null_reasons"]]
 
 
 def test_case(case: Case, run_file: RunFile, result_validator: Draft202012Validator) -> None:

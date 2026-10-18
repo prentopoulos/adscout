@@ -2,7 +2,8 @@
 
 The result record follows the adscout-eval-review skill ("Record and compare honestly"):
 every result names its inputs, versions, configuration, budgets and platform, and a field
-without a value is null with a reason in `null_reasons`, never zero. Model and token fields
+without a value is null with a reason in `null_reasons` (a metric's under `metrics.<name>`),
+never zero. Model and token fields
 borrow OpenTelemetry GenAI attribute names.
 """
 
@@ -100,6 +101,11 @@ class ResultRecord(BaseModel):
             info.alias or name
             for name, info in type(self).model_fields.items()
             if getattr(self, name) is None and (info.alias or name) not in self.null_reasons
+        ]
+        missing += [
+            f"metrics.{key}"
+            for key, value in self.metrics.items()
+            if value is None and f"metrics.{key}" not in self.null_reasons
         ]
         if missing:
             raise ValueError(f"null fields without a reason in null_reasons: {missing}")
