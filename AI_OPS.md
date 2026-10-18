@@ -7,7 +7,8 @@ than maintaining duplicate specifications. Read
 
 ## Capability map
 
-Nothing is implemented yet. "Deferred" below means planned in PROJECT.md §6 but not built.
+No AI capability is implemented yet: Phase 1 built the pipeline skeleton with stub steps and
+no model call. "Deferred" below means planned in PROJECT.md §6 but not built.
 
 | Capability | Status | Reason / evidence or task | Recheck when |
 |---|---|---|---|
@@ -16,8 +17,8 @@ Nothing is implemented yet. "Deferred" below means planned in PROJECT.md §6 but
 | RAG / document ingestion | deferred | No index planned; the research agent reads pages directly and drafts use configured media-kit facts | First indexed source or ingestion change |
 | Semantic or response caching | deferred | Playbook proposes provider prompt caching for the fixed draft prompt (Phase 4); no response cache planned | Cache enabled or scope/index changes |
 | Model training / feature pipelines | deferred | A classic lead-scoring model needs real won/lost outcomes, which this project lacks | Real outcome labels become available |
-| Tool actions / external adapters | deferred | Research agent gets read-only search and fetch tools (Phase 3); the CRM writer and send function are code paths, not model tools (§5) | New tool, destination or write action |
-| Persistent state / replay | deferred | Local database of companies, scores, briefs, drafts, approvals and runs (Phase 1); resumable runs TBD | Memory or resumable execution added |
+| Tool actions / external adapters | partial (local only) | The single CRM writer exists and writes only the local fake CRM (Phase 1, `src/adscout/crm/writer.py`); the real sandbox adapter is Phase 4. Research agent gets read-only search and fetch tools (Phase 3); the CRM writer and send function are code paths, not model tools (§5) | New tool, destination or write action |
+| Persistent state / replay | enabled (local) | SQLite database of companies, leads, step outcomes, outputs, approvals and runs (Phase 1). A run stops at approval; approval and CRM sync are separate runs. Leads of a failed or interrupted run re-enter the next run; nothing is replayed mid-step | Memory, checkpoints or mid-step resume added |
 | Multiple users / tenants | deferred | Single user on the owner's PC (PROJECT.md §2) | Second user, shared listener or worker |
 | Generated code execution | deferred | Not planned | Code execution tool enabled |
 | MCP / external tool servers | deferred | Not planned | Server or tool contract changes |
@@ -29,17 +30,18 @@ Nothing is implemented yet. "Deferred" below means planned in PROJECT.md §6 but
 | Record | Location / current status |
 |---|---|
 | Design choices: autonomy, pattern, framework, model tiers, hosting, fallback | Phase 1 design (decision 23): a workflow with one agentic step, the pattern per step, local single-user hosting and the security check. Model tiers, access and fallback TBD in Phase 2; agent framework TBD in Phase 3 (PROJECT.md §4) |
-| System bundle and last known-good version | TBD; none exists |
+| System bundle and last known-good version | Every run row records code revision and dirty flag, `uv.lock` digest, package, agent and prompt versions, schema version and config, seed-list and stub-script hashes (Phase 1). Last known-good: the Phase 1 evidence runs at c957258 (`evidence/runs/`) |
 | Evaluation plan, held-out cases and evaluator | TBD in Phase 5 (PROJECT.md §3 outline). Harness, case and result formats in `evals/` (Phase 0); only synthetic scaffold cases exist |
 | Offline deterministic check command | `uv run --locked python scripts/gate.py`; its evaluation step is `uv run --locked pytest evals` |
 | Authorized provider-evaluation command and budget | TBD; behind the spend gate |
-| Run records / metrics / alerts | Evaluation run records in gitignored `evals/runs/`, never deleted; cited runs in `evals/evidence/` (Phase 0). Pipeline runs table in Phase 1, tracing with cost per lead in Phase 5 |
+| Run records / metrics / alerts | Evaluation run records in gitignored `evals/runs/`, never deleted; cited runs in `evals/evidence/` (Phase 0). Pipeline runs in `runs`, `step_runs` and `lead_step_outcomes` of the gitignored `data/adscout.db`; `adscout check` validates a run independently; exports cited as evidence in `evidence/runs/` (Phase 1). Tracing with cost per lead in Phase 5 |
 | Release evidence and stop/recovery runbook | TBD; not planned beyond the portfolio README |
 | Operational owner and maintenance/recheck cadence | Peter Rentopoulos; cadence TBD |
 
 ## Current operational limits
 
-No limits are enforced yet. Decided by §5: the research agent has a step cap and a page budget
+Enforced since Phase 1: one live run at a time, and each run records budgets of zero model and
+network calls (nothing in Phase 1 makes either). Decided by §5: the research agent has a step cap and a page budget
 (values TBD in Phase 3), read-only tools, and no send or write access. Playbook proposals to
 confirm: research only for leads above the fit threshold; at most two draft revisions before
 handing to a person. Model, token, time, retry, concurrency and cost bounds are TBD behind the
@@ -50,6 +52,9 @@ TBD; only public company-level data and synthetic contacts are stored (§5).
 
 ## Latest scoped evidence
 
-No AI runtime evaluation has been established by installing this kit. Record actual candidate
+Phase 1 (2026-10-18): three evidence runs of the stub pipeline on the five real seeds at
+c957258, each passing `adscout check` and an independent check of the exports (HANDOFF.md). They
+show the pipeline's structure, not AI behaviour: no model ran, so AI runtime evaluation is
+not_run. No AI runtime evaluation has been established by installing this kit. Record actual candidate
 and baseline versions, case counts, commands, pass/fail/not_run/stale outcomes and limitations
 as implementation proceeds. A deferred capability needs fresh evidence before it is enabled.
