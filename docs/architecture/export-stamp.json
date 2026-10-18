@@ -1,0 +1,43 @@
+{
+  "workspace_sha256": "fea34118c9329522b3b6a7c6561aa586a12923e8eb2c2afc8b9faf542aeda594",
+  "exported_with": "structurizr-2026.09.19-playwright.war on Microsoft OpenJDK 21.0.12.1",
+  "exported_on": "2026-10-18",
+  "files": [
+    {
+      "path": "svg/Context.svg",
+      "sha256": "d7d50787ffd114a65fac55083ce8a1bb980f3de9cf5be42798ff7a95b56c8e68"
+    },
+    {
+      "path": "svg/Context-key.svg",
+      "sha256": "e8fd15056c049439c94c507dbf74be51291cffecfd4e788cc39d40003291b7c6"
+    },
+    {
+      "path": "mermaid/structurizr-Context.mmd",
+      "sha256": "7c471e199be3571b05adb58626ba7a168b11005c0f4b1b59be7197677dba44d0"
+    },
+    {
+      "path": "svg/ContainersBuilt.svg",
+      "sha256": "02fce2943faffae84928cf8fa3d6f8538b53a68761522ec4735a5381875b01ae"
+    },
+    {
+      "path": "svg/ContainersBuilt-key.svg",
+      "sha256": "9b314d7a43d64656e317cf6e39f9f4e01d83c746b3107de1d0882975f0acfd2e"
+    },
+    {
+      "path": "mermaid/structurizr-ContainersBuilt.mmd",
+      "sha256": "0e35a792b8580ac5a1d98eae770abb5eefd4dc55e6c8b1f59d93892df3b3c390"
+    },
+    {
+      "path": "svg/ContainersTarget.svg",
+      "sha256": "d2f2e8d5d2c719a98371b7ce562810ad84aa35beac9c2a72b2665d355d67b185"
+    },
+    {
+      "path": "svg/ContainersTarget-key.svg",
+      "sha256": "77b47698c800488bb1187d396252ff2ebaec5e889682a4d4ed361834e248dc7f"
+    },
+    {
+      "path": "mermaid/structurizr-ContainersTarget.mmd",
+      "sha256": "a160dd26ffd5ef588d6e319dc9b72138f3c390a570b8bc9ca45dff532927ee15"
+    }
+  ]
+}

@@ -35,10 +35,10 @@
 
 ## 6. Architecture diagrams
 
-- [ ] 6.1 Install Microsoft OpenJDK 21 beside Java 11 and download the Structurizr `-playwright` war outside the repo (owner-approved, Q10); record versions in HANDOFF
-- [ ] 6.2 Write `docs/architecture/workspace.dsl` (context, built and target container views, Planned tags), validate it, export SVG and Mermaid, and commit the export stamp with its drift test
-- [ ] 6.3 `scripts/erd.py` generating `docs/architecture/erd.md` with its drift test
-- [ ] 6.4 Update the showcase skill's C4 reference with the Java war export commands
+- [x] 6.1 Install Microsoft OpenJDK 21 beside Java 11 and download the Structurizr `-playwright` war outside the repo (owner-approved, Q10); record versions in HANDOFF
+- [x] 6.2 Write `docs/architecture/workspace.dsl` (context, built and target container views, Planned tags), validate it, export SVG and Mermaid, and commit the export stamp with its drift test
+- [x] 6.3 `scripts/erd.py` generating `docs/architecture/erd.md` with its drift test
+- [x] 6.4 Update the showcase skill's C4 reference with the Java war export commands
 
 ## 7. Verification and close
 

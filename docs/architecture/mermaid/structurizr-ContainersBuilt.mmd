@@ -1,0 +1,28 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["Container View: AdScout"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Ad sales researcher</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Works at a publisher; picks a<br />segment, reviews the funnel<br />and approves drafts.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+
+    subgraph 9 ["AdScout"]
+      style 9 fill:#ffffff,stroke:#0b4884,color:#0b4884
+
+      10["<div style='font-weight: bold'>Command-line pipeline</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python CLI]</div><div style='font-size: 80%; margin-top:10px'>Sources seeds, runs each step<br />(stubs in Phase 1), approves<br />with a stub approver, syncs<br />through the one CRM writer<br />and checks every run.</div>"]
+      style 10 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      11["<div style='font-weight: bold'>Config files</div><div style='font-size: 70%; margin-top: 0px'>[Container: YAML and CSV files]</div><div style='font-size: 80%; margin-top:10px'>Segment rules, seed list and<br />the stub script with its<br />sources.</div>"]
+      style 11 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      12[("<div style='font-weight: bold'>Pipeline database</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite file]</div><div style='font-size: 80%; margin-top:10px'>Companies, leads with fixed<br />source fields, step outcomes,<br />drafts, approvals and run<br />records.</div>")]
+      style 12 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      13[("<div style='font-weight: bold'>Local fake CRM</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite tables]</div><div style='font-size: 80%; margin-top:10px'>Stand-in for the CRM sandbox<br />until Phase 4: accounts,<br />field owners and a write log.</div>")]
+      style 13 fill:#1168bd,stroke:#0b4884,color:#ffffff
+    end
+
+    1-- "<div>Runs a segment and the stub<br />approver</div><div style='font-size: 70%'>[Command line]</div>" -->10
+    10-- "<div>Reads segment rules, seeds<br />and the stub script</div><div style='font-size: 70%'>[YAML, CSV]</div>" -->11
+    10-- "<div>Stores leads, outcomes,<br />drafts and run records</div><div style='font-size: 70%'>[SQL]</div>" -->12
+    10-- "<div>Writes approved leads through<br />the one CRM writer</div><div style='font-size: 70%'>[SQL]</div>" -->13
+
+  end

@@ -140,6 +140,13 @@ project idea and is gitignored.
   (owner, 2026-10-18). Other terminals and harnesses (Codex) still send it unless the
   variable is set there.
 - **Coverage** has no threshold until Phase 1 task 1.2 adds 90%.
+- **Diagram tooling (owner-approved, 2026-10-18):** Microsoft OpenJDK 21.0.12.1 unzipped to
+  `C:\Users\Peter\tools\jdk-21.0.12.1+1` (zip SHA-256 matched Microsoft's published
+  `192441a9…5ce07f`; no installer, no PATH change; Java 11 stays the default), and
+  `C:\Users\Peter\tools\structurizr\structurizr-2026.09.19-playwright.war` (no checksum is
+  published; SHA-256 `7b717f14…077d90` as downloaded). The first SVG export downloaded
+  Playwright's WebKit to `%LOCALAPPDATA%\ms-playwright`. Commands are in the showcase skill's C4
+  reference and the header of `docs/architecture/workspace.dsl`.
 
 ## Next action
 

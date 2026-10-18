@@ -75,6 +75,21 @@ a verb label and a technology. Structurizr draws the key itself.
 - **Export:** Structurizr's `export` command writes `-format svg` or `png` (images for `docs/`),
   `mermaid` (for the README) and `plantuml/c4plantuml`. See docs.structurizr.com/export for the
   exact invocation of the current release.
+- **Without Docker (checked 2026-10-18):** current Structurizr releases need Java 21, and only
+  the `-playwright` builds export SVG or PNG. Unzip Microsoft's OpenJDK 21 into a user folder
+  (no installer, no PATH change), download `structurizr-<version>-playwright.war` outside the
+  repository, then run, from the repository root:
+
+  ```sh
+  java -jar structurizr-<version>-playwright.war validate -workspace docs/architecture/workspace.dsl
+  java -jar structurizr-<version>-playwright.war export -workspace docs/architecture/workspace.dsl -format svg -output docs/architecture/svg
+  java -jar structurizr-<version>-playwright.war export -workspace docs/architecture/workspace.dsl -format mermaid -output docs/architecture/mermaid
+  ```
+
+  `validate` prints errors but exits 0, so read its output. The first SVG export downloads a
+  Playwright browser (WebKit, about 60 MB) to the user profile. `-format png` into a scratch
+  folder gives images to inspect the layout. AdScout's `scripts/architecture.py stamp` then
+  records the export so its gate can tell when the model changed without a re-export.
 - **Mermaid in the README:** paste the exported definition into a fenced code block marked
   `mermaid`, and GitHub renders it. Mermaid's own C4 syntax is still experimental, so prefer
   exporting from the Structurizr model.
