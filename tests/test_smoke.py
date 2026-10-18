@@ -40,6 +40,7 @@ def test_metadata_guards_against_upload() -> None:
     assert meta.get("License-Expression") is None
 
 
+@pytest.mark.filterwarnings("ignore:A test tried to use socket")
 def test_tests_cannot_open_sockets() -> None:
     with pytest.raises(SocketBlockedError):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM)

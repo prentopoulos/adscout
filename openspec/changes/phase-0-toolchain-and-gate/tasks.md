@@ -11,12 +11,12 @@
 
 ## 3. Gate and checks
 
-- [ ] 3.1 Add `scripts/gate.py` running the twelve steps in order, reporting every step and exiting non-zero on any failure; implement the lockfile, format, lint, type, test and OpenSpec steps (with the missing-CLI hint). Test the orchestrator's keep-going and exit behaviour.
-- [ ] 3.2 Constitution copy check with tests for an edited rule, a missing rule, reordered rules, a version-line drift and a "Last amended" mismatch.
-- [ ] 3.3 Verbatim digest check with tests for a changed byte and a missing file.
-- [ ] 3.4 Secrets scan, `.env` ignore and untracked check, and `.secrets-allowlist`, with tests that build fake keys at runtime for each known format, a generic long-literal assignment, a tracked `.env`, and an allowlisted entry; findings never print the value.
-- [ ] 3.5 Commit message check with tests for a valid subject, a bad subject, and an exempt merge commit, using a temporary Git repository.
-- [ ] 3.6 Documentation checks (local links, pointer frontmatter, skill name and description) with tests for a broken link, pointer drift and a name/folder mismatch.
+- [x] 3.1 Add `scripts/gate.py` running the twelve steps in order, reporting every step and exiting non-zero on any failure; implement the lockfile, format, lint, type, test and OpenSpec steps (with the missing-CLI hint). Test the orchestrator's keep-going and exit behaviour.
+- [x] 3.2 Constitution copy check with tests for an edited rule, a missing rule, reordered rules, a version-line drift and a "Last amended" mismatch.
+- [x] 3.3 Verbatim digest check with tests for a changed byte and a missing file.
+- [x] 3.4 Secrets scan, `.env` ignore and untracked check, and `.secrets-allowlist`, with tests that build fake keys at runtime for each known format, a generic long-literal assignment, a tracked `.env`, and an allowlisted entry; findings never print the value.
+- [x] 3.5 Commit message check with tests for a valid subject, a bad subject, and an exempt merge commit, using a temporary Git repository.
+- [x] 3.6 Documentation checks (local links, pointer frontmatter, skill name and description) with tests for a broken link, pointer drift and a name/folder mismatch.
 
 ## 4. Offline evaluation scaffold
 

@@ -40,7 +40,7 @@ select = ["E", "W", "F", "I", "B", "UP", "S", "TID", "SIM", "RUF"]
 [tool.mypy]
 strict = true
 python_version = "3.13"
-files = ["src"]
+files = ["src", "scripts"]
 mypy_path = ["src", "scripts"]
 explicit_package_bases = true
 plugins = ["pydantic.mypy"]
