@@ -28,7 +28,7 @@ Nothing is implemented yet. "Deferred" below means planned in PROJECT.md §6 but
 
 | Record | Location / current status |
 |---|---|
-| Design choices: autonomy, pattern, framework, model tiers, hosting, fallback | TBD in the Phase 1 design; playbook proposal: workflow with one ReAct research step, evaluator-optimizer drafts, fast tier for scoring, workhorse tier for research and drafts |
+| Design choices: autonomy, pattern, framework, model tiers, hosting, fallback | Phase 1 design (decision 23): a workflow with one agentic step, the pattern per step, local single-user hosting and the security check. Model tiers, access and fallback TBD in Phase 2; agent framework TBD in Phase 3 (PROJECT.md §4) |
 | System bundle and last known-good version | TBD; none exists |
 | Evaluation plan, held-out cases and evaluator | TBD in Phase 5 (PROJECT.md §3 outline). Harness, case and result formats in `evals/` (Phase 0); only synthetic scaffold cases exist |
 | Offline deterministic check command | `uv run --locked python scripts/gate.py`; its evaluation step is `uv run --locked pytest evals` |

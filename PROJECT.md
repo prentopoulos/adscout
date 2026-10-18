@@ -36,8 +36,13 @@ personal contact data, and its revenue is simulated.
 - Out of scope: real sends, real personal data, multi-agent orchestration, fine-tuning,
   self-hosted models, Kubernetes. Deferred: an n8n low-code variant of the source, enrich and
   draft steps (playbook option), a classic lead-scoring model (needs real outcomes).
-- TBD: which steps call live services versus recorded fixtures in each phase; the first
-  segment; seed-list size (playbook proposal: 20 to 50 companies).
+- First segment (owner, 2026-10-18): gaming hardware brands in North America, meaning
+  peripherals, PC components, prebuilt gaming PCs and console accessories from brands that sell
+  to consumers in the US and Canada, wherever they are headquartered. Phase 1 runs five real
+  seed companies, name and domain only.
+- TBD: which steps call live services versus recorded fixtures in each phase; the full
+  seed-list size (playbook proposal: 20 to 50 companies), decided in Phase 2 with the
+  live-read gate's run size.
 
 ## 3. Acceptance and evidence
 
@@ -49,7 +54,9 @@ personal contact data, and its revenue is simulated.
   (all pass), about 10 planted-injection pages (all pass), and cost per qualified lead and
   minutes per account for a full segment run (minutes per account added by the owner,
   2026-10-17, from playbook slide 20). Optional: the same suite on two models, compared by
-  cost per qualified lead.
+  cost per qualified lead. Before Phase 5 the owner times their own manual research on the
+  five seed companies under a short written routine, as the minutes-per-account baseline
+  (owner, 2026-10-18).
 - Business-level outcomes (reply, meeting and revenue rates) cannot be measured without real
   sends; the dashboard demonstrates the loop with simulated revenue and says so.
 - Only measured numbers are reported; bracketed playbook targets stay TBD until measured.
@@ -92,6 +99,28 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
     `Private :: Do Not Upload` classifier.
   - Decisions are recorded here and in each OpenSpec design; no separate decision-record
     folder.
+- Decided in Phase 1 grilling, 2026-10-18 (owner calls unless marked settled; basis and
+  source in the Phase 1 design):
+  - Database: SQLite through Python's standard `sqlite3` (WAL, foreign keys, STRICT
+    tables), with SQL views as the dashboard's read interface. File `data/adscout.db`,
+    gitignored, never reset (settled).
+  - Migrations: numbered SQL files with checksums and a committed `schema.sql` snapshot
+    (settled).
+  - A lead is one company within one segment; companies are keyed by normalized domain. Lead
+    IDs are UUIDv7. Agent version is `<package version>+g<12-char commit>`, with `.dirty` for
+    an uncommitted tree; prompt version is `none` until a prompt exists.
+  - Run records live in the database (`runs`, `step_runs`, `lead_step_outcomes`); a run
+    stops at approval, and approval and CRM sync are separate runs. Exports cited as evidence
+    are committed under `evidence/runs/`.
+  - Segment config is YAML validated by pydantic with a committed JSON Schema; pydantic and
+    PyYAML become runtime dependencies. Seeds are CSV.
+  - Commands: `adscout db upgrade`, `run`, `approve`, `sync`, `runs`, `funnel`, `check`,
+    `export`.
+  - Diagrams: Structurizr's `-playwright` war on Microsoft OpenJDK 21, installed on the
+    owner's PC outside the repo; no hosted editor. ERD as generated Mermaid (settled).
+  - Gate coverage threshold 90% on `src/` and `scripts/`, raised only (settled).
+  - Agent framework (provider SDK loop or LangGraph) is decided in Phase 3; model tiers,
+    access and fallback stay with Phase 2 (below).
 - Model cost and access, TBD: Phase 2 grilling must answer each item before the first model
   call. Options are in the AI-ops skill's `llm-rag.md` (§ Reduce spend, § Gateway and
   budgets) and `design-choices.md`.
@@ -193,6 +222,10 @@ their order and boundaries are confirmed in grilling before each phase.
   dependencies (pip-audit querying PyPI's advisory service at phase close) is not a live read
   under this gate. Scope: that audit only; pipeline searches, fetches and enrichment stay
   gated.
+- Decision (owner, 2026-10-18): the agent may open each Phase 1 seed candidate's home page
+  once to confirm that its domain belongs to that company. Scope: those checks only, done on
+  2026-10-18 for six candidates, one of which refused (Phase 1 design); pipeline searches,
+  fetches and enrichment stay gated.
 
 ### ⛔ Before any message is sent
 

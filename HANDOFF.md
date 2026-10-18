@@ -4,6 +4,21 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
+Phase 1 (thin end-to-end pipeline with stub steps) is specified and not yet built. Branch
+`phase-1/thin-pipeline` holds the spec-only commit for OpenSpec change
+`phase-1-thin-pipeline` (proposal, design, specs, tasks), awaiting the owner's review. No
+Phase 1 task is done.
+
+- Grilling ran on 2026-10-18; the owner accepted every recommendation (Q1–Q16). Decisions are
+  in PROJECT.md §2–4 and §6 and in the change's design, with who made each.
+- First segment: gaming hardware brands in North America (settled with the owner; do not
+  reopen).
+- Seeds: corsair.com, razer.com, turtlebeach.com, nzxt.com and 8bitdo.com, each checked on its
+  home page under the owner's scoped live-read decision (PROJECT.md §6). steelseries.com
+  answered HTTP 403 and was left out.
+- The owner approved installing Microsoft OpenJDK 21 and the Structurizr `-playwright` war
+  for diagram export (task 6.1); not installed yet.
+
 Phase 0 (toolchain, local gate, offline evaluation scaffold) is done. OpenSpec change
 `phase-0-toolchain-and-gate` is archived, and branch `phase-0/toolchain-and-gate` was merged
 into `main` on the owner's go-ahead on 2026-10-18 (f5706ec), then deleted. A `/code-review`
@@ -37,7 +52,7 @@ project idea and is gitignored.
 - `.gitattributes` keeps the 26 verbatim skill files byte-exact, and every other text file is
   LF. The duplicated Codex `source-command-opsx-*` folders are removed.
 
-## Verification (2026-10-18)
+## Phase 0 verification (2026-10-18)
 
 - **Gate:** all 12 steps pass at 293a781, the last code commit. 93 tests; coverage of `src/`
   and `scripts/` 90%; 6 scaffold cases. (Before the review fixes: a7712ad, 65 tests, 88%.)
@@ -103,7 +118,8 @@ project idea and is gitignored.
   held for the working tree only. Fixed in d1cf7cf.
 - **Temp folder:** in the agent's shell on this PC, `%TEMP%\pytest-of-Peter` (created
   2026-10-04) denies access, so pytest's `tmp_path` fails there. Runs set
-  `PYTEST_DEBUG_TEMPROOT` to a short writable folder. Deleting that folder may fix it. Keep
+  `PYTEST_DEBUG_TEMPROOT` to a short writable folder; `C:\Users\Peter\AppData\Local\Temp\p`
+  worked on 2026-10-18, while the deeper agent scratchpad hit the path limit. Deleting that folder may fix it. Keep
   the temp root short: Windows' 260-character path limit breaks the digest tests under deep
   folders.
 - **Ruff 0.17** also formats Markdown code blocks, so `pyproject.toml` limits ruff to Python
@@ -120,10 +136,10 @@ project idea and is gitignored.
   `.claude/settings.json` sets `OPENSPEC_TELEMETRY=0` for Claude Code sessions in this repo
   (owner, 2026-10-18). Other terminals and harnesses (Codex) still send it unless the
   variable is set there.
-- **Coverage** has no threshold until Phase 1.
+- **Coverage** has no threshold until Phase 1 task 1.2 adds 90%.
 
 ## Next action
 
-Phase 0 is merged. Clear the context and run `/next-phase` to start Phase 1 (thin end-to-end pipeline with stub steps, PROJECT.md §6). Its grilling decides the
-database and run-record design, checking them against the Phase 5 tracing and Phase 6
-dashboard candidates (PROJECT.md §4).
+If the owner has not yet reviewed the Phase 1 spec on `phase-1/thin-pipeline`, ask for that
+review. Once approved, implement `phase-1-thin-pipeline` from task 1.1 with the OpenSpec apply
+workflow, setting Phase 1 to In progress in the first implementation commit.
