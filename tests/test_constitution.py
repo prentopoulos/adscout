@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from checks import constitution
 from conftest import ROOT
 

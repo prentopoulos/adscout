@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+
 from checks import digests
 from conftest import ROOT
 

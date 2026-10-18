@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-import gate
 import pytest
+
+import gate
 from gate import Step, run_steps
 
 

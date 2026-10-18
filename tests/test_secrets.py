@@ -6,6 +6,7 @@ Fake keys are assembled at runtime so this file never contains one.
 from pathlib import Path
 
 import pytest
+
 from checks import secrets
 from conftest import run_git
 

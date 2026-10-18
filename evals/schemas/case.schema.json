@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One fixed evaluation case.",
+  "properties": {
+    "case_id": {
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "case_set": {
+      "title": "Case Set",
+      "type": "string"
+    },
+    "case_set_version": {
+      "title": "Case Set Version",
+      "type": "string"
+    },
+    "step": {
+      "enum": [
+        "scaffold",
+        "rules",
+        "enrich",
+        "score",
+        "research",
+        "draft",
+        "injection",
+        "cost"
+      ],
+      "title": "Step",
+      "type": "string"
+    },
+    "layer": {
+      "enum": [
+        "deterministic",
+        "judged",
+        "operational"
+      ],
+      "title": "Layer",
+      "type": "string"
+    },
+    "label": {
+      "enum": [
+        "normal",
+        "edge",
+        "deliberately_failing"
+      ],
+      "title": "Label",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "split": {
+      "enum": [
+        "tuning",
+        "held_out"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "evaluator": {
+      "title": "Evaluator",
+      "type": "string"
+    },
+    "inputs": {
+      "additionalProperties": true,
+      "title": "Inputs",
+      "type": "object"
+    },
+    "expected": {
+      "additionalProperties": true,
+      "title": "Expected",
+      "type": "object"
+    },
+    "tags": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "case_id",
+    "case_set",
+    "case_set_version",
+    "step",
+    "layer",
+    "label",
+    "synthetic",
+    "split",
+    "evaluator",
+    "inputs",
+    "expected"
+  ],
+  "title": "Case",
+  "type": "object"
+}

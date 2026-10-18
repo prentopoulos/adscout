@@ -20,9 +20,9 @@
 
 ## 4. Offline evaluation scaffold
 
-- [ ] 4.1 Add pydantic case and result models under `evals/`, export them to `evals/schemas/case.schema.json` and `result.schema.json`, and add a test that fails when an export differs from its committed file.
-- [ ] 4.2 Add the runner (pytest parametrized over cases) writing one record per case and repetition to `evals/runs/<run_id>.jsonl`, with explained nulls and `source: "fixture"`; validate each record with `jsonschema`; never overwrite or delete a run file.
-- [ ] 4.3 Add the synthetic scaffold case set (normal, edge and deliberately failing cases) and wire the gate's evaluation step to pass only when normal and edge pass and the deliberately failing case fails; test that a wrongly passing deliberately failing case fails the step.
+- [x] 4.1 Add pydantic case and result models under `evals/`, export them to `evals/schemas/case.schema.json` and `result.schema.json`, and add a test that fails when an export differs from its committed file.
+- [x] 4.2 Add the runner (pytest parametrized over cases) writing one record per case and repetition to `evals/runs/<run_id>.jsonl`, with explained nulls and `source: "fixture"`; validate each record with `jsonschema`; never overwrite or delete a run file.
+- [x] 4.3 Add the synthetic scaffold case set (normal, edge and deliberately failing cases) and wire the gate's evaluation step to pass only when normal and edge pass and the deliberately failing case fails; test that a wrongly passing deliberately failing case fails the step.
 
 ## 5. Documents and phase close
 
