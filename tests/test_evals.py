@@ -120,6 +120,14 @@ def test_eval_step_passes_on_scaffold(tmp_path: Path) -> None:
     assert len(run.read_text(encoding="utf-8").splitlines()) == 6
 
 
+def test_eval_step_fails_on_empty_case_file(tmp_path: Path) -> None:
+    cases = tmp_path / "cases.jsonl"
+    cases.write_text("", encoding="utf-8")
+    result = run_eval_step(cases, tmp_path / "runs")
+    assert result.returncode != 0, result.stdout
+    assert "contains no cases" in result.stdout + result.stderr
+
+
 def test_eval_step_fails_when_deliberately_failing_case_passes(tmp_path: Path) -> None:
     wrongly_passing = scaffold_case(case_id="wrongly-passing", label="deliberately_failing")
     cases = write_cases(tmp_path / "cases.jsonl", wrongly_passing)

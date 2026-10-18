@@ -11,7 +11,9 @@ environment with `uv sync --locked` without installing anything outside the proj
 
 #### Scenario: Stale lockfile is rejected
 - **WHEN** `pyproject.toml` changes a dependency without updating `uv.lock`
-- **THEN** the gate's lockfile step fails and names the lockfile as out of date
+- **THEN** the gate fails and names `uv.lock` as needing an update: `uv run --locked`
+  refuses before the first step, and the lockfile step fails when the gate runs under the
+  environment's Python directly
 
 ### Requirement: Package and command
 The project SHALL ship an importable package `adscout` in src layout and an `adscout` console

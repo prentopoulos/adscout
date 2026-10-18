@@ -17,7 +17,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if "case" in metafunc.fixturenames:
-        cases = load_cases(Path(str(metafunc.config.getoption("--cases"))))
+        path = Path(str(metafunc.config.getoption("--cases")))
+        cases = load_cases(path)
+        if not cases:
+            # pytest would skip an empty parameter set and exit 0: a vacuous pass.
+            raise pytest.UsageError(f"{path} contains no cases")
         metafunc.parametrize("case", cases, ids=[case.case_id for case in cases])
 
 
