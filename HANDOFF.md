@@ -4,21 +4,23 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
-Agent skills and OpenSpec were set up on 2026-10-17 from the new_project_agent_setup kit.
-Fresh project on branch `main`; no phase has started and no OpenSpec change exists. The local
-job playbook PDF is the source of the project idea and is gitignored.
+Phase 0 is in progress on branch `phase-0/toolchain-and-gate`, OpenSpec change
+`phase-0-toolchain-and-gate`. Its grilling decisions are in PROJECT.md §4 and the change's
+design. OpenSpec `tasks.md` holds task status. The local job playbook PDF is the source of
+the project idea and is gitignored.
 
 ## Implemented behavior
 
-None yet. No application code, dependencies, accounts or credentials exist.
+None yet beyond repository hygiene. No accounts or credentials exist.
+
+## Findings
+
+- Setup commit 3de5377 stored the 26 verbatim skill files with LF line endings, so their
+  committed bytes did not match the source manifest. Only the working copies (CRLF) matched,
+  so the setup note "26 verbatim copies match the kit manifest" held for the working tree
+  only. Phase 0 task 1.1 adds `.gitattributes` (`-text` for the verbatim folders) and
+  re-commits them; every index blob now matches its manifest digest.
 
 ## Verification and next action
 
-Setup verification on 2026-10-17: kit validator passed; 26 verbatim copies match the kit
-manifest; scoped template scan clean; Claude pointers match their canonical skills; local
-Markdown links resolve; `openspec validate --all --strict` reports nothing to validate. No AI
-runtime evaluation exists (not_run): there is no system bundle yet.
-
-Next action: clear the context and run `/next-phase` to start Phase 0. Its grilling settles
-the stack (PROJECT.md §4 playbook proposal), then Phase 0 builds the toolchain, lockfile, the
-local gate with the constitution copy check, smoke checks and the offline evaluation scaffold.
+Next action: continue the open tasks in `openspec/changes/phase-0-toolchain-and-gate/tasks.md`.
