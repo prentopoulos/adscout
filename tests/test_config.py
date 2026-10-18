@@ -167,6 +167,8 @@ def test_duplicate_seed_domains_are_reported_not_merged(tmp_path: Path) -> None:
         ("revenue $1,472.5M in 2025", None),
         ("checked on 2026-10-18", None),
         ("sec.gov/Archives/edgar/data/1743759/000119312526048668/crsr-ex99_1.htm", None),
+        ("https://www.businesswire.com/news/home/20210324005217/en/Razer", None),
+        ("order 20210324005217", "a phone number"),
     ],
 )
 def test_contact_kind(text: str, kind: str | None) -> None:

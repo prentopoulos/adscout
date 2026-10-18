@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from adscout.config import SeedRow, SegmentConfig
+from adscout.pipeline.stubs import StubScript
 
 ROOT = Path(__file__).resolve().parents[2]
 JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
@@ -25,6 +26,7 @@ def schema_files() -> dict[str, type[BaseModel]]:
     return {
         "config/schemas/segment.schema.json": SegmentConfig,
         "config/schemas/seed-row.schema.json": SeedRow,
+        "config/schemas/stub-script.schema.json": StubScript,
     }
 
 

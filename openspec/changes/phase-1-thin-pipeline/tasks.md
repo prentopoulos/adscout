@@ -19,11 +19,11 @@
 
 ## 4. Pipeline run
 
-- [ ] 4.1 Step contracts (pydantic input and output models) and the runner: run and step records, timings, null reasons, status, error category, failed-run handling, stale-run interruption and the concurrent-run refusal
-- [ ] 4.2 Real `source` step: seed loading, domain dedupe against the seed list, existing leads and the CRM, exclusions; lead creation with immutable fields and config snapshots
-- [ ] 4.3 Stub steps for enrich, rules, score, research and draft driven by `config/stubs/gaming-hardware-na.yaml` (outcomes, rationale and sources from the design's desk research), plus a synthetic fixture script that exercises every exit reason and flag; `adscout run`
-- [ ] 4.4 Stub approver bound to the draft SHA-256 and `adscout approve --stub`
-- [ ] 4.5 CRM writer and local fake CRM (dedupe by domain, owned fields only, person-edited fields kept with a logged conflict, idempotent) and `adscout sync`, with the CRM-writer scenarios and a test that no other module writes CRM tables
+- [x] 4.1 Step contracts (pydantic input and output models) and the runner: run and step records, timings, null reasons, status, error category, failed-run handling, stale-run interruption and the concurrent-run refusal
+- [x] 4.2 Real `source` step: seed loading, domain dedupe against the seed list, existing leads and the CRM, exclusions; lead creation with immutable fields and config snapshots
+- [x] 4.3 Stub steps for enrich, rules, score, research and draft driven by `config/stubs/gaming-hardware-na.yaml` (outcomes, rationale and sources from the design's desk research), plus a synthetic fixture script that exercises every exit reason and flag; `adscout run`
+- [x] 4.4 Stub approver bound to the draft SHA-256 and `adscout approve --stub`
+- [x] 4.5 CRM writer and local fake CRM (dedupe by domain, owned fields only, person-edited fields kept with a logged conflict, idempotent) and `adscout sync`, with the CRM-writer scenarios and a test that no other module writes CRM tables
 
 ## 5. Checks, summaries and export
 

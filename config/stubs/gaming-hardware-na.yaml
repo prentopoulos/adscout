@@ -1,0 +1,74 @@
+# Scripted outcomes for the Phase 1 stub steps (Phase 1 design, decision 15).
+#
+# The owner asked for each real seed's path to follow what it would likely get in the real
+# world. The expectations come from one-off desk research on 2026-10-18 under the owner's
+# scoped live-read decision (PROJECT.md §6). They are the agent's judgement from the sources
+# below, not the owner's labels and not anything the pipeline concluded. Database rows only
+# carry the label; the facts and their sources stay here.
+schema_version: "1"
+segment_id: gaming-hardware-na
+label: >-
+  stub: scripted from desk research (config/stubs/gaming-hardware-na.yaml, 2026-10-18);
+  not a pipeline assessment
+leads:
+  8bitdo.com:
+    expected: exits at the score step, below the threshold
+    exit: {step: score, reason: below_threshold}
+    rationale: >-
+      Fits the segment, but it is the smallest of the five by the only figures found, which
+      are a third-party estimate (unverified), so it has the smallest likely marketing budget.
+    sources:
+      - url: https://www.owler.com/company/8bitdo
+        retrieved: 2026-10-18
+        note: >-
+          Private, Shenzhen, founded 2013; estimated revenue $5-25M and 250-500 staff
+          (third-party estimate, unverified).
+  corsair.com:
+    expected: approved and synced to the CRM
+    approval: approved
+    rationale: Public company with large gaming hardware sales; a strong fit.
+    sources:
+      - url: https://www.sec.gov/Archives/edgar/data/1743759/000119312526048668/crsr-ex99_1.htm
+        retrieved: 2026-10-18
+        note: SEC 8-K exhibit 99.1; 2025 revenue $1,472.5M, up 12%.
+  nzxt.com:
+    expected: reaches a draft and is rejected at approval
+    approval: rejected
+    rejection_reason: scripted brand-safety hold; rationale and sources in the stub script
+    rationale: >-
+      Fits the segment on paper, but a salesperson might hold off after the class-action
+      settlement over its Flex PC rental program (agreed without admitting wrongdoing,
+      pending court approval).
+    sources:
+      - url: https://www.techspot.com/news/112053-nzxt-pay-345-million-class-action-settlement-over.html
+        retrieved: 2026-10-18
+        note: $3.45M class-action settlement over the Flex rental program.
+      - url: https://www.consumeraffairs.com/news/nzxt-faces-class-action-over-flex-pc-rental-scheme-103125.html
+        retrieved: 2026-10-18
+        note: The class action over the Flex rental program.
+  razer.com:
+    expected: approved and synced to the CRM
+    approval: approved
+    rationale: >-
+      Large gaming hardware brand, private since 2022, with a long record of sponsoring North
+      American esports teams; a strong fit.
+    sources:
+      - url: https://vulcanpost.com/786487/shareholders-approve-razer-privatisation-deal-singapore
+        retrieved: 2026-10-18
+        note: Shareholders approved taking Razer private in 2022 (94.74% in favour).
+      - url: https://www.businesswire.com/news/home/20210324005217/en/Razer-Crosses-the-US1B-Revenue-Milestone-and-Turns-Profitable-Ahead-of-All-Expectations-in-FY2020
+        retrieved: 2026-10-18
+        note: Revenue passed US$1B in FY2020.
+      - url: https://gamesbeat.com/razer-expands-pro-gaming-investment-with-sponsorship-of-denial-esports/
+        retrieved: 2026-10-18
+        note: Sponsorship of North American esports team Denial Esports.
+  turtlebeach.com:
+    expected: approved and synced to the CRM
+    approval: approved
+    rationale: >-
+      Public gaming headset and controller maker; a good fit, though it reported soft North
+      American gaming-accessory demand, so its budget may be tighter.
+    sources:
+      - url: https://www.sec.gov/Archives/edgar/data/1493761/000119312526104292/tbch-ex99_1.htm
+        retrieved: 2026-10-18
+        note: SEC 8-K exhibit 99.1; 2025 revenue $319.9M; weak fourth quarter in North America.

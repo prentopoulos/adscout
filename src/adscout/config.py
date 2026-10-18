@@ -22,8 +22,11 @@ SLUG = r"^[a-z0-9]+(-[a-z0-9]+)*$"
 SEED_COLUMNS = ("name", "domain", "source", "added_by", "added_on", "notes")
 
 EMAIL = re.compile(r"[^\s@<>()\[\],;:\"']+@[^\s@<>()\[\],;:\"']+\.[a-z]{2,}", re.IGNORECASE)
-# A run of digits with the separators phone numbers use; 10 to 15 digits make it a phone number.
-PHONE_CANDIDATE = re.compile(r"\+?\(?\d[\d\s().-]{6,}\d")
+# A run of digits with the separators phone numbers use, not part of a longer token; 10 to 15
+# digits make it a phone number.
+PHONE_CANDIDATE = re.compile(r"(?<![\w/])\+?\(?\d[\d\s().-]{6,}\d(?![\w/])")
+# Web addresses are not contact data, and their long numeric IDs look like phone numbers.
+URL = re.compile(r"https?://\S+")
 LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
 DOMAIN = re.compile(rf"^(?:{LABEL}\.)+[a-z][a-z0-9-]{{0,61}}[a-z0-9]$")
 
@@ -36,7 +39,7 @@ def contact_kind(value: str) -> str | None:
     """'an email address' or 'a phone number' if the text contains one, else None."""
     if EMAIL.search(value):
         return "an email address"
-    for match in PHONE_CANDIDATE.finditer(value):
+    for match in PHONE_CANDIDATE.finditer(URL.sub(" ", value)):
         if 10 <= sum(character.isdigit() for character in match.group()) <= 15:
             return "a phone number"
     return None
