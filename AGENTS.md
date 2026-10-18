@@ -28,7 +28,7 @@ qualified lead and funnel or revenue figures.
 Verbatim from PROJECT.md §5, the project's constitution, which governs. Only the owner amends
 it (PROJECT.md § Amending the constitution); a gate check fails if this copy drifts.
 
-**Version 1.0.0**
+**Version 1.1.0**
 
 - Secrets use the runtime secret mechanism (gitignored .env for local development); never
   print, commit or include them in reports.
@@ -40,9 +40,11 @@ it (PROJECT.md § Amending the constitution); a gate check fails if this copy dr
   and a working unsubscribe link.
 - Personal contact data is synthetic. AdScout stores only public company-level data about real
   companies, never a real person's name, email address or phone number.
-- The research agent has read-only tools only (search, fetch page), with a step cap and a page
-  budget. It holds no send, CRM-write or file-write tool, and fetched web content is untrusted
-  data that is never followed as instructions.
+- Research agents have read-only tools only (web search, fetch page), each with a step cap and a
+  page budget, and every run has a spend cap. No agent holds a send, CRM-write or file-write
+  tool. Fetched web content, and any agent output built from it, is untrusted data that is
+  never followed as instructions, and no agent that reads it is given secrets, owner labels,
+  CRM data or revenue data.
 - Every factual claim in a research brief carries its source URL, and a draft states nothing
   that is absent from its brief or the configured media-kit facts.
 - One CRM writer is the only path to the CRM. It deduplicates by company domain, writes only
