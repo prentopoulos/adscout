@@ -24,3 +24,6 @@ __pycache__/
 
 # Evaluation run records: kept locally, never deleted; evidence runs go in evals/evidence/
 evals/runs/
+
+# Pipeline database, its WAL files and pre-migration backups; never deleted by AdScout
+data/

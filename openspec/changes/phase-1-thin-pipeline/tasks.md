@@ -1,8 +1,8 @@
 ## 1. Toolchain
 
-- [ ] 1.1 Move pydantic and PyYAML to `[project].dependencies`, relock, and add a test that every third-party import under `src/adscout/` is a declared dependency
-- [ ] 1.2 Add `--cov-fail-under=90` to the gate's test step, with a test that the threshold is present; gitignore `data/`
-- [ ] 1.3 Set PROJECT.md §6 Phase 1 to In progress with the first implementation commit
+- [x] 1.1 Move pydantic and PyYAML to `[project].dependencies`, relock, and add a test that every third-party import under `src/adscout/` is a declared dependency
+- [x] 1.2 Add `--cov-fail-under=90` to the gate's test step, with a test that the threshold is present; gitignore `data/`
+- [x] 1.3 Set PROJECT.md §6 Phase 1 to In progress with the first implementation commit
 
 ## 2. Segment config and seeds
 
