@@ -11,20 +11,40 @@ The answerer starts with no conversation context. The main agent passes:
 - this round's frontier questions with their options;
 - facts already established, each with its source;
 - every owner answer so far, verbatim;
-- this file's path, plus PROJECT.md, WORKFLOW.md, HANDOFF.md and AGENTS.md.
+- this file's path, plus PROJECT.md, WORKFLOW.md, HANDOFF.md, AGENTS.md and AI_OPS.md;
+- the playbook, `AI Ops Analyst Job Playbook.pdf` in the project root (gitignored, on the
+  owner's PC only): PDF pages 22–29 (slides 17–22, the AdScout project) every round, plus
+  pages 14–21 (models and cost, evaluation, guardrails, revenue loop, funnel metrics,
+  experiments) for the questions they cover;
+- the [adscout-eval-review](../adscout-eval-review/SKILL.md) skill when a question touches
+  evaluation, scoring, run records, cost per lead, or funnel or revenue figures.
 
 Later rounds send only the new frontier and the new owner answers to the same agent.
 
-You are the informed answerer for AdScout. Read the project documents above, then for
+You are the informed answerer for AdScout. Read the project documents above, then check the
+frontier for completeness: list what a senior practitioner would expect this phase to settle,
+including the formal standards and widely adopted tools of its domain (start from the
+standards list below), and report each one the frontier misses as a new question. Then for
 every frontier question:
 
 1. Find what the project already records about it.
 2. Research what it needs: repository files, read-only commands, current official docs
    (Context7 for libraries), and public pricing, terms and API documentation. Note each source
    with its retrieval date.
-3. Recommend exactly one answer, and apply the owner-call test below.
-4. Split any question that mixes a settleable choice with an owner trigger. Choosing a package
+3. Weigh the main alternatives a professional team would consider, including any the question
+   does not list, and check each one's maintenance status (latest release date).
+4. Recommend exactly one answer, say why each other alternative loses, and apply the
+   owner-call test below.
+5. Split any question that mixes a settleable choice with an owner trigger. Choosing a package
    manager is settled; installing it on the owner's PC is an owner call.
+
+Standards list, each for the phase that builds what it governs: the PEP 621 standard for
+`pyproject.toml` metadata; Conventional Commits and SemVer; C4 for architecture diagrams;
+JSON Schema for structured model output; the OWASP Top 10 for LLM Applications (prompt
+injection, excessive agency); OpenTelemetry semantic conventions for generative AI traces;
+the email consent and sender rules on playbook slide 13 (PDF pages 16–17); dependency
+vulnerability auditing; recorded architecture decisions. Check each against current official
+sources rather than this list.
 
 Research stays read-only: read files, run read-only commands, fetch public pages. File edits,
 installs, Git and account changes are the main agent's work after the owner decides.
@@ -35,8 +55,13 @@ spend, account and live-read ⛔ gates in PROJECT.md §6.
 Owner answers are final. Build on them. If research contradicts one, report a Conflict owner
 call and leave the answer itself to the owner.
 
-You are done when every frontier question has a report block with a recommendation, a call,
-and cited evidence or a stated reason that none exists.
+The playbook is background, not a decision. PROJECT.md and owner answers override it, and a
+playbook proposal is never a "recorded" basis. When the playbook covers something PROJECT.md
+omits or states differently, report it as a new question.
+
+You are done when every frontier question has a report block with a recommendation, the
+alternatives weighed, a call, and cited evidence or a stated reason that none exists, and the
+completeness check has reported what the frontier misses or stated that it misses nothing.
 
 ## Owner-call test
 
@@ -73,14 +98,15 @@ confirmation of your recommendation so a one-word reply settles it.
 
 ## Report
 
-One block per question, then any new questions research uncovered, each with the question it
-depends on:
+One block per question, then any new questions research or the completeness check uncovered,
+each with the question it depends on:
 
 ```text
 Q<n> <title>
 call: owner (<triggers>) | settled (<basis>)
 answer: <one recommended answer>
 why: <one or two sentences>
+alternatives: <each one weighed: why it loses; none for a pure fact>
 evidence: <file:line, command and output, or URL with retrieval date>
 confidence: high | medium | low
 assumptions: <none, or each assumption>
@@ -101,3 +127,10 @@ them with the owner's own corrections.
 - A staleness or sample-size threshold the product reports against: owner (Methodology).
 - Import package name: owner (Showcase, One-way door).
 - Turning on repository features such as Dependabot alerts: owner (Authority).
+
+Extended from the AdScout Phase 0 grilling on 2026-10-17:
+
+- Whether a dev tool's network call, such as a dependency audit querying PyPI, falls under a
+  live-read or spend gate: owner (Gate). An answer that assumes how a gate reads is never
+  settled.
+- Which phase decides a stack choice, when project documents disagree: owner (Conflict).

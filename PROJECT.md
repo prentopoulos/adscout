@@ -46,8 +46,10 @@ personal contact data, and its revenue is simulated.
   on about 30 seeded edge cases (all pass), enrichment field accuracy on about 40
   hand-checked companies, precision in the top 20 on about 60 owner-labelled companies,
   claim-matches-source rate on about 20 spot-checked briefs, rule checks on about 30 drafts
-  (all pass), about 10 planted-injection pages (all pass), and cost per qualified lead for a
-  full segment run. Optional: the same suite on two models, compared by cost per qualified lead.
+  (all pass), about 10 planted-injection pages (all pass), and cost per qualified lead and
+  minutes per account for a full segment run (minutes per account added by the owner,
+  2026-10-17, from playbook slide 20). Optional: the same suite on two models, compared by
+  cost per qualified lead.
 - Business-level outcomes (reply, meeting and revenue rates) cannot be measured without real
   sends; the dashboard demonstrates the loop with simulated revenue and says so.
 - Only measured numbers are reported; bracketed playbook targets stay TBD until measured.
@@ -57,12 +59,39 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
 
 ## 4. Stack and commands
 
-- Playbook proposal, to confirm in Phase 0 grilling: Python with uv; Anthropic (Claude) or
+- Playbook proposal (candidates, not decisions): Python with uv; Anthropic (Claude) or
   OpenAI SDK; HubSpot free developer or test account as the CRM sandbox; SQLite or DuckDB;
   Docker; Langfuse for tracing; promptfoo or pytest for evals; GitHub Actions for CI;
   Streamlit, Metabase or Looker Studio for the dashboard and approval queue.
-- Decided: none yet. Language version, model provider, database, search/fetch provider,
-  enrichment source, tracing host and dashboard tool are TBD.
+- Each stack piece is decided in the grilling of the phase that first needs it (owner,
+  2026-10-17): database in Phase 1; model SDK and the model cost and access items below in
+  Phase 2; search, fetch and enrichment sources in Phases 2–3; approval UI in Phase 4;
+  tracing host in Phase 5; dashboard and Docker in Phase 6. A phase that decides a piece
+  checks it against the later choices it constrains, for example the Phase 1 database and
+  run-record design against the Phase 5 tracing and Phase 6 dashboard candidates. Tools are
+  chosen for the posting's skill list (SQL, Python, APIs, CRMs, BI, automation) and market
+  familiarity, with vendor-specific pieces behind thin adapters.
+- Decided in Phase 0 grilling, 2026-10-17 ("owner" marks owner calls; the rest are settled,
+  with basis and source in the Phase 0 design):
+  - Python 3.13 (`requires-python = ">=3.13"`), uv with a committed `uv.lock`, src layout.
+  - Package and command name `adscout` (owner). Version 0.1.0 in `pyproject.toml`, SemVer,
+    minor bump per merged phase.
+  - Dev tools pinned in the `uv.lock` dev group and run with `uv run`: ruff (lint and
+    format), mypy (strict), pytest with pytest-socket (no network in tests) and pytest-cov,
+    pip-audit.
+  - Gate command `uv run --locked python scripts/gate.py`, a standard-library script, built
+    in Phase 0. No pre-commit hook. CI waits for Phase 5.
+  - Offline evaluation harness on pytest under `evals/`, with case and result formats as JSON
+    Schema following the eval-review skill (owner). Inspect AI or promptfoo is reconsidered
+    in Phase 2 or 5.
+  - Evaluation run records are kept in gitignored `evals/runs/` and never deleted
+    automatically; runs cited as phase evidence are committed (owner).
+  - Dependency audit with pip-audit at each phase close, outside the offline gate (owner;
+    gate decision in §6).
+  - No licence until the publishing gate; `pyproject.toml` carries the
+    `Private :: Do Not Upload` classifier.
+  - Decisions are recorded here and in each OpenSpec design; no separate decision-record
+    folder.
 - Model cost and access, TBD: Phase 2 grilling must answer each item before the first model
   call. Options are in the AI-ops skill's `llm-rag.md` (§ Reduce spend, § Gateway and
   budgets) and `design-choices.md`.
@@ -137,7 +166,7 @@ their order and boundaries are confirmed in grilling before each phase.
 
 | Phase | Deliverable | Status |
 |---|---|---|
-| 0 | Toolchain, lockfile, quality gate with the constitution copy check, smoke checks; applicable offline AI evaluation scaffold | Planned |
+| 0 | Toolchain, lockfile, quality gate (constitution copy check, verbatim digests, secrets scan, no-network tests, commit messages, links), smoke checks; offline AI evaluation scaffold | Planned |
 | 1 | Thin end-to-end pipeline on five seed companies with stub steps: segment and ideal-customer config, seed list, local database schema for companies, scores, briefs, drafts, approvals and runs; C4 architecture diagrams as code | Planned |
 | 2 | Enrichment with field validation, deterministic profile rules and LLM fit scoring with structured output and reasons; answers the model cost and access TBDs in §4 | Planned |
 | 3 | Read-only research agent: search and fetch tools, step cap, page budget, a citation per claim | Planned |
@@ -160,6 +189,10 @@ their order and boundaries are confirmed in grilling before each phase.
 - [ ] Operator confirms the source, its terms of service and rate limits, and the run size,
   before the pipeline searches, fetches or enriches against live services. Tests use recorded
   fixtures.
+- Decision (owner, 2026-10-17): a dependency vulnerability audit of AdScout's own
+  dependencies (pip-audit querying PyPI's advisory service at phase close) is not a live read
+  under this gate. Scope: that audit only; pipeline searches, fetches and enrichment stay
+  gated.
 
 ### ⛔ Before any message is sent
 
@@ -179,4 +212,4 @@ their order and boundaries are confirmed in grilling before each phase.
 
 Record explicit operator decisions already given, with scope and date; do not request them
 again. Gates without such a decision remain unresolved. Local work proceeds independently.
-No gate decisions are recorded yet.
+Recorded decisions sit under their gate.
