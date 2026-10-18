@@ -1,0 +1,136 @@
+{
+  "adopted_on": "2026-10-17",
+  "source_kit": "C:\\Users\\Peter\\Documents\\new_project_agent_setup_updated",
+  "files": [
+    {
+      "source": "skills/build-safety/agent-builder/apply_finops_governance.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/apply_finops_governance.md",
+      "sha256": "60729816b61ac2473d33c5dd03ff374f67e777437e16d7ebe4a2c61d6675bd07"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/Architecturebuild.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/Architecturebuild.md",
+      "sha256": "9462cdab64e15315084c2a91a951d60c63482d13e83884d77ef2a85535cbe89e"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/assess_threat_vectors.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/assess_threat_vectors.md",
+      "sha256": "c33197c8a505bcd5542809347fe6a6fd0399bb029965235e3cacb704b5fdad07"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/configure_telemetry_schema.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/configure_telemetry_schema.md",
+      "sha256": "20054ddfa70219fd18cd2e14ee34babc6dfd357a8d1a6a70815454918260c35e"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/define_release_gates.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/define_release_gates.md",
+      "sha256": "177a9f8e36057f382d65c04adc1afe84c0b845a42075414fd27461fd0ae9545e"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/design_iac_blueprint.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/design_iac_blueprint.md",
+      "sha256": "781cad044288fdf8e54612bb7aed805393e049a64498604c400220a308eb4e83"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/design_pii_redaction.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/design_pii_redaction.md",
+      "sha256": "f4f1e4e891d2e65d5abd59f609b376dd9778456999fed5d9f91361607da2ad5a"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/examples/inventory-assistant.production-target.spec.yaml",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/examples/inventory-assistant.production-target.spec.yaml",
+      "sha256": "3d22d55e261f51cef0629977b8c59284062ac91c177d4a1f20548b818dd38173"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/examples/inventory-assistant.spec.yaml",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/examples/inventory-assistant.spec.yaml",
+      "sha256": "537fad3c62d6da76e17a4607afaa1f5fcbbab0a9d962ee0f5aa87f4bc65fbf84"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/FOUNDATION_CONTRACT.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/FOUNDATION_CONTRACT.md",
+      "sha256": "902b6d079970a3011506d8ec0e576d208122c3601bf06a985c6145bbe6987e65"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/generate_asset_metadata.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/generate_asset_metadata.md",
+      "sha256": "a5fb7f91de08539323803531540f46ea6f3c7e945e28d803cffbc67494af2331"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/generate_eval_metrics.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/generate_eval_metrics.md",
+      "sha256": "ab1dc778803f555777220dbccb30d69f8c0fa345bedcc58173b7baac9b797276"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/generate_tool_schema.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/generate_tool_schema.md",
+      "sha256": "ad6e2d86b3a78704b5ef7615c861d92ecabe9a8435dba5db07518671f855ae9b"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/map_rbac_policies.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/map_rbac_policies.md",
+      "sha256": "6f934dea8ac9cc3572e86c067af519ccd32c19486f4cc49d4198839e23649981"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/orchestrate_ci_cd.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/orchestrate_ci_cd.md",
+      "sha256": "183d84ebafdb61aca7f3f3289b8b83d707180d9fec9eb9002dd1b0951fd611cc"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/README.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/README.md",
+      "sha256": "590fae2ec62cea22344bc53cd5ec540cf4b253cb6b050d32a9b0ba5271558e96"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/reference/SOURCES.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/reference/SOURCES.md",
+      "sha256": "137bb7689b02956b68f2ff78d81608bae1f423ab4d32130fc1b10e0cd1c62a7c"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/resolve_stack_dependencies.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/resolve_stack_dependencies.md",
+      "sha256": "08ebc7cf6fa341e911e871a880db6619d6de84103f044684591f82899fec5458"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/scaffold_repo_tree.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/scaffold_repo_tree.md",
+      "sha256": "4ae14ac57067fea0c0c7c1379d80e5b634e180bd5e359c4fcbe67207edae0113"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/SECURITY_BASELINE.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/SECURITY_BASELINE.md",
+      "sha256": "29eba11f225917f9371898b5b387a4cd3a18c8448317fd2cfbd0a9703136938c"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/select_adk_tools.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/select_adk_tools.md",
+      "sha256": "c364f1a5afa8385c5ae30f2a2c0002fbc6f8bb8df95695980c54796d1f3161bd"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/standardize_system_prompt.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/standardize_system_prompt.md",
+      "sha256": "c44a70662c05a41e786b4c8d4e646479efd28f248f5794360931fdbaf6766b72"
+    },
+    {
+      "source": "skills/build-safety/agent-builder/validate_architecture_spec.md",
+      "copy": ".agents/skills/adscout-build-safety/agent-builder/validate_architecture_spec.md",
+      "sha256": "6e30a30f0a7fad78e0df0f1cc0ca53674dacbbf023475c82686e21dd6fde63dd"
+    },
+    {
+      "source": "skills/grilling/SKILL.md",
+      "copy": ".agents/skills/grilling/SKILL.md",
+      "sha256": "d806733216b16e51adad834e724bfec5540a436d06395bfc75b843cda9f7404b"
+    },
+    {
+      "source": "skills/grilling/agents/openai.yaml",
+      "copy": ".agents/skills/grilling/agents/openai.yaml",
+      "sha256": "ad75163922ff8263acdd25ebc37420e8fcf1fccb93483fd5742e9bd26f5c45f6"
+    },
+    {
+      "source": "skills/grilling/LICENSE",
+      "copy": ".agents/skills/grilling/LICENSE",
+      "sha256": "4981c5f6a90eb3a969dacabb9350f5a75695ff3910b39b6534952908dfdc5ff7"
+    }
+  ]
+}

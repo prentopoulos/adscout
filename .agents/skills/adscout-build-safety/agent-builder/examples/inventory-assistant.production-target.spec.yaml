@@ -1,0 +1,242 @@
+# Planned production target for the SAME personal owner. This is not a deployed or approved release.
+# Region/model/contracts/retention/service targets and runtime test evidence must be resolved.
+schema_version: '0.3'
+metadata:
+  use_case_id: inventory-planning-assistant
+  name: Inventory Planning Assistant
+  version: 0.1.0
+  owner: project-owner
+  cost_center: null
+  environment: prod
+  project_group: personal-projects
+business:
+  intent: Explain inventory availability and forecast shortages using authoritative
+    stock and demand data.
+  users:
+  - project-owner
+  success_measures:
+  - Reduce time to investigate a potential stock shortage.
+  - Produce accurate, useful recommendations with source timestamps.
+  non_goals:
+  - Place purchase orders or update inventory records.
+  - Treat forecast demand as guaranteed future demand.
+architecture:
+  cloud: other
+  region: null
+  runtime: hosted_service_to_select
+  language: python
+  framework: custom
+  framework_version: null
+  iac: null
+  l1_pattern_ref: null
+  l2_pattern_ref: null
+model:
+  provider: null
+  model_id: null
+  approval_ref: null
+  fallback_model_id: null
+  access_route: choose-local-or-hosted-model
+data:
+  classification: confidential
+  residency: null
+  pii_expected: false
+  retention_days: null
+  sources:
+  - id: inventory-status
+    kind: operational_api
+    contract_ref: null
+    owner: project-owner
+    freshness_limit_seconds: 300
+    access_scope: project-owned-inventory
+  - id: demand-forecast
+    kind: forecast_api
+    contract_ref: null
+    owner: project-owner
+    freshness_limit_seconds: 300
+    access_scope: project-owned-inventory
+agent:
+  pattern: single_agent
+  grounding:
+    mode: structured_tools
+    source_ids:
+    - inventory-status
+    - demand-forecast
+    vector_store_ref: null
+    citations_required: true
+  memory:
+    mode: session
+    store_ref: null
+    cross_session_enabled: false
+    retention_days: null
+  tools:
+  - id: get_inventory_status
+    capability: Read on-hand and reserved stock for an item and location.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  - id: get_demand_forecast
+    capability: Read forecast additional demand for the same item, location and horizon.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  - id: compare_inventory_options
+    capability: Calculate stock shortage scenarios deterministically; advisory only.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  human_approval:
+    operational_changes: out_of_scope
+    approver_role: project-owner
+security:
+  identity_provider_ref: null
+  runtime_identity_ref: null
+  network_policy_ref: null
+  guardrail_policy_ref: null
+  network_review_ref: null
+nonfunctional:
+  peak_requests_per_second: 5
+  p95_latency_ms: 10000
+  availability_target: null
+  rto_minutes: null
+  rpo_minutes: null
+finops:
+  currency: USD
+  monthly_budget: 1000
+  max_cost_per_successful_task: 0.05
+  max_input_tokens_per_request: 8000
+  max_output_tokens_per_request: 1500
+  max_model_calls_per_request: 4
+  max_tool_calls_per_request: 6
+delivery:
+  repo_provider: null
+  ci_provider: null
+  environments:
+  - dev
+  - stage
+  - prod
+  release_owner: project-owner
+  rollback_strategy: Define and test rollback or forward recovery for the chosen hosted application, prompt/model configuration and persistent data schema before promotion.
+governance:
+  request_ref: null
+  policy_bundle_ref: null
+  approval_status: not_required
+  approvals: []
+  profile: personal
+  control_applicability:
+  - control_id: formal_approval
+    applicability: not_applicable
+    reason: No external organization process is required; technical baseline and production
+      evidence remain mandatory.
+    owner: project-owner
+    evidence_ref: null
+    scope: Owner-operated production target
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: enterprise_catalogs
+    applicability: not_applicable
+    reason: No external organization process is required; technical baseline and production
+      evidence remain mandatory.
+    owner: project-owner
+    evidence_ref: null
+    scope: Owner-operated production target
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: B01
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B02
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B03
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B04
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B05
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B06
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B07
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+  - control_id: B08
+    applicability: required
+    reason: Required security baseline for the proposed production capabilities.
+    owner: project-owner
+    evidence_ref: null
+    scope: Production target, not yet implemented or verified
+    evaluated_revision: null
+    recheck_on:
+    - code/configuration/data/tool/model changes
+    - user or exposure changes
+lifecycle:
+  stage: prototype
+  target_stage: production
+  capabilities:
+    remote_access: true
+    multiple_users: true
+    multi_tenant: false
+    sensitive_data: true
+    external_providers: true
+    persistent_state: true
+    write_actions: false
+    destructive_actions: false
+    payments: false
+    production_reliance: true
+    high_impact_decisions: false

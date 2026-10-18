@@ -1,0 +1,210 @@
+# Synthetic prototype specification. Unknown model-provider capability remains unresolved.
+schema_version: '0.3'
+metadata:
+  use_case_id: inventory-planning-assistant
+  name: Inventory Planning Assistant
+  version: 0.1.0
+  owner: project-owner
+  cost_center: null
+  environment: dev
+  project_group: personal-projects
+business:
+  intent: Explain inventory availability and forecast shortages using authoritative
+    stock and demand data.
+  users:
+  - project-owner
+  success_measures:
+  - Reduce time to investigate a potential stock shortage.
+  - Produce accurate, useful recommendations with source timestamps.
+  non_goals:
+  - Place purchase orders or update inventory records.
+  - Treat forecast demand as guaranteed future demand.
+architecture:
+  cloud: local
+  region: null
+  runtime: local_process
+  language: python
+  framework: custom
+  framework_version: null
+  iac: null
+  l1_pattern_ref: null
+  l2_pattern_ref: null
+model:
+  provider: null
+  model_id: null
+  approval_ref: null
+  fallback_model_id: null
+  access_route: choose-local-or-hosted-model
+data:
+  classification: internal
+  residency: null
+  pii_expected: false
+  retention_days: null
+  sources:
+  - id: inventory-status
+    kind: local_fixture
+    contract_ref: null
+    owner: project-owner
+    freshness_limit_seconds: 300
+    access_scope: project-owned-inventory
+  - id: demand-forecast
+    kind: local_fixture
+    contract_ref: null
+    owner: project-owner
+    freshness_limit_seconds: 300
+    access_scope: project-owned-inventory
+agent:
+  pattern: single_agent
+  grounding:
+    mode: structured_tools
+    source_ids:
+    - inventory-status
+    - demand-forecast
+    vector_store_ref: null
+    citations_required: true
+  memory:
+    mode: none
+    store_ref: null
+    cross_session_enabled: false
+    retention_days: null
+  tools:
+  - id: get_inventory_status
+    capability: Read on-hand and reserved stock for an item and location.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  - id: get_demand_forecast
+    capability: Read forecast additional demand for the same item, location and horizon.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  - id: compare_inventory_options
+    capability: Calculate stock shortage scenarios deterministically; advisory only.
+    operation: read
+    catalog_ref: null
+    contract_ref: null
+  human_approval:
+    operational_changes: out_of_scope
+    approver_role: project-owner
+security:
+  identity_provider_ref: null
+  runtime_identity_ref: null
+  network_policy_ref: null
+  guardrail_policy_ref: null
+  network_review_ref: null
+nonfunctional:
+  peak_requests_per_second: 5
+  p95_latency_ms: 10000
+  availability_target: null
+  rto_minutes: null
+  rpo_minutes: null
+finops:
+  currency: USD
+  monthly_budget: 1000
+  max_cost_per_successful_task: 0.05
+  max_input_tokens_per_request: 8000
+  max_output_tokens_per_request: 1500
+  max_model_calls_per_request: 4
+  max_tool_calls_per_request: 6
+delivery:
+  repo_provider: null
+  ci_provider: null
+  environments:
+  - dev
+  release_owner: project-owner
+  rollback_strategy: Restore the previous tested code, prompt and compatible configuration
+    from version control.
+governance:
+  request_ref: null
+  policy_bundle_ref: null
+  approval_status: not_required
+  approvals: []
+  profile: personal
+  control_applicability:
+  - control_id: formal_approval
+    applicability: not_applicable
+    reason: Owner-directed personal prototype; no external approval process.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: enterprise_catalogs
+    applicability: not_applicable
+    reason: Use local architecture and tool manifests.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: network_review
+    applicability: not_applicable
+    reason: Local process; reassess if private network integration is introduced.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: cloud_region
+    applicability: not_applicable
+    reason: No hosted resources selected; revisit residency when choosing a hosted
+      model.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: iac
+    applicability: not_applicable
+    reason: No infrastructure provisioning for the local fixture prototype.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: persistent_memory_retention
+    applicability: not_applicable
+    reason: Agent memory disabled. This covers memory only; model-provider logs, telemetry
+      and any other retained data still require review.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+  - control_id: service_slo_recovery
+    applicability: not_applicable
+    reason: No hosted service or durable application state in this prototype.
+    owner: project-owner
+    evidence_ref: null
+    scope: Declared local fixture prototype only
+    evaluated_revision: null
+    recheck_on:
+    - lifecycle target changes
+    - data/model/tool/deployment capabilities change
+lifecycle:
+  stage: prototype
+  target_stage: prototype
+  capabilities:
+    remote_access: false
+    multiple_users: false
+    multi_tenant: false
+    sensitive_data: false
+    external_providers: null
+    persistent_state: false
+    write_actions: false
+    destructive_actions: false
+    payments: false
+    production_reliance: false
+    high_impact_decisions: false
