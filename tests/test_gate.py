@@ -1,6 +1,8 @@
 """The gate runs every step, reports each, and fails if any step fails."""
 
+import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -70,3 +72,17 @@ def test_missing_openspec_fails_with_install_hint(
     monkeypatch.setattr(gate.shutil, "which", lambda name: None)
     assert gate.openspec() is False
     assert "npm install -g @fission-ai/openspec" in capsys.readouterr().out
+
+
+def test_openspec_runs_with_telemetry_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    envs: list[dict[str, str]] = []
+
+    def fake_run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        envs.append(kwargs["env"])
+        return subprocess.CompletedProcess(args, 0, stdout="1.6.0\n")
+
+    monkeypatch.setattr(gate.shutil, "which", lambda name: "openspec")
+    monkeypatch.setattr(gate.subprocess, "run", fake_run)
+    assert gate.openspec() is True
+    assert len(envs) == 2
+    assert all(env["OPENSPEC_TELEMETRY"] == "0" and env["DO_NOT_TRACK"] == "1" for env in envs)

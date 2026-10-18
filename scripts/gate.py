@@ -5,6 +5,7 @@ so one run reports everything that is wrong; the exit code is non-zero if any st
 """
 
 import io
+import os
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,8 @@ from checks import commits, constitution, digests, docs, secrets
 
 ROOT = Path(__file__).resolve().parent.parent
 OPENSPEC_INSTALL = "npm install -g @fission-ai/openspec@1.6.0"
+# OpenSpec sends a usage event on every command unless told not to; the gate stays offline.
+OPENSPEC_NO_TELEMETRY = {"OPENSPEC_TELEMETRY": "0", "DO_NOT_TRACK": "1"}
 
 
 @dataclass(frozen=True)
@@ -52,12 +55,13 @@ def openspec() -> bool:
     if executable is None:
         print(f"  openspec is not on PATH; install it with: {OPENSPEC_INSTALL}")
         return False
+    env = os.environ | OPENSPEC_NO_TELEMETRY
     version = subprocess.run(
-        [executable, "--version"], capture_output=True, text=True, check=False
+        [executable, "--version"], capture_output=True, text=True, env=env, check=False
     ).stdout.strip()
     print(f"  OpenSpec {version}", flush=True)
     validate = [executable, "validate", "--all", "--strict"]
-    return subprocess.run(validate, cwd=ROOT, check=False).returncode == 0
+    return subprocess.run(validate, cwd=ROOT, env=env, check=False).returncode == 0
 
 
 STEPS = [
