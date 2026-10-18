@@ -1,13 +1,13 @@
 ## 1. Repository hygiene
 
-- [ ] 1.1 Add `.gitattributes` (LF for text, `-text` for the two verbatim skill folders), run `git add --renormalize .`, and confirm each committed verbatim blob hashes to its manifest digest. Note in HANDOFF.md that 3de5377 stored LF blobs.
-- [ ] 1.2 Delete the six `.agents/skills/source-command-opsx-*` folders and gitignore `.agents/skills/source-command-*/`; add `evals/runs/` to `.gitignore`.
+- [x] 1.1 Add `.gitattributes` (LF for text, `-text` for the two verbatim skill folders), run `git add --renormalize .`, and confirm each committed verbatim blob hashes to its manifest digest. Note in HANDOFF.md that 3de5377 stored LF blobs.
+- [x] 1.2 Delete the six `.agents/skills/source-command-opsx-*` folders and gitignore `.agents/skills/source-command-*/`; add `evals/runs/` to `.gitignore`.
 
 ## 2. Toolchain
 
-- [ ] 2.1 Add `.python-version`, a PEP 621 `pyproject.toml` (package `adscout` 0.1.0, `requires-python = ">=3.13"`, `uv_build` backend, `Private :: Do Not Upload`, `[project.scripts] adscout`, uv `required-version`) and the dev group (ruff, mypy, pytest, pytest-socket, pytest-cov, pip-audit, PyYAML, pydantic, jsonschema); lock with uv and sync with `uv sync --locked`.
-- [ ] 2.2 Add `src/adscout/__init__.py` and `cli.py` with `--version` from package metadata; configure ruff (including S and TID), mypy strict with the pydantic plugin, and pytest (`--disable-socket`, coverage report, `pythonpath = ["scripts"]`).
-- [ ] 2.3 Add smoke tests: the package imports, `adscout --version` prints the metadata version, the metadata carries the upload-guard classifier and no licence, and a test that opens a socket is blocked.
+- [x] 2.1 Add `.python-version`, a PEP 621 `pyproject.toml` (package `adscout` 0.1.0, `requires-python = ">=3.13"`, `uv_build` backend, `Private :: Do Not Upload`, `[project.scripts] adscout`, uv `required-version`) and the dev group (ruff, mypy, pytest, pytest-socket, pytest-cov, pip-audit, PyYAML, pydantic, jsonschema); lock with uv and sync with `uv sync --locked`.
+- [x] 2.2 Add `src/adscout/__init__.py` and `cli.py` with `--version` from package metadata; configure ruff (including S and TID), mypy strict with the pydantic plugin, and pytest (`--disable-socket`, coverage report, `pythonpath = ["scripts"]`).
+- [x] 2.3 Add smoke tests: the package imports, `adscout --version` prints the metadata version, the metadata carries the upload-guard classifier and no licence, and a test that opens a socket is blocked.
 
 ## 3. Gate and checks
 
