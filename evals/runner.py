@@ -4,16 +4,13 @@ import copy
 import hashlib
 import json
 import platform
-import subprocess
 import time
-import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from pydantic import ValidationError
 
-from adscout.ids import agent_version
+from adscout.ids import agent_version, code_version
 from evals.evaluators import EVALUATORS
 from evals.models import Case, Label, ResultRecord, Status, Validation, started_now
 
@@ -69,21 +66,8 @@ def load_cases(*paths: Path) -> list[Case]:
     return cases
 
 
-def new_run_id() -> str:
-    return f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:6]}"
-
-
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
-
-def code_version(root: Path) -> tuple[str, bool]:
-    def git(*args: str) -> str:
-        return subprocess.run(
-            ["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True
-        ).stdout.strip()
-
-    return git("rev-parse", "HEAD"), bool(git("status", "--porcelain"))
 
 
 def expected_outcome_met(label: Label, status: Status) -> bool:

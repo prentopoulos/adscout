@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from adscout.ids import new_run_id
 from conftest import ROOT
 from evals import runner
 from evals.evaluators import Outcome
@@ -20,7 +21,6 @@ from evals.runner import (
     RunFile,
     expected_outcome_met,
     load_cases,
-    new_run_id,
     run_case,
 )
 

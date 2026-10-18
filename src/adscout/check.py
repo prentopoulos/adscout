@@ -11,6 +11,8 @@ import sqlite3
 from dataclasses import dataclass
 from typing import Literal
 
+from adscout.db.connection import transaction
+
 PIPELINE_ORDER = ["source", "enrich", "rules", "score", "research", "draft"]
 STEPS_BY_KIND = {"pipeline": PIPELINE_ORDER, "approval": ["approve"], "crm_sync": ["crm_sync"]}
 STUB_TABLES = ("enrichments", "scores", "briefs", "drafts")
@@ -178,10 +180,9 @@ def check_run(connection: sqlite3.Connection, run_id: str) -> CheckResult:
     problems += lead_fields(connection, run_id)
     problems += crm_writes(connection, run_id)
     result = CheckResult(run_id, "fail" if problems else "pass", tuple(problems))
-    connection.execute("BEGIN IMMEDIATE")
-    connection.execute(
-        "UPDATE runs SET validation_outcome = ?, validation_detail = ? WHERE run_id = ?",
-        (result.outcome, result.detail, run_id),
-    )
-    connection.execute("COMMIT")
+    with transaction(connection):
+        connection.execute(
+            "UPDATE runs SET validation_outcome = ?, validation_detail = ? WHERE run_id = ?",
+            (result.outcome, result.detail, run_id),
+        )
     return result

@@ -11,6 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from adscout.db.guards import tables
 from adscout.db.migrate import upgrade
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -18,15 +19,8 @@ ERD = ROOT / "docs" / "architecture" / "erd.md"
 
 
 def mermaid(connection: sqlite3.Connection) -> str:
-    tables = [
-        row[0]
-        for row in connection.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
-            "ORDER BY name"
-        )
-    ]
     blocks, links = [], []
-    for table in tables:
+    for table in tables(connection):
         keys_by_id: dict[int, tuple[str, list[str]]] = {}
         for row in connection.execute(f"PRAGMA foreign_key_list({table})").fetchall():
             keys_by_id.setdefault(row[0], (row[2], []))[1].append(row[3])
