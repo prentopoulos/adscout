@@ -1,0 +1,29 @@
+# Synthetic stub script: together with one person edit in the fake CRM before sync, it
+# exercises every exit reason and flag.
+schema_version: "1"
+segment_id: synthetic-demo
+label: "stub: scripted fixture outcome; not a pipeline assessment"
+leads:
+  alpha.test: {expected: approved and synced, approval: approved}
+  bravo.test:
+    expected: exits at enrich with missing key fields
+    exit: {step: enrich, reason: missing_key_fields}
+  charlie.test:
+    expected: exits at rules, out of profile
+    exit: {step: rules, reason: out_of_profile}
+  delta.test:
+    expected: exits at score, below the threshold
+    exit: {step: score, reason: below_threshold}
+  echo.test:
+    expected: its draft fails the checks
+    exit: {step: draft, reason: draft_failed}
+  foxtrot.test:
+    expected: partial brief, then approved and synced
+    research_flag: research_partial
+    approval: approved
+  golf.test:
+    expected: rejected at approval
+    approval: rejected
+    rejection_reason: scripted fixture rejection
+  hotel.test: {expected: "approved, then a CRM conflict with a person's edit", approval: approved}
+  excluded.test: {expected: excluded at source, approval: rejected, rejection_reason: never reached}

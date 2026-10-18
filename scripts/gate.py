@@ -19,6 +19,15 @@ ROOT = Path(__file__).resolve().parent.parent
 OPENSPEC_INSTALL = "npm install -g @fission-ai/openspec@1.6.0"
 # OpenSpec sends a usage event on every command unless told not to; the gate stays offline.
 OPENSPEC_NO_TELEMETRY = {"OPENSPEC_TELEMETRY": "0", "DO_NOT_TRACK": "1"}
+# Line coverage of src/ and scripts/; raise it as coverage grows, never lower it (owner).
+COVERAGE_THRESHOLD = 90
+TEST_ARGS = (
+    "pytest",
+    "--cov=src",
+    "--cov=scripts",
+    "--cov-report=term",
+    f"--cov-fail-under={COVERAGE_THRESHOLD}",
+)
 
 
 @dataclass(frozen=True)
@@ -69,7 +78,7 @@ STEPS = [
     Step("format", python_module("ruff", "format", "--check", ".")),
     Step("lint", python_module("ruff", "check", ".")),
     Step("types", python_module("mypy")),
-    Step("tests", python_module("pytest", "--cov=src", "--cov=scripts", "--cov-report=term")),
+    Step("tests", python_module(*TEST_ARGS)),
     Step("constitution copies", problems(constitution.check)),
     Step("verbatim digests", problems(digests.check)),
     Step("secrets", problems(secrets.check)),

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One seed company: company-level fields and where the row came from.",
+  "properties": {
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "domain": {
+      "title": "Domain",
+      "type": "string"
+    },
+    "source": {
+      "minLength": 1,
+      "title": "Source",
+      "type": "string"
+    },
+    "added_by": {
+      "minLength": 1,
+      "title": "Added By",
+      "type": "string"
+    },
+    "added_on": {
+      "format": "date",
+      "title": "Added On",
+      "type": "string"
+    },
+    "notes": {
+      "default": "",
+      "title": "Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "domain",
+    "source",
+    "added_by",
+    "added_on"
+  ],
+  "title": "SeedRow",
+  "type": "object"
+}

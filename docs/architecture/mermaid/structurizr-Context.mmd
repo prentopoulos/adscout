@@ -1,0 +1,35 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["System Context View: AdScout"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Ad sales researcher</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Works at a publisher; picks a<br />segment, reviews the funnel<br />and approves drafts.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Model provider</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Hosted language model API<br />that scores fit and writes<br />briefs and drafts (planned,<br />Phase 2).</div>"]
+    style 2 fill:#f2f2f2,stroke:#999999,color:#555555
+    3["<div style='font-weight: bold'>Enrichment API</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Company-level facts such as<br />size, category and region<br />(planned, Phase 2).</div>"]
+    style 3 fill:#f2f2f2,stroke:#999999,color:#555555
+    4["<div style='font-weight: bold'>Search API</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Web search for the read-only<br />research agent (planned,<br />Phase 3).</div>"]
+    style 4 fill:#f2f2f2,stroke:#999999,color:#555555
+    5["<div style='font-weight: bold'>Company websites</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Public pages the research<br />agent reads as untrusted data<br />(planned, Phase 3).</div>"]
+    style 5 fill:#f2f2f2,stroke:#999999,color:#555555
+    6["<div style='font-weight: bold'>CRM sandbox</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Free CRM test account that<br />receives approved leads<br />(planned, Phase 4).</div>"]
+    style 6 fill:#f2f2f2,stroke:#999999,color:#555555
+    7["<div style='font-weight: bold'>Sandbox inbox</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Test inbox; the only place an<br />approved message can go<br />(planned, Phase 4).</div>"]
+    style 7 fill:#f2f2f2,stroke:#999999,color:#555555
+    8["<div style='font-weight: bold'>Tracing service</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Traces of every step with<br />tokens and cost per lead<br />(planned, Phase 5).</div>"]
+    style 8 fill:#f2f2f2,stroke:#999999,color:#555555
+    9["<div style='font-weight: bold'>AdScout</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Finds, scores and researches<br />brands for one segment,<br />drafts pitches for approval<br />and syncs approved leads to a<br />CRM.</div>"]
+    style 9 fill:#1168bd,stroke:#0b4884,color:#ffffff
+
+    1-- "<div>Runs a segment and the stub<br />approver</div><div style='font-size: 70%'>[Command line]</div>" -->9
+    9-. "<div>Scores fit, writes briefs and<br />drafts</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" .->2
+    9-. "<div>Reads company facts</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" .->3
+    9-. "<div>Searches the web (research<br />agent, read-only)</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" .->4
+    9-. "<div>Fetches public pages<br />(research agent, read-only)</div><div style='font-size: 70%'>[HTTPS]</div>" .->5
+    9-. "<div>Writes approved leads through<br />the one CRM writer</div><div style='font-size: 70%'>[HTTPS, REST]</div>" .->6
+    9-. "<div>Sends approved messages,<br />sandbox only</div><div style='font-size: 70%'>[HTTPS or SMTP]</div>" .->7
+    9-. "<div>Sends step traces with tokens<br />and cost</div><div style='font-size: 70%'>[OTLP]</div>" .->8
+
+  end

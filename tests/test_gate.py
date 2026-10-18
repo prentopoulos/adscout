@@ -86,3 +86,9 @@ def test_openspec_runs_with_telemetry_off(monkeypatch: pytest.MonkeyPatch) -> No
     assert gate.openspec() is True
     assert len(envs) == 2
     assert all(env["OPENSPEC_TELEMETRY"] == "0" and env["DO_NOT_TRACK"] == "1" for env in envs)
+
+
+def test_tests_step_enforces_the_coverage_threshold() -> None:
+    assert gate.COVERAGE_THRESHOLD >= 90
+    assert f"--cov-fail-under={gate.COVERAGE_THRESHOLD}" in gate.TEST_ARGS
+    assert {"--cov=src", "--cov=scripts"} <= set(gate.TEST_ARGS)

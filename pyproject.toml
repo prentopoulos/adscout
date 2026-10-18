@@ -1,6 +1,6 @@
 [project]
 name = "adscout"
-version = "0.1.0"
+version = "0.2.0"
 description = "Advertiser prospecting and qualification agent (portfolio project)"
 requires-python = ">=3.13"
 authors = [{ name = "Peter Rentopoulos" }]
@@ -9,7 +9,10 @@ classifiers = [
     "Private :: Do Not Upload",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.1",
+    "pyyaml>=6.0.3",
+]
 
 [project.scripts]
 adscout = "adscout.cli:main"
@@ -59,11 +62,9 @@ dev = [
     "jsonschema>=4.26.0",
     "mypy>=2.4.0",
     "pip-audit>=2.10.1",
-    "pydantic>=2.14.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "pytest-socket>=0.8.1",
-    "pyyaml>=6.0.3",
     "ruff>=0.17.1",
     "types-jsonschema>=4.26.0.20261006",
     "types-pyyaml>=6.0.12.20260906",

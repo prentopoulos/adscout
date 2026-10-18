@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "LeadScript": {
+      "additionalProperties": false,
+      "description": "One seed's scripted path; a lead without an exit needs an approval decision.",
+      "properties": {
+        "expected": {
+          "minLength": 1,
+          "title": "Expected",
+          "type": "string"
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScriptedExit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "research_flag": {
+          "anyOf": [
+            {
+              "const": "research_partial",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Research Flag"
+        },
+        "approval": {
+          "anyOf": [
+            {
+              "enum": [
+                "approved",
+                "rejected"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval"
+        },
+        "rejection_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rejection Reason"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "sources": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SourceNote"
+          },
+          "title": "Sources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "expected"
+      ],
+      "title": "LeadScript",
+      "type": "object"
+    },
+    "ScriptedExit": {
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "enum": [
+            "enrich",
+            "rules",
+            "score",
+            "draft"
+          ],
+          "title": "Step",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "duplicate",
+            "excluded",
+            "out_of_profile",
+            "missing_key_fields",
+            "below_threshold",
+            "draft_failed",
+            "rejected"
+          ],
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "step",
+        "reason"
+      ],
+      "title": "ScriptedExit",
+      "type": "object"
+    },
+    "SourceNote": {
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "pattern": "^https://",
+          "title": "Url",
+          "type": "string"
+        },
+        "retrieved": {
+          "format": "date",
+          "title": "Retrieved",
+          "type": "string"
+        },
+        "note": {
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "retrieved",
+        "note"
+      ],
+      "title": "SourceNote",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "label": {
+      "pattern": "^stub: \\S",
+      "title": "Label",
+      "type": "string"
+    },
+    "fail_at_step": {
+      "anyOf": [
+        {
+          "enum": [
+            "enrich",
+            "rules",
+            "score",
+            "research",
+            "draft"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fail At Step"
+    },
+    "leads": {
+      "additionalProperties": {
+        "$ref": "#/$defs/LeadScript"
+      },
+      "title": "Leads",
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "segment_id",
+    "label",
+    "leads"
+  ],
+  "title": "StubScript",
+  "type": "object"
+}

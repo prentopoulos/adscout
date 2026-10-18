@@ -1,0 +1,11 @@
+name,domain,source,added_by,added_on,notes
+Alpha Gear,alpha.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Bravo Gear,bravo.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Charlie Gear,charlie.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Delta Gear,delta.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Echo Gear,echo.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Foxtrot Gear,foxtrot.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Golf Gear,golf.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Hotel Gear,hotel.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Excluded Gear,excluded.test,synthetic fixture,tests,2026-10-18,Fictional company.
+Alpha Gear again,www.alpha.test,synthetic fixture,tests,2026-10-18,Repeats row 2 on purpose.

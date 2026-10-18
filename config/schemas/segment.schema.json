@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Exclusions": {
+      "additionalProperties": false,
+      "properties": {
+        "domains": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Domains",
+          "type": "array"
+        },
+        "categories": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        }
+      },
+      "title": "Exclusions",
+      "type": "object"
+    },
+    "SizeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "enum": [
+            "annual_revenue_usd",
+            "employees"
+          ],
+          "title": "Metric",
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        }
+      },
+      "required": [
+        "metric"
+      ],
+      "title": "SizeRange",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One segment and its ideal-customer rules. Undecided fields are null with a reason.",
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "scope": {
+      "minLength": 1,
+      "title": "Scope",
+      "type": "string"
+    },
+    "regions": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Regions",
+      "type": "array"
+    },
+    "categories": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Categories",
+      "type": "array"
+    },
+    "size_range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SizeRange"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "exclusions": {
+      "$ref": "#/$defs/Exclusions"
+    },
+    "score_threshold": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Score Threshold"
+    },
+    "null_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "title": "Null Reasons",
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema_version",
+    "segment_id",
+    "name",
+    "scope",
+    "regions",
+    "categories",
+    "size_range",
+    "exclusions",
+    "score_threshold"
+  ],
+  "title": "SegmentConfig",
+  "type": "object"
+}

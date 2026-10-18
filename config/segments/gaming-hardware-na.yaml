@@ -1,0 +1,24 @@
+# Segment and ideal-customer rules (PROJECT.md §2; Phase 1 design, decision 2).
+# Only company-level data belongs here. A field the segment has not decided yet is null,
+# with its reason under null_reasons.
+schema_version: "1"
+segment_id: gaming-hardware-na
+name: Gaming hardware brands in North America
+scope: >-
+  Brands of gaming peripherals, PC components, prebuilt gaming PCs and console accessories
+  that sell to consumers in the United States and Canada, wherever they are headquartered.
+# ISO 3166-1 alpha-2 codes of the markets a brand must sell in. Headquarters is not a rule.
+regions: ["US", "CA"]
+categories:
+  - peripherals
+  - pc-components
+  - prebuilt-pcs
+  - console-accessories
+size_range: null
+exclusions:
+  domains: []
+  categories: []
+score_threshold: null
+null_reasons:
+  size_range: set in Phase 2 grilling
+  score_threshold: set in Phase 2 grilling

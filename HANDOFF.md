@@ -4,126 +4,126 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
-Phase 0 (toolchain, local gate, offline evaluation scaffold) is done. OpenSpec change
-`phase-0-toolchain-and-gate` is archived, and branch `phase-0/toolchain-and-gate` was merged
-into `main` on the owner's go-ahead on 2026-10-18 (f5706ec), then deleted. A `/code-review`
-of the branch ran first and its findings are resolved (Verification below). Its grilling decisions are in
-PROJECT.md §4 and the change's design. The local job playbook PDF is the source of the
-project idea and is gitignored.
+Phase 1 (thin end-to-end pipeline with stub steps) is complete. OpenSpec change
+`phase-1-thin-pipeline` is archived on branch `phase-1/thin-pipeline`, which merges into `main`
+with a merge commit on the owner's go-ahead. The code review ran and its findings are resolved
+(Verification below).
+
+- Grilling ran on 2026-10-18; the owner accepted every recommendation (Q1–Q16). Decisions are
+  in PROJECT.md §2–4 and §6 and in the archived change's design, with who made each.
+- First segment: gaming hardware brands in North America (settled with the owner; do not
+  reopen).
+- Seeds: 8bitdo.com, corsair.com, nzxt.com, razer.com and turtlebeach.com, each checked once on
+  its home page under the owner's scoped live-read decision (PROJECT.md §6). steelseries.com
+  answered HTTP 403 and was left out.
+- The scripted stub outcomes follow one-off desk research the owner asked for (design
+  decision 15; sources in `config/stubs/gaming-hardware-na.yaml`): Corsair, Razer and Turtle
+  Beach approved and synced; NZXT rejected at approval; 8BitDo below the score threshold. They
+  are the agent's judgement, not the owner's labels.
+
+Phase 0 (toolchain, local gate, offline evaluation scaffold) was merged on 2026-10-18 (f5706ec);
+its verification record is in commit 8c79625's HANDOFF.md.
 
 ## Implemented behavior
 
-- Package `adscout` 0.1.0 (Python 3.13, src layout, `uv.lock`); `adscout --version`.
-- Gate `uv run --locked python scripts/gate.py`, twelve steps:
-  1. lockfile;
-  2. format;
-  3. lint;
-  4. types;
-  5. tests with coverage;
-  6. constitution copies;
-  7. verbatim digests;
-  8. secrets;
-  9. commit messages;
-  10. documentation;
-  11. evaluation scaffold;
-  12. OpenSpec validation, with OpenSpec's usage telemetry turned off.
-- Offline evaluation harness in `evals/`:
-  - case and result formats as committed JSON Schema;
-  - the evaluation step runs every `evals/cases/*.jsonl` file; a malformed or repeated case
-    fails the load, and malformed inputs are recorded as errors, not failures;
-  - run records in gitignored `evals/runs/`, never deleted;
-  - cited runs in `evals/evidence/`;
-  - a synthetic scaffold case set.
-- `.gitattributes` keeps the 26 verbatim skill files byte-exact, and every other text file is
-  LF. The duplicated Codex `source-command-opsx-*` folders are removed.
+- Package `adscout` 0.2.0 (Python 3.13, src layout, `uv.lock`); runtime dependencies pydantic
+  and PyYAML.
+- Config: `config/segments/<id>.yaml` (strict, nulls with reasons), `config/seeds/<id>.csv`
+  (company-level columns only), `config/stubs/<id>.yaml` (scripted stub outcomes; a real
+  company's outcome needs a rationale and sources). Values that look like an email address or
+  phone number are refused. JSON Schemas in `config/schemas/`.
+- Database: SQLite at `data/adscout.db` (gitignored; `--db` or `ADSCOUT_DB`), numbered SQL
+  migrations with checksums and a backup before each upgrade, committed
+  `src/adscout/db/schema.sql`, triggers that refuse any change or deletion of a lead's source
+  fields, views `v_funnel` and `v_lead_journey`, a guard against personal-contact columns.
+- Commands: `adscout db upgrade`, `run`, `approve --stub`, `sync`, `runs`, `funnel`, `check`,
+  `export`; `scripts/demo.py` chains the whole flow. All offline.
+- Pipeline: real `source` step (domain dedupe, exclusions, lead creation with UUIDv7 IDs and
+  agent version `<package>+g<commit>[.dirty]`, prompt version `none`), five scripted stub
+  steps, a run that stops at approval, a stub approver bound to the draft's SHA-256, and the
+  single CRM writer into a local fake CRM (dedupe by domain, owned fields only, person edits
+  kept and logged). Each step works outside any transaction and writes in one short one. One
+  live run at a time; a dead `running` run is marked `interrupted`; leads of an unfinished run
+  re-enter the next run.
+- Run records: `runs`, `step_runs`, `lead_step_outcomes` with the system version and explained
+  nulls. `adscout check` validates a run from the database alone. `adscout export` writes JSON
+  Lines with OpenTelemetry GenAI and Langfuse names (`src/adscout/schemas/run-export.schema.json`).
+- Diagrams: `docs/architecture/workspace.dsl` (context, built and target container views),
+  SVG and Mermaid exports with a stamp, and `docs/architecture/erd.md` generated from the
+  schema. Gate tests fail on drift without needing Java.
+- Gate: as in Phase 0, with a 90% line-coverage threshold on `src/` and `scripts/`.
 
-## Verification (2026-10-18)
+## Phase 1 verification (2026-10-18)
 
-- **Gate:** all 12 steps pass at 293a781, the last code commit. 93 tests; coverage of `src/`
-  and `scripts/` 90%; 6 scaffold cases. (Before the review fixes: a7712ad, 65 tests, 88%.)
-- **Fresh clones** of the branch at a7712ad, one with `core.autocrlf=true` and one with
-  `false` (the line-ending setup has not changed since): in each,
-  `uv sync --locked` and the gate pass all 12 steps. `git ls-files --eol` shows the verbatim
-  files as `i/crlf w/crlf` and other files as LF.
-- **Planted violations** in a scratch clone at a7712ad:
-  - An unused import plus an unannotated function failed format, lint and types.
-  - A dependency added without relocking made `uv run --locked` refuse ("The lockfile at
-    `uv.lock` needs to be updated"). The lockfile step also failed when the gate ran under the
-    venv's Python directly.
-  - Every other planted violation (rule copy, verbatim byte, fake keys, socket, commit
-    subject, links, wrongly passing deliberately failing case, empty case file) is a unit test.
-- **Evidence run:** `evals/evidence/phase-0-20261018T045448Z-6ea193.jsonl` at 293a781, clean
-  tree, evaluators version 2. 4 cases pass, and the 2 deliberately failing cases fail as
-  required. A separate script checked each record against the committed schema, recomputed
-  each outcome and input hash from the case file, and found every null explained. It is a
-  synthetic self-test of the harness, not a model evaluation; no AI runtime evaluation exists
-  yet (not_run). The earlier run, `phase-0-20261018T041403Z-d367b0.jsonl` at a7712ad
-  (evaluators version 1), stays as its record.
-- **Dependency audit:** on 2026-10-18, `uv run --locked pip-audit --skip-editable` (pip-audit
-  2.10.1) reported "No known vulnerabilities found". `adscout` was skipped as editable. The
-  review fixes changed neither `uv.lock` nor `pyproject.toml`, so the audit still applies. The
-  owner's gate decision for this audit is in PROJECT.md §6.
+- **Gate:** all 12 steps pass at c957258, the last code commit: 218 tests, coverage of `src/`
+  and `scripts/` 94%, 6 scaffold cases.
+- **Evidence runs:** from a clean worktree at c957258 (the main tree has the owner's untracked
+  `.codex/config.toml`, which marks it dirty), `scripts/demo.py` on the five real seeds wrote
+  three runs, each `succeeded`, `code_dirty` 0, agent version `0.1.0+gc957258643cd`, and
+  `adscout check` pass. Exports in `evidence/runs/phase-1-20261018T170334Z-{585a29,ba73a2,8e454e}.jsonl`.
+  Pipeline: 5 sourced, 1 below threshold at score (8BitDo), 4 drafts; approval: 3 approved,
+  1 rejected (NZXT); CRM sync: 3 written to the fake CRM. A separate script validated all 46
+  export lines against the committed schema and recomputed every step's counts, the funnel
+  chain, the explained nulls and the stub labels from the exports alone: no problems. This is a
+  structural check of a stub pipeline, not an AI evaluation (not_run).
+- **Dependency audit:** `uv run --locked pip-audit --skip-editable` (pip-audit 2.10.1) on
+  2026-10-18: "No known vulnerabilities found" after pydantic and PyYAML became runtime
+  dependencies. The review fixes changed no dependency.
 - **Code review:**
-  - First, an inline review by the implementing agent against the specs, tasks and the
-    design's non-negotiables check. It fixed, in a7712ad, an empty case file passing the
-    evaluation step vacuously, and corrected the stale-lockfile scenario wording.
-  - Then `/code-review` of `main...phase-0/toolchain-and-gate`, run by a separate agent
-    session (same model, fresh context, not a human review). It reported 15 findings, plus 7
-    candidates cut by its cap, and reproduced most findings against the old code.
-  - Fixed, each with regression tests:
-    - 298de4a: the gate's OpenSpec calls sent a usage event on every run.
-    - 7869c47: the secrets scan missed names that only contain a secret word, UTF-16 files
-      and staged copies, and miscounted lines at U+2028.
-    - 6898a60: the evaluation harness could lose a record or let a malformed input pass as a
-      deliberately failing case. Case loading was loose, ran only `scaffold.jsonl` and split
-      lines at U+2028. Null metrics carried no reason, and the input hash was taken after
-      evaluating.
-    - 9007e45: the link check misparsed angle brackets, parentheses, indented fences, HTML
-      comments and reference links; it accepted ignored files and wrong-case paths; and bad
-      frontmatter YAML crashed it.
-    - 293a781: the commit check crashed on a subject containing U+2028.
-  - Answered without a change: the record's `validation.outcome` repeats the evaluator's
-    verdict. In the scaffold the evaluator is the independent check: deterministic code that
-    recomputes the invariant from the case data, separate from whatever produced that data.
-    Phase 0 has no producing step, so status and validation agree. Revisit this when Phase 1
-    pipeline steps get a status of their own.
-  - Not changed:
-    - No date-time format check for records: it needs a new dependency
-      (`rfc3339-validator`), and pydantic's `AwareDatetime` already enforces the format on
-      write.
-    - The gate imports PyYAML at load: `uv run --locked` syncs the dev group first.
-    - Commit types stay lowercase; the `Revert "…"` limitation is listed below.
-    - Cleanups: git and the lockfile hash run once per case, and the scaffold runs twice per
-      gate. Revisit when case counts grow in Phase 5.
+  - Inline, by the implementing agent, against every spec requirement and the design's
+    non-negotiables check: it corrected the design where the build differed (Langfuse release
+    instead of the unconfirmed `gen_ai.agent.version`; WebKit, not Chromium), bda1bb3.
+  - `/code-review high` of `main...phase-1/thin-pipeline`, run by a separate agent session
+    (same model, fresh context, not a human review; it could not run the tests because of the
+    temp-folder problem below). It reported 10 findings; all were fixed in c1b7e0c and c957258
+    with regression tests: leads of a failed run stuck as duplicates; approval loading the
+    unused seed list; tracebacks for migration, SQLite and Git errors; approval and sync
+    reading their work before taking the run lock; stub labels and `fail_at_step: source`
+    accepted but broken; export null reasons under raw column names; Windows "access denied"
+    read as a dead process; duplicated helpers; the write lock held during a step's work.
+  - Answered without a change: re-syncing logs a `no_op` CRM write for every approval each
+    time, which the spec's "log every write" asks for.
 
 ## Findings and limitations
 
-- **Setup commit 3de5377** stored the 26 verbatim skill files with LF line endings, so their
-  committed bytes did not match the source manifest. The setup note "26 verbatim copies match"
-  held for the working tree only. Fixed in d1cf7cf.
 - **Temp folder:** in the agent's shell on this PC, `%TEMP%\pytest-of-Peter` (created
   2026-10-04) denies access, so pytest's `tmp_path` fails there. Runs set
-  `PYTEST_DEBUG_TEMPROOT` to a short writable folder. Deleting that folder may fix it. Keep
-  the temp root short: Windows' 260-character path limit breaks the digest tests under deep
-  folders.
+  `PYTEST_DEBUG_TEMPROOT` to a short writable folder; `C:\Users\Peter\AppData\Local\Temp\p`
+  worked on 2026-10-18, while the deeper agent scratchpad hit Windows' 260-character path
+  limit in the digest tests. Deleting that folder may fix it.
+- **Untracked `.codex/config.toml`** (the owner's, not committed) makes the main tree dirty, so
+  evidence runs come from a clean worktree. Committing or ignoring it is the owner's call.
+- **Diagram tooling (owner-approved, 2026-10-18):** Microsoft OpenJDK 21.0.12.1 unzipped to
+  `C:\Users\Peter\tools\jdk-21.0.12.1+1` (zip SHA-256 matched Microsoft's published
+  `192441a9…5ce07f`; no installer, no PATH change; Java 11 stays the default), and
+  `C:\Users\Peter\tools\structurizr\structurizr-2026.09.19-playwright.war` (no checksum is
+  published; SHA-256 `7b717f14…077d90` as downloaded). The first SVG export downloaded
+  Playwright's WebKit to `%LOCALAPPDATA%\ms-playwright`. Commands are in the showcase skill's C4
+  reference and the header of `docs/architecture/workspace.dsl`.
+- **Target container view** is legible but its planned-system lines cross some labels near the
+  pipeline; arranging it by hand belongs with the Phase 6 showcase work.
+- **A `running` run recorded on another host name** (for example after renaming the PC) blocks
+  every new run, and no command clears it; it would need a manual SQL update.
+- **The agent version needs a Git checkout;** a Phase 6 container needs a build-time stamp.
+- **The secrets scan** matches any name containing KEY, TOKEN, SECRET or PASSWORD; two
+  OpenTelemetry token-count attribute names in `src/adscout/export.py` are allowlisted with a
+  reason. Confirm each provider's key prefix when its account is created.
+- **The commit check** compares the branch with `main`; commits made directly on `main` are not
+  checked, and Git's default `Revert "…"` subjects fail it.
+- **The link check** fails on links to gitignored files, such as the local playbook PDF.
 - **Ruff 0.17** also formats Markdown code blocks, so `pyproject.toml` limits ruff to Python
   files.
-- **The commit check** compares the branch with `main` or `origin/main`. Commits made directly
-  on `main` are not checked, and Git's default `Revert "…"` subjects fail it.
-- **The secrets scan** knows this stack's key prefixes. Confirm each prefix when its account
-  is created behind the accounts gate. It now matches any name containing KEY, TOKEN, SECRET
-  or PASSWORD, so a long identifier such as a `primary_key` value can be flagged; accept such
-  a finding in `.secrets-allowlist` with a reason.
-- **The link check** fails on links to gitignored files, such as the local playbook PDF.
-- **OpenSpec telemetry:** OpenSpec sends a usage event to edge.openspec.dev on every command
-  unless `OPENSPEC_TELEMETRY=0` or `DO_NOT_TRACK=1` is set. The gate sets both, and
-  `.claude/settings.json` sets `OPENSPEC_TELEMETRY=0` for Claude Code sessions in this repo
-  (owner, 2026-10-18). Other terminals and harnesses (Codex) still send it unless the
-  variable is set there.
-- **Coverage** has no threshold until Phase 1.
+- **OpenSpec telemetry:** the gate and `.claude/settings.json` turn it off; other terminals and
+  harnesses send a usage event unless `OPENSPEC_TELEMETRY=0` is set there.
+- **Open for later phases** (Phase 1 design, Open Questions): what counts as a qualified lead and
+  the score scale and threshold (Phase 2); the minutes-per-account definition (Phase 5), with
+  the owner timing their own research on the five seeds before then; whether to cover the
+  posting's automation tools (the deferred n8n variant); the CRM sandbox product (Phase 4).
 
 ## Next action
 
-Phase 0 is merged. Clear the context and run `/next-phase` to start Phase 1 (thin end-to-end pipeline with stub steps, PROJECT.md §6). Its grilling decides the
-database and run-record design, checking them against the Phase 5 tracing and Phase 6
-dashboard candidates (PROJECT.md §4).
+If `phase-1/thin-pipeline` is not yet merged into `main`, ask the owner for the merge
+go-ahead, merge with `git merge --no-ff`, confirm it landed and delete the branch. Then clear the
+context and run `/next-phase` to start Phase 2 (enrichment with field validation, profile rules
+and LLM fit scoring, PROJECT.md §6). Its grilling must answer the model cost and access items in
+PROJECT.md §4 and the qualified-lead definition before the first model call.

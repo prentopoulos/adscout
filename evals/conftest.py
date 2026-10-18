@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 from jsonschema import Draft202012Validator
 
-from evals.runner import CASES, RUNS, SCHEMAS, RunFile, case_files, load_cases, new_run_id
+from adscout.ids import new_run_id
+from evals.runner import CASES, RUNS, SCHEMAS, RunFile, case_files, load_cases
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

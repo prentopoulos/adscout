@@ -4,15 +4,13 @@ import copy
 import hashlib
 import json
 import platform
-import subprocess
 import time
-import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from pydantic import ValidationError
 
+from adscout.ids import agent_version, code_version
 from evals.evaluators import EVALUATORS
 from evals.models import Case, Label, ResultRecord, Status, Validation, started_now
 
@@ -22,15 +20,14 @@ RUNS = ROOT / "evals" / "runs"
 SCHEMAS = ROOT / "evals" / "schemas"
 
 NULL_REASONS = {
-    "gen_ai.request.model": "no model step in Phase 0",
-    "prompt_version": "no model step in Phase 0",
-    "agent_version": "agent version is defined in Phase 1",
-    "gen_ai.usage.input_tokens": "no model step in Phase 0",
-    "gen_ai.usage.output_tokens": "no model step in Phase 0",
-    "cost_usd": "no model step in Phase 0",
-    "segment": "segment config arrives in Phase 1",
-    "seed_list_hash": "seed list arrives in Phase 1",
-    "icp_config_hash": "ideal-customer config arrives in Phase 1",
+    "gen_ai.request.model": "scaffold cases run no model step",
+    "prompt_version": "scaffold cases run no prompt",
+    "gen_ai.usage.input_tokens": "scaffold cases run no model step",
+    "gen_ai.usage.output_tokens": "scaffold cases run no model step",
+    "cost_usd": "scaffold cases run no model step",
+    "segment": "scaffold cases belong to no segment",
+    "seed_list_hash": "scaffold cases use no seed list",
+    "icp_config_hash": "scaffold cases use no segment config",
     "labelled_set_version": "no owner-labelled set; scaffold cases are synthetic",
     "attribution_rule": "no revenue figure",
 }
@@ -69,21 +66,8 @@ def load_cases(*paths: Path) -> list[Case]:
     return cases
 
 
-def new_run_id() -> str:
-    return f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{uuid.uuid4().hex[:6]}"
-
-
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
-
-def code_version(root: Path) -> tuple[str, bool]:
-    def git(*args: str) -> str:
-        return subprocess.run(
-            ["git", *args], cwd=root, capture_output=True, text=True, encoding="utf-8", check=True
-        ).stdout.strip()
-
-    return git("rev-parse", "HEAD"), bool(git("status", "--porcelain"))
 
 
 def expected_outcome_met(label: Label, status: Status) -> bool:
@@ -127,6 +111,7 @@ def run_case(case: Case, run_id: str, repetition: int, root: Path = ROOT) -> Res
         "code_revision": revision,
         "code_dirty": dirty,
         "lock_digest": sha256_hex((root / "uv.lock").read_bytes()),
+        "agent_version": agent_version(revision, dirty),
         "evaluator": case.evaluator,
         "evaluator_version": version,
         "config": {"case_set": case.case_set, "case_set_version": case.case_set_version},

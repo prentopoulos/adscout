@@ -1,0 +1,16 @@
+# Synthetic segment for tests and the offline demo. Every company is on a reserved domain.
+schema_version: "1"
+segment_id: synthetic-demo
+name: Synthetic demo segment
+scope: Fictional companies on reserved test domains, for exercising every pipeline path.
+regions: ["US", "CA"]
+categories:
+  - peripherals
+size_range: null
+exclusions:
+  domains: ["excluded.test"]
+  categories: []
+score_threshold: null
+null_reasons:
+  size_range: synthetic fixture has no size rule
+  score_threshold: synthetic fixture has no threshold
