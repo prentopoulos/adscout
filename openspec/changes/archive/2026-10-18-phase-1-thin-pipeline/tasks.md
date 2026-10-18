@@ -46,4 +46,4 @@
 - [x] 7.2 Run the gate (all steps, coverage at least 90%) and pip-audit; record results in HANDOFF
 - [x] 7.3 Run the WORKFLOW.md code review (`/code-review` on `main...phase-1/thin-pipeline`, plus requirements and non-negotiables check); fix or answer each finding
 - [x] 7.4 Update AI_OPS.md capability rows and evidence pointers, and HANDOFF.md with checks, limitations and the next action
-- [ ] 7.5 Bump the version to 0.2.0, archive the change, sync specs, set Phase 1 Done, rerun validation and the gate; merge on the owner's go-ahead
+- [x] 7.5 Bump the version to 0.2.0, archive the change, sync specs, set Phase 1 Done, rerun validation and the gate (the merge follows on the owner's go-ahead, WORKFLOW.md)

@@ -1,6 +1,6 @@
 [project]
 name = "adscout"
-version = "0.1.0"
+version = "0.2.0"
 description = "Advertiser prospecting and qualification agent (portfolio project)"
 requires-python = ">=3.13"
 authors = [{ name = "Peter Rentopoulos" }]

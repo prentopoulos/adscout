@@ -9,11 +9,15 @@ status (pass, fail, not_run or error), the independent validation outcome, metri
 time and duration, and the source (fixture or live). Fields with no value SHALL be null with a
 reason in the record, never zero, and each reason SHALL be true for the run that wrote it.
 
-#### Scenario: Scaffold record has explained nulls
+#### Scenario: Phase 0 record has explained nulls
+- **WHEN** the scaffold runs before any model step exists
+- **THEN** the model ID, prompt version, tokens and cost are null, each with a reason, and the
+  source is "fixture"
+
+#### Scenario: Scaffold record carries the agent version and present-tense reasons
 - **WHEN** the scaffold runs, which has no model step and no segment
-- **THEN** the model ID, prompt version, tokens, cost, segment and config hashes are null,
-  each with a reason that does not refer to a future phase, the agent version is filled, and
-  the source is "fixture"
+- **THEN** the agent version is filled, and the segment and config hashes are null, each with
+  a reason that does not refer to a future phase
 
 #### Scenario: Schema files match the code
 - **WHEN** the case or result model changes without regenerating its JSON Schema file
