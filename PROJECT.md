@@ -63,6 +63,19 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
   Streamlit, Metabase or Looker Studio for the dashboard and approval queue.
 - Decided: none yet. Language version, model provider, database, search/fetch provider,
   enrichment source, tracing host and dashboard tool are TBD.
+- Model cost and access, TBD: Phase 2 grilling must answer each item before the first model
+  call. Options are in the AI-ops skill's `llm-rag.md` (§ Reduce spend, § Gateway and
+  budgets) and `design-choices.md`.
+  - Model access route behind a thin in-house adapter: direct provider SDK, OpenRouter (no
+    markup on model prices, 5.5% fee on credit purchases; OpenRouter FAQ, retrieved
+    2026-10-17) or LiteLLM.
+  - Model tier per step and the fallback model (playbook proposal: fast tier for extraction
+    and scoring, workhorse tier for research and drafts).
+  - Token and cost recording per step from the first model call, with a dated price table.
+  - A local record-and-replay cache of model responses and fetched pages, keyed by input,
+    prompt version and model, so development reruns cost nothing.
+  - A per-run spend cap and output-length limits enforced in code.
+  - Prompt caching for the fixed prompt prefix, and the Batch API for steps that can wait.
 - External services and access: no accounts, keys or paid plans exist for this project yet.
   Each is behind the gates in §6.
 - Architecture diagrams: C4 as code, drawn to the c4model.com notation guide (context and
@@ -126,7 +139,7 @@ their order and boundaries are confirmed in grilling before each phase.
 |---|---|---|
 | 0 | Toolchain, lockfile, quality gate with the constitution copy check, smoke checks; applicable offline AI evaluation scaffold | Planned |
 | 1 | Thin end-to-end pipeline on five seed companies with stub steps: segment and ideal-customer config, seed list, local database schema for companies, scores, briefs, drafts, approvals and runs; C4 architecture diagrams as code | Planned |
-| 2 | Enrichment with field validation, deterministic profile rules and LLM fit scoring with structured output and reasons | Planned |
+| 2 | Enrichment with field validation, deterministic profile rules and LLM fit scoring with structured output and reasons; answers the model cost and access TBDs in §4 | Planned |
 | 3 | Read-only research agent: search and fetch tools, step cap, page budget, a citation per claim | Planned |
 | 4 | Draft writer and rule checker, approval queue, CRM sandbox sync with source and version tags, sandbox-only send | Planned |
 | 5 | Offline evaluation suite in CI and tracing with tokens and cost per lead | Planned |
