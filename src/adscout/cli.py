@@ -1,6 +1,7 @@
 """Command-line entry point for AdScout."""
 
 import argparse
+import json
 import sqlite3
 import sys
 from collections.abc import Callable, Iterator
@@ -8,9 +9,11 @@ from contextlib import contextmanager
 from importlib.metadata import version
 from pathlib import Path
 
+from adscout.check import check_run
 from adscout.config import ConfigError, load_segment
 from adscout.db.connection import connect, resolve_db_path
 from adscout.db.migrate import MigrationError, upgrade
+from adscout.export import ExportRefused, export_lines, write_export
 from adscout.pipeline.recorder import RunFailed, RunInProgress
 from adscout.pipeline.run import (
     DatabaseNotReady,
@@ -19,6 +22,7 @@ from adscout.pipeline.run import (
     run_pipeline,
     run_stub_approval,
 )
+from adscout.report import funnel, list_runs
 
 Handler = Callable[[argparse.Namespace], int]
 DEFAULT_CONFIG_DIR = Path("config")
@@ -88,6 +92,50 @@ def sync(args: argparse.Namespace) -> int:
         return fail("sync", error)
 
 
+def runs(args: argparse.Namespace) -> int:
+    try:
+        with database(args) as connection:
+            print(list_runs(connection, args.segment))
+    except DatabaseNotReady as error:
+        return fail("runs", error)
+    return 0
+
+
+def show_funnel(args: argparse.Namespace) -> int:
+    try:
+        with database(args) as connection:
+            print(funnel(connection, args.run_id))
+    except (DatabaseNotReady, LookupError) as error:
+        return fail("funnel", error)
+    return 0
+
+
+def check(args: argparse.Namespace) -> int:
+    try:
+        with database(args) as connection:
+            result = check_run(connection, args.run_id)
+    except (DatabaseNotReady, LookupError) as error:
+        return fail("check", error)
+    print(f"run {result.run_id}: {result.outcome}")
+    for problem in result.problems:
+        print(f"  {problem}")
+    return 0 if result.outcome == "pass" else 1
+
+
+def export(args: argparse.Namespace) -> int:
+    try:
+        with database(args) as connection:
+            if args.out is None:
+                for line in export_lines(connection, args.run_id):
+                    print(json.dumps(line, ensure_ascii=False, sort_keys=True))
+                return 0
+            path = write_export(connection, args.run_id, args.out)
+    except (DatabaseNotReady, LookupError, ExportRefused, FileExistsError) as error:
+        return fail("export", error)
+    print(f"wrote {path}")
+    return 0
+
+
 def add_db_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--db", help="database file (default: $ADSCOUT_DB, else data/adscout.db)")
 
@@ -135,6 +183,23 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser = commands.add_parser("sync", help="write approved leads to the CRM")
     add_segment_options(sync_parser)
     sync_parser.set_defaults(handler=sync)
+
+    runs_parser = commands.add_parser("runs", help="list recorded runs")
+    runs_parser.add_argument("--segment", help="only this segment's runs")
+    add_db_option(runs_parser)
+    runs_parser.set_defaults(handler=runs)
+
+    for name, handler, text in (
+        ("funnel", show_funnel, "show a run's counts per step and its exit reasons"),
+        ("check", check, "validate a run independently and record the outcome"),
+        ("export", export, "write a run as JSON Lines (to stdout, or a new file with --out)"),
+    ):
+        sub = commands.add_parser(name, help=text)
+        sub.add_argument("run_id")
+        add_db_option(sub)
+        if name == "export":
+            sub.add_argument("--out", type=Path, help="new file to write; never overwritten")
+        sub.set_defaults(handler=handler)
 
     return parser
 

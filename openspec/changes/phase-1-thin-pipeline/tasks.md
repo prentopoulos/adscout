@@ -27,11 +27,11 @@
 
 ## 5. Checks, summaries and export
 
-- [ ] 5.1 Independent run check over SQL only and `adscout check`, with the conservation, monotonic-funnel, labelling, immutable-field and approval tests
-- [ ] 5.2 `adscout runs` and `adscout funnel`
-- [ ] 5.3 `adscout export` with the OpenTelemetry/Langfuse mapping table, the committed export schema, and the dirty-tree refusal for `evidence/runs/`
-- [ ] 5.4 `scripts/demo.py` chaining upgrade, run, approve, sync, check and funnel, with a test that runs it offline on synthetic seeds
-- [ ] 5.5 Eval scaffold: fill `agent_version` and rewrite the "Phase 1" null reasons; update the scaffold test
+- [x] 5.1 Independent run check over SQL only and `adscout check`, with the conservation, monotonic-funnel, labelling, immutable-field and approval tests
+- [x] 5.2 `adscout runs` and `adscout funnel`
+- [x] 5.3 `adscout export` with the OpenTelemetry/Langfuse mapping table, the committed export schema, and the dirty-tree refusal for `evidence/runs/`
+- [x] 5.4 `scripts/demo.py` chaining upgrade, run, approve, sync, check and funnel, with a test that runs it offline on synthetic seeds
+- [x] 5.5 Eval scaffold: fill `agent_version` and rewrite the "Phase 1" null reasons; update the scaffold test
 
 ## 6. Architecture diagrams
 

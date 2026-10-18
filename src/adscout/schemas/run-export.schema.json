@@ -1,0 +1,476 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "OutcomeRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "record": {
+          "const": "lead_outcome",
+          "title": "Record",
+          "type": "string"
+        },
+        "adscout.lead.id": {
+          "title": "Adscout.Lead.Id",
+          "type": "string"
+        },
+        "adscout.company.domain": {
+          "title": "Adscout.Company.Domain",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "adscout.seed_row": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Seed Row"
+        },
+        "adscout.outcome": {
+          "title": "Adscout.Outcome",
+          "type": "string"
+        },
+        "adscout.exit_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Exit Reason"
+        },
+        "adscout.flag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Flag"
+        },
+        "adscout.detail": {
+          "title": "Adscout.Detail",
+          "type": "string"
+        },
+        "adscout.step.implementation": {
+          "title": "Adscout.Step.Implementation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "record",
+        "adscout.lead.id",
+        "adscout.company.domain",
+        "adscout.step.name",
+        "adscout.seed_row",
+        "adscout.outcome",
+        "adscout.exit_reason",
+        "adscout.flag",
+        "adscout.detail",
+        "adscout.step.implementation"
+      ],
+      "title": "OutcomeRecord",
+      "type": "object"
+    },
+    "RunRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "record": {
+          "const": "run",
+          "title": "Record",
+          "type": "string"
+        },
+        "adscout.run.kind": {
+          "title": "Adscout.Run.Kind",
+          "type": "string"
+        },
+        "adscout.segment.id": {
+          "title": "Adscout.Segment.Id",
+          "type": "string"
+        },
+        "adscout.run.status": {
+          "title": "Adscout.Run.Status",
+          "type": "string"
+        },
+        "adscout.run.started_at": {
+          "title": "Adscout.Run.Started At",
+          "type": "string"
+        },
+        "adscout.run.ended_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Run.Ended At"
+        },
+        "adscout.run.error_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Run.Error Category"
+        },
+        "adscout.validation.outcome": {
+          "title": "Adscout.Validation.Outcome",
+          "type": "string"
+        },
+        "adscout.validation.detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Validation.Detail"
+        },
+        "adscout.source": {
+          "title": "Adscout.Source",
+          "type": "string"
+        },
+        "adscout.code.revision": {
+          "title": "Adscout.Code.Revision",
+          "type": "string"
+        },
+        "adscout.code.dirty": {
+          "title": "Adscout.Code.Dirty",
+          "type": "boolean"
+        },
+        "adscout.lock.digest": {
+          "title": "Adscout.Lock.Digest",
+          "type": "string"
+        },
+        "adscout.package.version": {
+          "title": "Adscout.Package.Version",
+          "type": "string"
+        },
+        "langfuse.release": {
+          "title": "Langfuse.Release",
+          "type": "string"
+        },
+        "adscout.prompt.version": {
+          "title": "Adscout.Prompt.Version",
+          "type": "string"
+        },
+        "adscout.python.version": {
+          "title": "Adscout.Python.Version",
+          "type": "string"
+        },
+        "adscout.platform": {
+          "title": "Adscout.Platform",
+          "type": "string"
+        },
+        "adscout.schema.version": {
+          "title": "Adscout.Schema.Version",
+          "type": "integer"
+        },
+        "adscout.icp_config_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Icp Config Hash"
+        },
+        "adscout.seed_list_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Seed List Hash"
+        },
+        "adscout.stub_script_hash": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Stub Script Hash"
+        },
+        "adscout.budgets": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Adscout.Budgets",
+          "type": "object"
+        },
+        "adscout.minutes_per_account": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Minutes Per Account"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "record",
+        "adscout.run.kind",
+        "adscout.segment.id",
+        "adscout.run.status",
+        "adscout.run.started_at",
+        "adscout.run.ended_at",
+        "adscout.run.error_category",
+        "adscout.validation.outcome",
+        "adscout.validation.detail",
+        "adscout.source",
+        "adscout.code.revision",
+        "adscout.code.dirty",
+        "adscout.lock.digest",
+        "adscout.package.version",
+        "langfuse.release",
+        "adscout.prompt.version",
+        "adscout.python.version",
+        "adscout.platform",
+        "adscout.schema.version",
+        "adscout.icp_config_hash",
+        "adscout.seed_list_hash",
+        "adscout.stub_script_hash",
+        "adscout.budgets",
+        "adscout.minutes_per_account"
+      ],
+      "title": "RunRecord",
+      "type": "object"
+    },
+    "StepRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "record": {
+          "const": "step",
+          "title": "Record",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "adscout.step.seq": {
+          "title": "Adscout.Step.Seq",
+          "type": "integer"
+        },
+        "adscout.step.implementation": {
+          "title": "Adscout.Step.Implementation",
+          "type": "string"
+        },
+        "adscout.step.status": {
+          "title": "Adscout.Step.Status",
+          "type": "string"
+        },
+        "adscout.step.started_at": {
+          "title": "Adscout.Step.Started At",
+          "type": "string"
+        },
+        "adscout.step.ended_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Step.Ended At"
+        },
+        "adscout.step.duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Step.Duration Ms"
+        },
+        "adscout.step.entering": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Step.Entering"
+        },
+        "adscout.step.kept": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Step.Kept"
+        },
+        "adscout.step.exited": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Step.Exited"
+        },
+        "gen_ai.request.model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Request.Model"
+        },
+        "gen_ai.usage.input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Input Tokens"
+        },
+        "gen_ai.usage.output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Output Tokens"
+        },
+        "gen_ai.usage.cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Cost"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "record",
+        "adscout.step.name",
+        "adscout.step.seq",
+        "adscout.step.implementation",
+        "adscout.step.status",
+        "adscout.step.started_at",
+        "adscout.step.ended_at",
+        "adscout.step.duration_ms",
+        "adscout.step.entering",
+        "adscout.step.kept",
+        "adscout.step.exited",
+        "gen_ai.request.model",
+        "gen_ai.usage.input_tokens",
+        "gen_ai.usage.output_tokens",
+        "gen_ai.usage.cost"
+      ],
+      "title": "StepRecord",
+      "type": "object"
+    }
+  },
+  "description": "One line of a run export.",
+  "discriminator": {
+    "mapping": {
+      "lead_outcome": "#/$defs/OutcomeRecord",
+      "run": "#/$defs/RunRecord",
+      "step": "#/$defs/StepRecord"
+    },
+    "propertyName": "record"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RunRecord"
+    },
+    {
+      "$ref": "#/$defs/StepRecord"
+    },
+    {
+      "$ref": "#/$defs/OutcomeRecord"
+    }
+  ],
+  "title": "ExportLine"
+}

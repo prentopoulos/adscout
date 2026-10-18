@@ -1,6 +1,7 @@
 """The evaluation harness: formats, retention and the gate step's pass rule."""
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -161,12 +162,14 @@ def test_null_metric_needs_a_reason() -> None:
         type(record).model_validate(data)
 
 
-def test_phase_0_record_explains_its_nulls() -> None:
+def test_scaffold_record_explains_its_nulls() -> None:
     record = run_case(load_cases(SCAFFOLD)[0], new_run_id(), repetition=0)
     data = record.model_dump(mode="json", by_alias=True)
     assert data["source"] == "fixture"
     assert data["gen_ai.request.model"] is None
     assert data["null_reasons"] == NULL_REASONS
+    assert re.fullmatch(r"\d+\.\d+\.\d+\+g[0-9a-f]{12}(\.dirty)?", data["agent_version"])
+    assert not [reason for reason in NULL_REASONS.values() if "Phase" in reason]
 
 
 def test_run_file_is_never_overwritten(tmp_path: Path) -> None:
