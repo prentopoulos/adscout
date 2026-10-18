@@ -28,6 +28,37 @@ def test_broken_local_link_fails(git_repo: Path) -> None:
     assert docs.check(git_repo) == ["docs/a.md: broken link to missing.md"]
 
 
+def test_link_forms_are_parsed(git_repo: Path) -> None:
+    write(git_repo, "My File.md", "# Spaces\n")
+    write(git_repo, "foo(1).md", "# Parentheses\n")
+    write(git_repo, "docs/guide.md", "# Folder\n")
+    write(
+        git_repo,
+        "a.md",
+        "[spaces](<My File.md>) [parens](foo(1).md) [folder](docs/) [root](/docs/guide.md)\n"
+        "[gone](<Gone File.md>)\n"
+        "- item\n\n  ```md\n  [listed](nope.md)\n  ```\n"
+        "<!-- [commented](nope.md) -->\n"
+        "[ref]: missing-ref.md\n"
+        "[^note]: Footnote text, not a link.\n",
+    )
+    assert docs.check(git_repo) == [
+        "a.md: broken link to Gone File.md",
+        "a.md: broken link to missing-ref.md",
+    ]
+
+
+def test_link_must_work_in_a_fresh_clone(git_repo: Path) -> None:
+    write(git_repo, ".gitignore", "private.md\n")
+    write(git_repo, "private.md", "# Ignored\n")
+    write(git_repo, "b.md", "# B\n")
+    write(git_repo, "a.md", "[ignored](private.md) [case](B.md) [ok](b.md)\n")
+    assert docs.check(git_repo) == [
+        "a.md: broken link to private.md",
+        "a.md: broken link to B.md",
+    ]
+
+
 def test_matching_pointer_passes(git_repo: Path) -> None:
     skill(git_repo, ".agents/skills", "demo", "demo", "Does the demo thing.")
     skill(git_repo, ".claude/skills", "demo", "demo", "Does the demo thing.")
@@ -52,3 +83,16 @@ def test_name_folder_mismatch_fails(git_repo: Path) -> None:
 def test_missing_description_fails(git_repo: Path) -> None:
     write(git_repo, ".agents/skills/demo/SKILL.md", "---\nname: demo\n---\n")
     assert docs.check(git_repo) == [".agents/skills/demo/SKILL.md: no description"]
+
+
+def test_invalid_frontmatter_is_named_and_other_problems_still_reported(git_repo: Path) -> None:
+    write(
+        git_repo, ".agents/skills/demo/SKILL.md", "---\nname: demo\ndescription: Use when: x\n---\n"
+    )
+    write(git_repo, "a.md", "[gone](missing.md)\n")
+    problems = docs.check(git_repo)
+    assert problems[0] == "a.md: broken link to missing.md"
+    assert problems[1].startswith(
+        ".agents/skills/demo/SKILL.md: frontmatter is not valid YAML: mapping values"
+    )
+    assert len(problems) == 2
