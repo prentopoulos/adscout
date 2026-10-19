@@ -48,9 +48,9 @@
 
 ## 8. Observability and diagrams
 
-- [ ] 8.1 Export mapping updated for the moved OTel GenAI conventions and `gen_ai.agent.version`; trace fields exported
-- [ ] 8.2 End-of-run cost table by step, role and model with cost per lead and per qualified lead
-- [ ] 8.3 `adscout trace`
+- [x] 8.1 Export mapping updated for the moved OTel GenAI conventions and `gen_ai.agent.version`; trace fields exported
+- [x] 8.2 End-of-run cost table by step, role and model with cost per lead and per qualified lead
+- [x] 8.3 `adscout trace`
 - [ ] 8.4 `scripts/diagrams.py` generating `agents.md` and `agent-flow.html` with stamp and drift tests; C4 model with the research team view, re-exported; republish the private artifact from the generated page
 
 ## 9. Seeds, sites, labels and plans

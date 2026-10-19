@@ -515,6 +515,29 @@ the grilling round; question numbers are those the owner answered.
     in Phase 2; Langfuse Cloud's free plan is planned for Phase 3 under the account gate
     (owner). Datadog, LangSmith, self-hosted Langfuse and Phoenix lose on accounts, data
     leaving the PC, weight or licence.
+
+    **As built (tasks 8.1 to 8.3, 2026-10-19).** Names were checked against the GenAI registry
+    in `semantic-conventions-genai` (Development) and Langfuse's OpenTelemetry property
+    mapping. `export.ATTRIBUTES` is now the one table every OpenTelemetry or Langfuse name
+    comes from, and a test fails if a record uses one that is not in it. A run export adds
+    a record per span: `step_span`, `agent_span` (`invoke_agent`), `model_call` (`chat`) and
+    `source_call` (`execute_tool`), each with `trace_id`, `span_id`, `parent_span_id`, a
+    span name such as `chat claude-sonnet-5-5`, times, `status_code` and
+    `langfuse.observation.type`. Calls carry `gen_ai.provider.name` (`anthropic`),
+    `gen_ai.agent.name`, `gen_ai.agent.version` (the role's prompt version, `p-...`; an
+    agent span takes it from its calls), `gen_ai.response.finish_reasons`, the cache
+    attributes `gen_ai.usage.cache_read.input_tokens` and
+    `gen_ai.usage.cache_write.input_tokens` (renamed from `cache_creation` upstream), and
+    `gen_ai.usage.input_tokens` including cached tokens, as the convention requires and the
+    API's own count does not. `adscout check` now follows parent span IDs: every span and
+    call must be in its lead's trace under a span of that trace. Runs of kind pipeline,
+    rescore and eval store `cost_summary_json` when they finish, failed runs included, and
+    print it: calls, input (cached included), cached, output, searches, cost and seconds by
+    step, role and model, summed as decimals, with cost per lead (leads carried past
+    `source`) and per qualified lead (a real `score` outcome of `kept`), each null with a
+    reason when there is none. `adscout trace <run> [--lead <domain>]` prints each lead's
+    last outcome and span tree from the database alone; siblings are ordered by start, end
+    and write order, since times have millisecond resolution.
 37. **Concurrency (settled, recorded: llm-rag.md; Phase 1 decision 7).** At most 3 parallel
     model calls; lock-guarded spend reservation; short `BEGIN IMMEDIATE` writes; workers
     never write SQLite directly.

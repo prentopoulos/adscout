@@ -1,10 +1,12 @@
-"""Export one run as JSON Lines: the run, its steps and its lead outcomes.
+"""Export one run as JSON Lines: the run, its steps, its lead outcomes and its trace spans.
 
 Fields use an OpenTelemetry GenAI or Langfuse attribute name where one exists and an
-`adscout.*` name otherwise, so Phase 5 can send the same fields as trace spans. The GenAI
-conventions are still in Development status; `ATTRIBUTES` is the one place to update them.
-Checked 2026-10-18: GenAI attributes in the OpenTelemetry semantic-conventions registry
-(moved to the semantic-conventions-genai repository), and Langfuse's OpenTelemetry mapping.
+`adscout.*` name otherwise, so Phase 5 can send the same fields as trace spans. Span records
+also carry the OpenTelemetry span fields `trace_id`, `span_id`, `parent_span_id`, `name`,
+`start_time`, `end_time` and `status_code`. The GenAI conventions are still in Development
+status; `ATTRIBUTES` is the one place to update them. Checked 2026-10-19: the GenAI registry
+in github.com/open-telemetry/semantic-conventions-genai (moved there from the main
+semantic-conventions repository), and Langfuse's OpenTelemetry property mapping.
 """
 
 import json
@@ -18,22 +20,51 @@ from adscout.ids import ROOT
 
 EVIDENCE = ROOT / "evidence" / "runs"
 MINUTES_NULL = "stub timing is not a measurement; defined in the evaluation plan"
+PROVIDER = "anthropic"
+NO_COST_TABLE = "only pipeline, rescore and evaluation runs store a cost table"
 
-# Column → exported attribute. A run maps to a Langfuse session, a step to a span.
+# Field → exported attribute, for every OpenTelemetry or Langfuse name the export uses. A run
+# maps to a Langfuse session, a step to a span; a lead's spans share its trace.
+# `gen_ai.usage.input_tokens` counts cache reads and writes too, as the convention says;
+# the API's `input_tokens` does not, so the export adds them. Cost is not an OpenTelemetry
+# attribute; Langfuse reads `gen_ai.usage.cost` as the total.
 ATTRIBUTES = {
     "run_id": "langfuse.session.id",
     "agent_version": "langfuse.release",
+    "observation_type": "langfuse.observation.type",
+    "operation": "gen_ai.operation.name",
+    "provider": "gen_ai.provider.name",
+    "agent_name": "gen_ai.agent.name",
+    "role_version": "gen_ai.agent.version",
     "model": "gen_ai.request.model",
+    "finish_reasons": "gen_ai.response.finish_reasons",
     "input_tokens": "gen_ai.usage.input_tokens",
     "output_tokens": "gen_ai.usage.output_tokens",
+    "cache_read_tokens": "gen_ai.usage.cache_read.input_tokens",
+    "cache_write_tokens": "gen_ai.usage.cache_write.input_tokens",
     "cost_usd": "gen_ai.usage.cost",
+    "tool_name": "gen_ai.tool.name",
+    "error_type": "error.type",
+    "http_status": "http.response.status_code",
 }
+# What Langfuse should show each span as.
+OBSERVATION_TYPES = {
+    "step": "span",
+    "invoke_agent": "agent",
+    "chat": "generation",
+    "execute_tool": "tool",
+}
+
+
+def otel(name: str) -> Any:
+    """A field exported under its mapped OpenTelemetry or Langfuse name."""
+    return Field(alias=ATTRIBUTES[name])
 
 
 class ExportRecord(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    session_id: str = Field(alias="langfuse.session.id")
+    session_id: str = otel("run_id")
     null_reasons: dict[str, str] = {}
 
 
@@ -52,7 +83,7 @@ class RunRecord(ExportRecord):
     code_dirty: bool = Field(alias="adscout.code.dirty")
     lock_digest: str = Field(alias="adscout.lock.digest")
     package_version: str = Field(alias="adscout.package.version")
-    agent_version: str = Field(alias="langfuse.release")
+    agent_version: str = otel("agent_version")
     prompt_version: str = Field(alias="adscout.prompt.version")
     python_version: str = Field(alias="adscout.python.version")
     platform: str = Field(alias="adscout.platform")
@@ -62,6 +93,7 @@ class RunRecord(ExportRecord):
     stub_script_hash: str | None = Field(alias="adscout.stub_script_hash")
     budgets: dict[str, int | float] = Field(alias="adscout.budgets")
     minutes_per_account: float | None = Field(alias="adscout.minutes_per_account")
+    cost_summary: dict[str, Any] | None = Field(alias="adscout.cost_summary")
 
 
 class StepRecord(ExportRecord):
@@ -76,10 +108,10 @@ class StepRecord(ExportRecord):
     entering: int | None = Field(alias="adscout.step.entering")
     kept: int | None = Field(alias="adscout.step.kept")
     exited: int | None = Field(alias="adscout.step.exited")
-    model: str | None = Field(alias="gen_ai.request.model")
-    input_tokens: int | None = Field(alias="gen_ai.usage.input_tokens")
-    output_tokens: int | None = Field(alias="gen_ai.usage.output_tokens")
-    cost_usd: float | None = Field(alias="gen_ai.usage.cost")
+    model: str | None = otel("model")
+    input_tokens: int | None = otel("input_tokens")
+    output_tokens: int | None = otel("output_tokens")
+    cost_usd: float | None = otel("cost_usd")
 
 
 class OutcomeRecord(ExportRecord):
@@ -95,9 +127,86 @@ class OutcomeRecord(ExportRecord):
     implementation: str = Field(alias="adscout.step.implementation")
 
 
-class ExportLine(
-    RootModel[Annotated[RunRecord | StepRecord | OutcomeRecord, Field(discriminator="record")]]
-):
+class SpanRecord(ExportRecord):
+    """Fields every trace span shares: OpenTelemetry span fields plus the lead and step."""
+
+    trace_id: str
+    span_id: str
+    parent_span_id: str | None
+    name: str
+    start_time: str
+    end_time: str
+    status_code: Literal["OK", "ERROR"]
+    observation_type: str = otel("observation_type")
+    lead_id: str = Field(alias="adscout.lead.id")
+    step: str = Field(alias="adscout.step.name")
+
+
+class StepSpanRecord(SpanRecord):
+    record: Literal["step_span"]
+    detail: str = Field(alias="adscout.detail")
+
+
+class AgentSpanRecord(SpanRecord):
+    record: Literal["agent_span"]
+    operation: Literal["invoke_agent"] = otel("operation")
+    provider: str = otel("provider")
+    agent_name: str = otel("agent_name")
+    role_version: str | None = otel("role_version")
+    detail: str = Field(alias="adscout.detail")
+
+
+class ModelCallRecord(SpanRecord):
+    record: Literal["model_call"]
+    operation: Literal["chat"] = otel("operation")
+    provider: str = otel("provider")
+    agent_name: str = otel("agent_name")
+    role_version: str = otel("role_version")
+    model: str = otel("model")
+    finish_reasons: list[str] = otel("finish_reasons")
+    input_tokens: int | None = otel("input_tokens")
+    output_tokens: int | None = otel("output_tokens")
+    cache_read_tokens: int | None = otel("cache_read_tokens")
+    cache_write_tokens: int | None = otel("cache_write_tokens")
+    cost_usd: float = otel("cost_usd")
+    error_type: str | None = otel("error_type")
+    call_id: str = Field(alias="adscout.call.id")
+    call_role: str = Field(alias="adscout.call.role")
+    mode: str = Field(alias="adscout.call.mode")
+    effort: str | None = Field(alias="adscout.request.effort")
+    web_search_requests: int = Field(alias="adscout.web_search.requests")
+    original_cost_usd: float | None = Field(alias="adscout.original_cost_usd")
+    latency_ms: int | None = Field(alias="adscout.latency_ms")
+
+
+class SourceCallRecord(SpanRecord):
+    record: Literal["source_call"]
+    operation: Literal["execute_tool"] = otel("operation")
+    tool_name: str = otel("tool_name")
+    http_status: int | None = otel("http_status")
+    error_type: str | None = otel("error_type")
+    call_id: str = Field(alias="adscout.call.id")
+    target: str = Field(alias="adscout.source.target")
+    mode: str = Field(alias="adscout.call.mode")
+    robots_decision: str | None = Field(alias="adscout.robots.decision")
+    bytes: int | None = Field(alias="adscout.source.bytes")
+    model_call_id: str | None = Field(alias="adscout.model_call.id")
+    detail: str = Field(alias="adscout.detail")
+    latency_ms: int | None = Field(alias="adscout.latency_ms")
+
+
+type AnyRecord = (
+    RunRecord
+    | StepRecord
+    | OutcomeRecord
+    | StepSpanRecord
+    | AgentSpanRecord
+    | ModelCallRecord
+    | SourceCallRecord
+)
+
+
+class ExportLine(RootModel[Annotated[AnyRecord, Field(discriminator="record")]]):
     """One line of a run export."""
 
 
@@ -120,11 +229,93 @@ def renamed_reasons(model: type[BaseModel], reasons: dict[str, str]) -> dict[str
     }
 
 
+def span_fields(row: sqlite3.Row, run_id: str, operation: str, name: str) -> dict[str, Any]:
+    failed = row["status"] in ("failed", "refused")
+    return {
+        "session_id": run_id,
+        "name": name,
+        "start_time": row["started_at"],
+        "end_time": row["ended_at"],
+        "status_code": "ERROR" if failed else "OK",
+        "observation_type": OBSERVATION_TYPES[operation],
+    }
+
+
+def trace_records(connection: sqlite3.Connection, run_id: str) -> list[BaseModel]:
+    records: list[BaseModel] = []
+    for span in connection.execute(
+        "SELECT s.*, (SELECT min(m.prompt_version) FROM model_calls AS m "
+        "WHERE m.parent_span_id = s.span_id) AS role_version "
+        "FROM spans AS s WHERE s.run_id = ? ORDER BY s.started_at, s.ended_at, s.rowid",
+        (run_id,),
+    ):
+        if span["operation"] == "step":
+            fields = span_fields(span, run_id, "step", span["step"])
+            records.append(build(StepSpanRecord, dict(span) | fields | {"record": "step_span"}))
+            continue
+        fields = span_fields(span, run_id, "invoke_agent", f"invoke_agent {span['agent_name']}")
+        reasons = {} if span["role_version"] else {"role_version": "no model call in this span"}
+        records.append(
+            build(
+                AgentSpanRecord,
+                dict(span)
+                | fields
+                | {
+                    "record": "agent_span",
+                    "provider": PROVIDER,
+                    "null_reasons": renamed_reasons(AgentSpanRecord, reasons),
+                },
+            )
+        )
+    for call in connection.execute(
+        "SELECT * FROM model_calls WHERE run_id = ? ORDER BY started_at, ended_at, rowid",
+        (run_id,),
+    ):
+        tokens = [call["input_tokens"], call["cache_read_tokens"], call["cache_write_tokens"]]
+        records.append(
+            build(
+                ModelCallRecord,
+                dict(call)
+                | span_fields(call, run_id, "chat", f"chat {call['model']}")
+                | {
+                    "record": "model_call",
+                    "provider": PROVIDER,
+                    "role_version": call["prompt_version"],
+                    "finish_reasons": [call["stop_reason"]] if call["stop_reason"] else [],
+                    "input_tokens": None if tokens[0] is None else sum(t or 0 for t in tokens),
+                    "error_type": call["error_category"],
+                    "null_reasons": renamed_reasons(
+                        ModelCallRecord, json.loads(call["null_reasons_json"])
+                    ),
+                },
+            )
+        )
+    for call in connection.execute(
+        "SELECT * FROM source_calls WHERE run_id = ? ORDER BY started_at, ended_at, rowid",
+        (run_id,),
+    ):
+        records.append(
+            build(
+                SourceCallRecord,
+                dict(call)
+                | span_fields(call, run_id, "execute_tool", f"execute_tool {call['kind']}")
+                | {
+                    "record": "source_call",
+                    "tool_name": call["kind"],
+                    "error_type": None if call["status"] == "succeeded" else call["status"],
+                },
+            )
+        )
+    return records
+
+
 def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, Any]]:
     run = connection.execute("SELECT * FROM runs WHERE run_id = ?", (run_id,)).fetchone()
     if run is None:
         raise LookupError(f"no run {run_id}")
     run_reasons = json.loads(run["null_reasons_json"]) | {"minutes_per_account": MINUTES_NULL}
+    if run["cost_summary_json"] is None:
+        run_reasons["cost_summary"] = NO_COST_TABLE
     records: list[BaseModel] = [
         build(
             RunRecord,
@@ -134,6 +325,7 @@ def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, 
                 "session_id": run_id,
                 "code_dirty": bool(run["code_dirty"]),
                 "budgets": json.loads(run["budgets_json"]),
+                "cost_summary": json.loads(run["cost_summary_json"] or "null"),
                 "minutes_per_account": None,
                 "null_reasons": renamed_reasons(RunRecord, run_reasons),
             },
@@ -165,6 +357,7 @@ def export_lines(connection: sqlite3.Connection, run_id: str) -> list[dict[str, 
         records.append(
             build(OutcomeRecord, dict(outcome) | {"record": "lead_outcome", "session_id": run_id})
         )
+    records.extend(trace_records(connection, run_id))
     return [record.model_dump(mode="json", by_alias=True) for record in records]
 
 

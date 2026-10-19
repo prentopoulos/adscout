@@ -155,6 +155,36 @@ def crm_writes(connection: sqlite3.Connection, run_id: str) -> list[str]:
     return problems
 
 
+# Parent span IDs are not foreign keys, as in OpenTelemetry, so the check follows them.
+TRACED = {
+    "spans": "SELECT span_id, trace_id, parent_span_id, lead_id FROM spans WHERE run_id = ?",
+    "model_calls": (
+        "SELECT span_id, trace_id, parent_span_id, lead_id FROM model_calls WHERE run_id = ?"
+    ),
+    "source_calls": (
+        "SELECT span_id, trace_id, parent_span_id, lead_id FROM source_calls WHERE run_id = ?"
+    ),
+}
+
+
+def trace_tree(connection: sqlite3.Connection, run_id: str) -> list[str]:
+    """Every span and call is in its lead's trace, under a span recorded in that trace."""
+    spans = dict(
+        connection.execute("SELECT span_id, trace_id FROM spans WHERE run_id = ?", (run_id,))
+    )
+    problems = []
+    for table, query in TRACED.items():
+        for row in connection.execute(query, (run_id,)):
+            if row["trace_id"] != row["lead_id"].replace("-", ""):
+                problems.append(f"{table} span {row['span_id']}: not in its lead's trace")
+            parent = row["parent_span_id"]
+            if parent is not None and spans.get(parent) != row["trace_id"]:
+                problems.append(
+                    f"{table} span {row['span_id']}: parent {parent} is not a span in its trace"
+                )
+    return problems
+
+
 def check_run(connection: sqlite3.Connection, run_id: str) -> CheckResult:
     """Validate one run and record the outcome on it."""
     run = connection.execute("SELECT kind, status FROM runs WHERE run_id = ?", (run_id,)).fetchone()
@@ -179,6 +209,7 @@ def check_run(connection: sqlite3.Connection, run_id: str) -> CheckResult:
     problems += labelling(connection, run_id)
     problems += lead_fields(connection, run_id)
     problems += crm_writes(connection, run_id)
+    problems += trace_tree(connection, run_id)
     result = CheckResult(run_id, "fail" if problems else "pass", tuple(problems))
     with transaction(connection):
         connection.execute(

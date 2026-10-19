@@ -523,7 +523,8 @@ answers:
       stop_reason: tool_use
   score:
     alpha.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories
@@ -548,7 +549,8 @@ answers:
       input_tokens: 1800
       output_tokens: 160
     delta.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories
@@ -573,7 +575,8 @@ answers:
       input_tokens: 1800
       output_tokens: 160
     echo.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories
@@ -598,7 +601,8 @@ answers:
       input_tokens: 1800
       output_tokens: 160
     foxtrot.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories
@@ -623,7 +627,8 @@ answers:
       input_tokens: 1800
       output_tokens: 160
     golf.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories
@@ -648,7 +653,8 @@ answers:
       input_tokens: 1800
       output_tokens: 160
     hotel.test:
-    - data:
+    - cache_read_tokens: 1200
+      data:
         ratings:
         - cited_fields:
           - categories

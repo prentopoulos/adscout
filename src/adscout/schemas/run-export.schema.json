@@ -1,6 +1,372 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "AgentSpanRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Span Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "start_time": {
+          "title": "Start Time",
+          "type": "string"
+        },
+        "end_time": {
+          "title": "End Time",
+          "type": "string"
+        },
+        "status_code": {
+          "enum": [
+            "OK",
+            "ERROR"
+          ],
+          "title": "Status Code",
+          "type": "string"
+        },
+        "langfuse.observation.type": {
+          "title": "Langfuse.Observation.Type",
+          "type": "string"
+        },
+        "adscout.lead.id": {
+          "title": "Adscout.Lead.Id",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "record": {
+          "const": "agent_span",
+          "title": "Record",
+          "type": "string"
+        },
+        "gen_ai.operation.name": {
+          "const": "invoke_agent",
+          "title": "Gen Ai.Operation.Name",
+          "type": "string"
+        },
+        "gen_ai.provider.name": {
+          "title": "Gen Ai.Provider.Name",
+          "type": "string"
+        },
+        "gen_ai.agent.name": {
+          "title": "Gen Ai.Agent.Name",
+          "type": "string"
+        },
+        "gen_ai.agent.version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Agent.Version"
+        },
+        "adscout.detail": {
+          "title": "Adscout.Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "name",
+        "start_time",
+        "end_time",
+        "status_code",
+        "langfuse.observation.type",
+        "adscout.lead.id",
+        "adscout.step.name",
+        "record",
+        "gen_ai.operation.name",
+        "gen_ai.provider.name",
+        "gen_ai.agent.name",
+        "gen_ai.agent.version",
+        "adscout.detail"
+      ],
+      "title": "AgentSpanRecord",
+      "type": "object"
+    },
+    "ModelCallRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Span Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "start_time": {
+          "title": "Start Time",
+          "type": "string"
+        },
+        "end_time": {
+          "title": "End Time",
+          "type": "string"
+        },
+        "status_code": {
+          "enum": [
+            "OK",
+            "ERROR"
+          ],
+          "title": "Status Code",
+          "type": "string"
+        },
+        "langfuse.observation.type": {
+          "title": "Langfuse.Observation.Type",
+          "type": "string"
+        },
+        "adscout.lead.id": {
+          "title": "Adscout.Lead.Id",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "record": {
+          "const": "model_call",
+          "title": "Record",
+          "type": "string"
+        },
+        "gen_ai.operation.name": {
+          "const": "chat",
+          "title": "Gen Ai.Operation.Name",
+          "type": "string"
+        },
+        "gen_ai.provider.name": {
+          "title": "Gen Ai.Provider.Name",
+          "type": "string"
+        },
+        "gen_ai.agent.name": {
+          "title": "Gen Ai.Agent.Name",
+          "type": "string"
+        },
+        "gen_ai.agent.version": {
+          "title": "Gen Ai.Agent.Version",
+          "type": "string"
+        },
+        "gen_ai.request.model": {
+          "title": "Gen Ai.Request.Model",
+          "type": "string"
+        },
+        "gen_ai.response.finish_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Gen Ai.Response.Finish Reasons",
+          "type": "array"
+        },
+        "gen_ai.usage.input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Input Tokens"
+        },
+        "gen_ai.usage.output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Output Tokens"
+        },
+        "gen_ai.usage.cache_read.input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Cache Read.Input Tokens"
+        },
+        "gen_ai.usage.cache_write.input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Gen Ai.Usage.Cache Write.Input Tokens"
+        },
+        "gen_ai.usage.cost": {
+          "title": "Gen Ai.Usage.Cost",
+          "type": "number"
+        },
+        "error.type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error.Type"
+        },
+        "adscout.call.id": {
+          "title": "Adscout.Call.Id",
+          "type": "string"
+        },
+        "adscout.call.role": {
+          "title": "Adscout.Call.Role",
+          "type": "string"
+        },
+        "adscout.call.mode": {
+          "title": "Adscout.Call.Mode",
+          "type": "string"
+        },
+        "adscout.request.effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Request.Effort"
+        },
+        "adscout.web_search.requests": {
+          "title": "Adscout.Web Search.Requests",
+          "type": "integer"
+        },
+        "adscout.original_cost_usd": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Original Cost Usd"
+        },
+        "adscout.latency_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Latency Ms"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "name",
+        "start_time",
+        "end_time",
+        "status_code",
+        "langfuse.observation.type",
+        "adscout.lead.id",
+        "adscout.step.name",
+        "record",
+        "gen_ai.operation.name",
+        "gen_ai.provider.name",
+        "gen_ai.agent.name",
+        "gen_ai.agent.version",
+        "gen_ai.request.model",
+        "gen_ai.response.finish_reasons",
+        "gen_ai.usage.input_tokens",
+        "gen_ai.usage.output_tokens",
+        "gen_ai.usage.cache_read.input_tokens",
+        "gen_ai.usage.cache_write.input_tokens",
+        "gen_ai.usage.cost",
+        "error.type",
+        "adscout.call.id",
+        "adscout.call.role",
+        "adscout.call.mode",
+        "adscout.request.effort",
+        "adscout.web_search.requests",
+        "adscout.original_cost_usd",
+        "adscout.latency_ms"
+      ],
+      "title": "ModelCallRecord",
+      "type": "object"
+    },
     "OutcomeRecord": {
       "additionalProperties": false,
       "properties": {
@@ -265,6 +631,18 @@
             }
           ],
           "title": "Adscout.Minutes Per Account"
+        },
+        "adscout.cost_summary": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Cost Summary"
         }
       },
       "required": [
@@ -292,9 +670,202 @@
         "adscout.seed_list_hash",
         "adscout.stub_script_hash",
         "adscout.budgets",
-        "adscout.minutes_per_account"
+        "adscout.minutes_per_account",
+        "adscout.cost_summary"
       ],
       "title": "RunRecord",
+      "type": "object"
+    },
+    "SourceCallRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Span Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "start_time": {
+          "title": "Start Time",
+          "type": "string"
+        },
+        "end_time": {
+          "title": "End Time",
+          "type": "string"
+        },
+        "status_code": {
+          "enum": [
+            "OK",
+            "ERROR"
+          ],
+          "title": "Status Code",
+          "type": "string"
+        },
+        "langfuse.observation.type": {
+          "title": "Langfuse.Observation.Type",
+          "type": "string"
+        },
+        "adscout.lead.id": {
+          "title": "Adscout.Lead.Id",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "record": {
+          "const": "source_call",
+          "title": "Record",
+          "type": "string"
+        },
+        "gen_ai.operation.name": {
+          "const": "execute_tool",
+          "title": "Gen Ai.Operation.Name",
+          "type": "string"
+        },
+        "gen_ai.tool.name": {
+          "title": "Gen Ai.Tool.Name",
+          "type": "string"
+        },
+        "http.response.status_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Http.Response.Status Code"
+        },
+        "error.type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error.Type"
+        },
+        "adscout.call.id": {
+          "title": "Adscout.Call.Id",
+          "type": "string"
+        },
+        "adscout.source.target": {
+          "title": "Adscout.Source.Target",
+          "type": "string"
+        },
+        "adscout.call.mode": {
+          "title": "Adscout.Call.Mode",
+          "type": "string"
+        },
+        "adscout.robots.decision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Robots.Decision"
+        },
+        "adscout.source.bytes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Source.Bytes"
+        },
+        "adscout.model_call.id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Model Call.Id"
+        },
+        "adscout.detail": {
+          "title": "Adscout.Detail",
+          "type": "string"
+        },
+        "adscout.latency_ms": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adscout.Latency Ms"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "name",
+        "start_time",
+        "end_time",
+        "status_code",
+        "langfuse.observation.type",
+        "adscout.lead.id",
+        "adscout.step.name",
+        "record",
+        "gen_ai.operation.name",
+        "gen_ai.tool.name",
+        "http.response.status_code",
+        "error.type",
+        "adscout.call.id",
+        "adscout.source.target",
+        "adscout.call.mode",
+        "adscout.robots.decision",
+        "adscout.source.bytes",
+        "adscout.model_call.id",
+        "adscout.detail",
+        "adscout.latency_ms"
+      ],
+      "title": "SourceCallRecord",
       "type": "object"
     },
     "StepRecord": {
@@ -457,14 +1028,112 @@
       ],
       "title": "StepRecord",
       "type": "object"
+    },
+    "StepSpanRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "langfuse.session.id": {
+          "title": "Langfuse.Session.Id",
+          "type": "string"
+        },
+        "null_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "title": "Null Reasons",
+          "type": "object"
+        },
+        "trace_id": {
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "span_id": {
+          "title": "Span Id",
+          "type": "string"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Span Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "start_time": {
+          "title": "Start Time",
+          "type": "string"
+        },
+        "end_time": {
+          "title": "End Time",
+          "type": "string"
+        },
+        "status_code": {
+          "enum": [
+            "OK",
+            "ERROR"
+          ],
+          "title": "Status Code",
+          "type": "string"
+        },
+        "langfuse.observation.type": {
+          "title": "Langfuse.Observation.Type",
+          "type": "string"
+        },
+        "adscout.lead.id": {
+          "title": "Adscout.Lead.Id",
+          "type": "string"
+        },
+        "adscout.step.name": {
+          "title": "Adscout.Step.Name",
+          "type": "string"
+        },
+        "record": {
+          "const": "step_span",
+          "title": "Record",
+          "type": "string"
+        },
+        "adscout.detail": {
+          "title": "Adscout.Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "langfuse.session.id",
+        "trace_id",
+        "span_id",
+        "parent_span_id",
+        "name",
+        "start_time",
+        "end_time",
+        "status_code",
+        "langfuse.observation.type",
+        "adscout.lead.id",
+        "adscout.step.name",
+        "record",
+        "adscout.detail"
+      ],
+      "title": "StepSpanRecord",
+      "type": "object"
     }
   },
   "description": "One line of a run export.",
   "discriminator": {
     "mapping": {
+      "agent_span": "#/$defs/AgentSpanRecord",
       "lead_outcome": "#/$defs/OutcomeRecord",
+      "model_call": "#/$defs/ModelCallRecord",
       "run": "#/$defs/RunRecord",
-      "step": "#/$defs/StepRecord"
+      "source_call": "#/$defs/SourceCallRecord",
+      "step": "#/$defs/StepRecord",
+      "step_span": "#/$defs/StepSpanRecord"
     },
     "propertyName": "record"
   },
@@ -477,6 +1146,18 @@
     },
     {
       "$ref": "#/$defs/OutcomeRecord"
+    },
+    {
+      "$ref": "#/$defs/StepSpanRecord"
+    },
+    {
+      "$ref": "#/$defs/AgentSpanRecord"
+    },
+    {
+      "$ref": "#/$defs/ModelCallRecord"
+    },
+    {
+      "$ref": "#/$defs/SourceCallRecord"
     }
   ],
   "title": "ExportLine"

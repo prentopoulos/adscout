@@ -167,6 +167,7 @@ def score(audience: int, ads: int, budget: int, launches: int) -> dict:
     ]
     return {
         "input_tokens": 1800,
+        "cache_read_tokens": 1200,  # the rubric prefix, cached after the first lead
         "output_tokens": 160,
         "data": {
             "ratings": [

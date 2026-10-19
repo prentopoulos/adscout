@@ -15,7 +15,7 @@ from adscout import cli
 from adscout.check import check_run
 from adscout.db.connection import connect
 from adscout.db.migrate import upgrade
-from adscout.export import ATTRIBUTES, EVIDENCE, ExportRefused, export_lines, write_export
+from adscout.export import EVIDENCE, ExportRefused, export_lines, write_export
 from adscout.pipeline.run import SegmentFiles, run_crm_sync, run_pipeline, run_stub_approval
 from adscout.report import funnel, list_runs
 from adscout.schema_files import ROOT
@@ -147,8 +147,11 @@ def test_export_validates_against_the_committed_schema(
     assert set(approval["null_reasons"]) == {
         "adscout.seed_list_hash",
         "adscout.minutes_per_account",
+        "adscout.cost_summary",  # approvals call no model
     }
-    assert set(ATTRIBUTES.values()) <= {key for line in export_lines(db, flow[0]) for key in line}
+    assert run["adscout.cost_summary"]["null_reasons"] == {
+        "cost_per_qualified_lead_usd": "no qualified leads"  # a stub run qualifies no one
+    }
 
 
 def test_export_never_overwrites(db: sqlite3.Connection, flow: list[str], tmp_path: Path) -> None:

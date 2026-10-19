@@ -13,6 +13,7 @@ from pathlib import Path
 
 from adscout.check import check_run
 from adscout.config import ConfigError, load_seeds, load_segment
+from adscout.costs import cost_table
 from adscout.db.connection import connect, resolve_db_path
 from adscout.db.migrate import MigrationError, upgrade
 from adscout.export import ExportRefused, export_lines, write_export
@@ -33,6 +34,7 @@ from adscout.pipeline.run import (
 )
 from adscout.report import funnel, list_runs
 from adscout.sources.fetcher import ContactMissing
+from adscout.trace import trace_text
 
 MODELS = {"haiku": HAIKU, "sonnet": SONNET}
 
@@ -86,9 +88,19 @@ def db_upgrade(args: argparse.Namespace) -> int:
     return 0
 
 
-def report(run_id: str, kind: str) -> int:
+def report(run_id: str, kind: str, connection: sqlite3.Connection | None = None) -> int:
     print(f"{kind} run {run_id}: succeeded")
+    if connection is not None:
+        print_costs(connection, run_id)
     return 0
+
+
+def print_costs(connection: sqlite3.Connection, run_id: str) -> None:
+    stored = connection.execute(
+        "SELECT cost_summary_json FROM runs WHERE run_id = ?", (run_id,)
+    ).fetchone()
+    if stored is not None and stored[0] is not None:
+        print(cost_table(json.loads(stored[0])))
 
 
 def run(args: argparse.Namespace) -> int:
@@ -96,7 +108,7 @@ def run(args: argparse.Namespace) -> int:
         if args.stub:
             files = SegmentFiles.load(args.config_dir, args.segment, args.seeds)
             with database(args) as connection:
-                return report(run_pipeline(connection, files), "pipeline")
+                return report(run_pipeline(connection, files), "pipeline", connection)
         segment = load_segment(args.config_dir / "segments" / f"{args.segment}.yaml")
         seeds = load_seeds(
             args.seeds or args.config_dir / "seeds" / f"{args.segment}.csv", args.segment
@@ -111,7 +123,12 @@ def run(args: argparse.Namespace) -> int:
             scorer_model=MODELS[args.scorer],
         )
         with database(args) as connection:
-            return report(run_real_pipeline(connection, segment, seeds, settings), "pipeline")
+            try:
+                run_id = run_real_pipeline(connection, segment, seeds, settings)
+            except RunFailed as error:
+                print_costs(connection, error.run_id)
+                raise
+            return report(run_id, "pipeline", connection)
     except (
         *EXPECTED_ERRORS,
         RunRefused,
@@ -164,6 +181,15 @@ def runs(args: argparse.Namespace) -> int:
     return 0
 
 
+def show_trace(args: argparse.Namespace) -> int:
+    try:
+        with database(args) as connection:
+            print(trace_text(connection, args.run_id, args.lead))
+    except EXPECTED_ERRORS as error:
+        return fail("trace", error)
+    return 0
+
+
 def show_funnel(args: argparse.Namespace) -> int:
     try:
         with database(args) as connection:
@@ -207,9 +233,10 @@ def rescore(args: argparse.Namespace) -> int:
             run_id = run_rescore(
                 connection, segment, choice, model=MODELS[args.model], repeats=args.score_repeats
             )
+            print(f"rescore run {run_id} finished")
+            print_costs(connection, run_id)
     except (*EXPECTED_ERRORS, ModelsNotChosen, LiveModeRefused, ValueError) as error:
         return fail("rescore", error)
-    print(f"rescore run {run_id} finished")
     return 0
 
 
@@ -308,6 +335,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     for name, handler, text in (
         ("funnel", show_funnel, "show a run's counts per step and its exit reasons"),
+        ("trace", show_trace, "print each lead's span tree: calls, tokens, cost and time"),
         ("check", check, "validate a run independently and record the outcome"),
         ("export", export, "write a run as JSON Lines (to stdout, or a new file with --out)"),
     ):
@@ -316,6 +344,8 @@ def build_parser() -> argparse.ArgumentParser:
         add_db_option(sub)
         if name == "export":
             sub.add_argument("--out", type=Path, help="new file to write; never overwritten")
+        if name == "trace":
+            sub.add_argument("--lead", metavar="DOMAIN", help="only this company's lead")
         sub.set_defaults(handler=handler)
 
     return parser

@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from importlib.metadata import version
 from typing import Any, Literal
 
+from adscout.costs import COSTED_KINDS, store_cost_summary
 from adscout.db.connection import transaction, utc_now
 from adscout.db.migrate import schema_version
 from adscout.ids import ROOT, agent_version, code_version, new_run_id
@@ -348,6 +349,8 @@ class Run:
                 "WHERE run_id = ?",
                 (status, utc_now(), error_category, error_detail, self.run_id),
             )
+            if self.kind in COSTED_KINDS:  # failed runs too: their spend is real
+                store_cost_summary(self.connection, self.run_id)
 
     @contextmanager
     def recording(self) -> Iterator["Run"]:
