@@ -88,14 +88,15 @@ def copy_migrations(tmp_path: Path) -> Path:
 
 def test_fresh_database_applies_and_records_every_migration(tmp_path: Path) -> None:
     path = tmp_path / "new" / "adscout.db"
-    assert upgrade(path) == ["0001_initial", "0002_ai_pipeline"]
+    assert upgrade(path) == [m.name for m in migrations()]
     connection = connect(path)
     rows = connection.execute("SELECT version, name FROM schema_migrations").fetchall()
     assert [(row["version"], row["name"]) for row in rows] == [
         (1, "0001_initial"),
         (2, "0002_ai_pipeline"),
+        (3, "0003_local_workspace"),
     ]
-    assert schema_version(connection) == 2
+    assert schema_version(connection) == 3
 
 
 def test_upgrade_twice_is_a_no_op_without_backup(tmp_path: Path) -> None:
@@ -388,11 +389,11 @@ def test_upgrade_from_phase_1_keeps_every_row_and_trigger(tmp_path: Path) -> Non
     before = table_rows(connection, columns)
     connection.close()
 
-    assert upgrade(path) == ["0002_ai_pipeline"]
+    assert upgrade(path) == ["0002_ai_pipeline", "0003_local_workspace"]
 
     assert len(list((tmp_path / "backups").glob("*-before-0002_ai_pipeline.db"))) == 1
     connection = connect(path)
-    assert schema_version(connection) == 2
+    assert schema_version(connection) == 3
     assert all(before[table] for table in ("runs", "leads", "drafts", "crm_writes"))
     assert table_rows(connection, columns) == before
     with pytest.raises(sqlite3.IntegrityError, match="immutable"):

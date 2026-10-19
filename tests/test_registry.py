@@ -18,7 +18,16 @@ from adscout.llm.budget import SpendLedger
 from adscout.llm.fakes import scripted
 from adscout.llm.invoke import HAIKU, SONNET
 from adscout.llm.prices import load_price_table
-from adscout.pipeline.registry import REGISTRY, WORKERS, WRITE_TOOLS, agents, node, tools_for
+from adscout.pipeline.registry import (
+    FLOWS,
+    LEAD_RESEARCH_CAPS,
+    REGISTRY,
+    WORKERS,
+    WRITE_TOOLS,
+    agents,
+    node,
+    tools_for,
+)
 
 
 def test_no_node_holds_a_send_crm_or_file_write_tool() -> None:
@@ -78,3 +87,14 @@ def test_writer_request_carrying_fetch_page_is_refused_before_sending() -> None:
     with pytest.raises(ModelCallFailed, match="tools differ from its registry entry"):
         adapter.call(request, context)
     assert transport.requests == []
+
+
+def test_every_flow_is_typed_by_its_ends() -> None:
+    for source, target, handoff in FLOWS:
+        sender, receiver = node(source), node(target)
+        assert handoff in (sender.output_type, receiver.input_type), (source, target)
+        same_step = sender.step == receiver.step
+        assert same_step or (sender.kind, receiver.kind) == ("step", "person"), (source, target)
+    flowing = {end for flow in FLOWS for end in flow[:2]}
+    assert {item.id for item in REGISTRY if item.kind != "step"} <= flowing
+    assert node("research").caps is LEAD_RESEARCH_CAPS  # the research step's per-lead budget

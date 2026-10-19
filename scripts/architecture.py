@@ -3,8 +3,9 @@
     uv run --locked python scripts/architecture.py stamp   # after exporting with Structurizr
     uv run --locked python scripts/architecture.py check   # what the gate's test runs
 
-The stamp records the SHA-256 of the model and of every exported file, so the check needs no
-Java: it fails when the model changed without a re-export, or an export is missing or edited.
+The stamp records the SHA-256 of the model, of every exported file and of the agent diagrams
+that `scripts/diagrams.py` generates, so the check needs no Java: it fails when the model
+changed without a re-export, or an export or diagram is missing or edited.
 Hashes ignore line endings, so a clone with any `core.autocrlf` setting agrees.
 """
 
@@ -20,7 +21,9 @@ FOLDER = ROOT / "docs" / "architecture"
 WORKSPACE = FOLDER / "workspace.dsl"
 STAMP = FOLDER / "export-stamp.json"
 EXPORTED_WITH = "structurizr-2026.09.19-playwright.war on Microsoft OpenJDK 21.0.12.1"
-VIEW = re.compile(r"^\s*(?:systemContext|container)\s+\S+\s+\"(\w+)\"", re.MULTILINE)
+VIEW = re.compile(r"^\s*(?:systemContext|container|component)\s+\S+\s+\"(\w+)\"", re.MULTILINE)
+# Generated from the agent registry by scripts/diagrams.py; stamped with the exports.
+GENERATED = ("agents.md", "agent-flow.html")
 
 
 def text_hash(path: Path) -> str:
@@ -35,7 +38,7 @@ def expected_files(folder: Path = FOLDER) -> list[str]:
     files = []
     for key in view_keys(folder / "workspace.dsl"):
         files += [f"svg/{key}.svg", f"svg/{key}-key.svg", f"mermaid/structurizr-{key}.mmd"]
-    return files
+    return [*files, *GENERATED]
 
 
 def stamp(folder: Path = FOLDER) -> dict[str, object]:

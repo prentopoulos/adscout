@@ -1,5 +1,6 @@
 """The pipeline, stub approver and CRM sync runs, on synthetic and on the real seeds."""
 
+import ast
 import json
 import re
 import shutil
@@ -380,13 +381,20 @@ def test_writer_refuses_fields_adscout_does_not_own(db: sqlite3.Connection) -> N
 
 def test_no_other_module_writes_crm_tables() -> None:
     writes = re.compile(
-        r"(INSERT|UPDATE|DELETE|REPLACE)[^;]*\b(fake_crm_\w+|crm_writes)\b",
-        re.IGNORECASE | re.DOTALL,
+        r"\b(?:INSERT(?:\s+OR\s+\w+)?\s+INTO|UPDATE(?:\s+OR\s+\w+)?|DELETE\s+FROM|"
+        r"REPLACE\s+INTO)\s+(?:fake_crm_\w+|crm_writes)\b",
+        re.IGNORECASE,
     )
     offenders = [
         str(path.relative_to(ROOT))
         for path in (ROOT / "src" / "adscout").rglob("*.py")
-        if path.name != "writer.py" and writes.search(path.read_text(encoding="utf-8"))
+        if path.name != "writer.py"
+        and any(
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and writes.search(node.value)
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        )
     ]
     assert offenders == []
 

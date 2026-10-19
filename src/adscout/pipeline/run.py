@@ -269,18 +269,36 @@ def run_stub_approval(
 def approved_for_sync(connection: sqlite3.Connection, segment_id: str) -> list[sqlite3.Row]:
     """Approved drafts whose current text still has the hash the approval was bound to."""
     rows = connection.execute(
-        "SELECT a.approval_id, a.draft_sha256, a.approver_kind, d.body, d.subject, "
+        "SELECT a.approval_id, a.draft_sha256, a.approver_kind, a.approved_subject_sha256, "
+        "d.body, d.subject, "
         "l.lead_id, l.source, l.agent_version, l.prompt_version, c.domain, c.name "
         "FROM approvals AS a JOIN drafts AS d ON d.draft_id = a.draft_id "
         "JOIN leads AS l ON l.lead_id = a.lead_id "
         "JOIN companies AS c ON c.company_id = l.company_id "
-        "WHERE l.segment_id = ? AND a.decision = 'approved' ORDER BY a.decided_at",
+        "WHERE l.segment_id = ? AND a.decision = 'approved' AND d.status = 'approved' "
+        "ORDER BY a.decided_at",
         (segment_id,),
     ).fetchall()
-    return [row for row in rows if sha256_text(row["body"]) == row["draft_sha256"]]
+    return [
+        row
+        for row in rows
+        if sha256_text(row["body"]) == row["draft_sha256"]
+        and (
+            row["approved_subject_sha256"] is None
+            or sha256_text(row["subject"]) == row["approved_subject_sha256"]
+        )
+    ]
 
 
 def latest(connection: sqlite3.Connection, table: str, column: str, lead_id: str) -> str | None:
+    if table == "scores" and column == "score":
+        # Repeats measure spread; sample 1 is the score that routed the lead.
+        row = connection.execute(
+            "SELECT score FROM scores WHERE lead_id=? AND run_id=(SELECT run_id FROM scores "
+            "WHERE lead_id=? ORDER BY score_id DESC LIMIT 1) ORDER BY sample, score_id LIMIT 1",
+            (lead_id, lead_id),
+        ).fetchone()
+        return None if row is None or row[0] is None else str(row[0])
     row = connection.execute(
         f"SELECT {column} FROM {table} WHERE lead_id = ? ORDER BY rowid DESC LIMIT 1",  # noqa: S608
         (lead_id,),

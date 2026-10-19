@@ -1,0 +1,65 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["Component View: AdScout - Command-line pipeline"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    2["<div style='font-weight: bold'>Model provider</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Anthropic's Messages API:<br />field extraction, scoring,<br />the research team and the<br />draft loop.</div>"]
+    style 2 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    5["<div style='font-weight: bold'>Company websites</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Public pages, read politely<br />(robots.txt, a delay per<br />host) as untrusted data.</div>"]
+    style 5 fill:#999999,stroke:#6b6b6b,color:#ffffff
+
+    subgraph 9 ["AdScout"]
+      style 9 fill:#ffffff,stroke:#0b4884,color:#0b4884
+
+      subgraph 10 ["Command-line pipeline"]
+        style 10 fill:#ffffff,stroke:#0b4884,color:#0b4884
+
+        11["<div style='font-weight: bold'>Model adapter</div><div style='font-size: 70%; margin-top: 0px'>[Component: Python]</div><div style='font-size: 80%; margin-top:10px'>Every model call: the<br />registry's tool allowlist,<br />the price table, a spend<br />reservation and a record per<br />call.</div>"]
+        style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
+        12["<div style='font-weight: bold'>Polite fetcher</div><div style='font-size: 70%; margin-top: 0px'>[Component: Python]</div><div style='font-size: 80%; margin-top:10px'>robots.txt, a delay per host,<br />a 2 MB cap and egress rules;<br />refuses unsafe URLs before<br />any request.</div>"]
+        style 12 fill:#85bbf0,stroke:#5d82a8,color:#000000
+        13["<div style='font-weight: bold'>Research lead</div><div style='font-size: 70%; margin-top: 0px'>[Component: Sonnet agent, no tools]</div><div style='font-size: 80%; margin-top:10px'>Plans the workers' questions,<br />then merges verified claims<br />into a brief.</div>"]
+        style 13 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+        14["<div style='font-weight: bold'>Audience worker</div><div style='font-size: 70%; margin-top: 0px'>[Component: Haiku agent: search, fetch]</div><div style='font-size: 80%; margin-top:10px'>Researches the company's<br />audience and channels.</div>"]
+        style 14 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+        15["<div style='font-weight: bold'>Ad-activity worker</div><div style='font-size: 70%; margin-top: 0px'>[Component: Haiku agent: search, fetch]</div><div style='font-size: 80%; margin-top:10px'>Researches where and how the<br />company advertises.</div>"]
+        style 15 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+        16["<div style='font-weight: bold'>Launches worker</div><div style='font-size: 70%; margin-top: 0px'>[Component: Haiku agent: search, fetch]</div><div style='font-size: 80%; margin-top:10px'>Researches recent launches<br />and sponsorships.</div>"]
+        style 16 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+        17["<div style='font-weight: bold'>Claim verifier</div><div style='font-size: 70%; margin-top: 0px'>[Component: Python]</div><div style='font-size: 80%; margin-top:10px'>Keeps a claim only if its<br />page was fetched in this run,<br />its quote is on the page and<br />it carries no link or person.</div>"]
+        style 17 fill:#85bbf0,stroke:#5d82a8,color:#000000
+        18["<div style='font-weight: bold'>Draft writer</div><div style='font-size: 70%; margin-top: 0px'>[Component: Sonnet agent, no tools]</div><div style='font-size: 80%; margin-top:10px'>Writes a pitch whose every<br />factual sentence cites a<br />verified claim or a simulated<br />media-kit fact.</div>"]
+        style 18 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+        19["<div style='font-weight: bold'>Rule checker</div><div style='font-size: 70%; margin-top: 0px'>[Component: Python]</div><div style='font-size: 80%; margin-top:10px'>Supports, numbers, names,<br />links, length and footer; no<br />personal data.</div>"]
+        style 19 fill:#85bbf0,stroke:#5d82a8,color:#000000
+        20["<div style='font-weight: bold'>Draft critic</div><div style='font-size: 70%; margin-top: 0px'>[Component: Sonnet agent, no tools]</div><div style='font-size: 80%; margin-top:10px'>Judges relevance,<br />specificity, tone and the<br />ask; cannot pass a draft the<br />rules fail.</div>"]
+        style 20 fill:#0d7a6f,stroke:#09554d,color:#ffffff
+      end
+
+    end
+
+    13-- "<div>Sends a WorkerTask</div><div style='font-size: 70%'>[in process]</div>" -->14
+    13-- "<div>Sends a WorkerTask</div><div style='font-size: 70%'>[in process]</div>" -->15
+    13-- "<div>Sends a WorkerTask</div><div style='font-size: 70%'>[in process]</div>" -->16
+    14-- "<div>Hands WorkerFindings to</div><div style='font-size: 70%'>[in process]</div>" -->17
+    15-- "<div>Hands WorkerFindings to</div><div style='font-size: 70%'>[in process]</div>" -->17
+    16-- "<div>Hands WorkerFindings to</div><div style='font-size: 70%'>[in process]</div>" -->17
+    14-- "<div>Reads pages through</div><div style='font-size: 70%'>[fetch_page]</div>" -->12
+    15-- "<div>Reads pages through</div><div style='font-size: 70%'>[fetch_page]</div>" -->12
+    16-- "<div>Reads pages through</div><div style='font-size: 70%'>[fetch_page]</div>" -->12
+    17-- "<div>Passes verified claims to</div><div style='font-size: 70%'>[in process]</div>" -->13
+    13-- "<div>Passes the brief to</div><div style='font-size: 70%'>[in process]</div>" -->18
+    18-- "<div>Passes each draft to</div><div style='font-size: 70%'>[in process]</div>" -->19
+    19-- "<div>Passes a rule-clean draft to</div><div style='font-size: 70%'>[in process]</div>" -->20
+    20-- "<div>Returns issues for a rewrite<br />(at most 2)</div><div style='font-size: 70%'>[in process]</div>" -->18
+    13-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    14-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    15-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    16-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    18-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    20-- "<div>Calls the model through</div><div style='font-size: 70%'>[in process]</div>" -->11
+    11-- "<div>Sends checked requests</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" -->2
+    12-- "<div>Fetches public pages</div><div style='font-size: 70%'>[HTTPS]</div>" -->5
+
+  end

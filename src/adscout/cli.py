@@ -285,6 +285,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--version", action="version", version=f"adscout {version('adscout')}")
     commands = parser.add_subparsers(dest="command", metavar="COMMAND")
 
+    # Import here to keep the existing CLI handlers and local web lifecycle independent.
+    from adscout.demo import command as demo_command
+    from adscout.web import command as web_command
+
+    demo_parser = commands.add_parser(
+        "demo", help="prepare the offline MVP and open its local workspace"
+    )
+    add_db_option(demo_parser)
+    demo_parser.add_argument("--port", type=int, default=8765)
+    demo_parser.add_argument(
+        "--prepare", action="store_true", help="prepare the demo without starting a server"
+    )
+    demo_parser.set_defaults(handler=demo_command)
+    web_parser = commands.add_parser(
+        "serve", help="serve the local review and dashboard on 127.0.0.1"
+    )
+    add_segment_options(web_parser)
+    web_parser.add_argument("--port", type=int, default=8765)
+    web_parser.set_defaults(handler=web_command)
+
     db = commands.add_parser("db", help="manage the local database")
     db_commands = db.add_subparsers(dest="db_command", metavar="ACTION", required=True)
     db_up = db_commands.add_parser("upgrade", help="create the database or apply new migrations")

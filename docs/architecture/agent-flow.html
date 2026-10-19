@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AdScout Agent Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a reading column for text; the diagram and the table run wider in their own
+   scrolling frames. Colours: one token per pattern (card outline and tag), one tint per
+   trust zone (card fill and badge). */
+:root {
+  --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --bg: #f3f5f8; --surface: #ffffff; --band: #e9edf3; --fg: #172030; --muted: #556074;
+  --line: #ccd3de; --edge: #6f7a8e;
+  --seq: #3651c9; --router: #a3620a; --orch: #0d7a6f; --evalopt: #7a45b8;
+  --single: #4a7a1f; --loop: #b03a2e; --code: #5b6578; --human: #b5346a;
+  --z-web: #fbf1e6; --z-tools: #eef3fb; --z-code: #f2f4f7; --z-human: #fbeaf1;
+  --b-web: #b45f10; --b-tools: #3651c9; --b-code: #5b6578; --b-human: #b5346a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1219; --surface: #161c26; --band: #121821; --fg: #e5e9f0; --muted: #9aa4b5;
+    --line: #2c3442; --edge: #8a94a6;
+    --seq: #8ea3ff; --router: #e2a64a; --orch: #46c4b4; --evalopt: #b495f2;
+    --single: #9ccc6a; --loop: #f08a7c; --code: #a3adbd; --human: #f17da9;
+    --z-web: #241b12; --z-tools: #141d2c; --z-code: #181d26; --z-human: #2a1822;
+    --b-web: #f2a25a; --b-tools: #8ea3ff; --b-code: #a3adbd; --b-human: #f17da9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1219; --surface: #161c26; --band: #121821; --fg: #e5e9f0; --muted: #9aa4b5;
+  --line: #2c3442; --edge: #8a94a6;
+  --seq: #8ea3ff; --router: #e2a64a; --orch: #46c4b4; --evalopt: #b495f2;
+  --single: #9ccc6a; --loop: #f08a7c; --code: #a3adbd; --human: #f17da9;
+  --z-web: #241b12; --z-tools: #141d2c; --z-code: #181d26; --z-human: #2a1822;
+  --b-web: #f2a25a; --b-tools: #8ea3ff; --b-code: #a3adbd; --b-human: #f17da9;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg); font: 15px/1.6 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 32px; }
+header, section { display: grid; gap: 12px; min-width: 0; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 21px; line-height: 1.3; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+.lede { color: var(--muted); font-size: 16px; }
+code { font: 13px var(--mono); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 20px; font: 12px var(--mono); color: var(--muted); }
+.key span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; flex: none; }
+.figure, .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; }
+.figure { width: fit-content; max-width: 100%; }
+.figure svg { display: block; max-width: none; height: auto; }
+svg text { font-family: var(--sans); }
+.band { fill: var(--band); }
+.card rect { stroke-width: 1.6; }
+.tag { font: 600 10px var(--mono); letter-spacing: .06em; }
+.badge { font: 600 9px var(--mono); letter-spacing: .08em; }
+.ttl { font-size: 15px; font-weight: 600; fill: var(--fg); }
+.id, .mono { font: 11px var(--mono); fill: var(--muted); }
+.sub { font-size: 12px; fill: var(--muted); }
+.io { font: 11px var(--mono); fill: var(--fg); }
+.exit { font: 11px var(--mono); fill: var(--human); }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+.edge.loop { stroke: var(--evalopt); stroke-dasharray: 5 4; }
+.ah { fill: var(--edge); }
+.ah-loop { fill: var(--evalopt); }
+.elabel { font: 11px var(--mono); fill: var(--muted); }
+.p-seq rect { stroke: var(--seq); } .p-seq .tag { fill: var(--seq); }
+.p-router rect { stroke: var(--router); } .p-router .tag { fill: var(--router); }
+.p-orch rect { stroke: var(--orch); } .p-orch .tag { fill: var(--orch); }
+.p-evalopt rect { stroke: var(--evalopt); } .p-evalopt .tag { fill: var(--evalopt); }
+.p-single rect { stroke: var(--single); } .p-single .tag { fill: var(--single); }
+.p-loop rect { stroke: var(--loop); } .p-loop .tag { fill: var(--loop); }
+.p-code rect { stroke: var(--code); } .p-code .tag { fill: var(--code); }
+.p-human rect { stroke: var(--human); } .p-human .tag { fill: var(--human); }
+.z-web rect { fill: var(--z-web); } .z-web .badge { fill: var(--b-web); }
+.z-tools rect { fill: var(--z-tools); } .z-tools .badge { fill: var(--b-tools); }
+.z-code rect { fill: var(--z-code); } .z-code .badge { fill: var(--b-code); }
+.z-human rect { fill: var(--z-human); } .z-human .badge { fill: var(--b-human); }
+table { border-collapse: collapse; width: 100%; min-width: 980px; font-size: 13px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+th { font: 600 11px var(--mono); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); }
+td { font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.note { font-size: 13px; color: var(--muted); }
+@media (max-width: 520px) { .wrap { padding-block: 24px 48px; gap: 28px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="eyebrow">Generated from the agent registry · Phase 2 as built</div>
+<h1>AdScout Agent Architecture</h1>
+<p class="lede">Every step AdScout runs for a company, the 11 agents inside them,
+and what each one may do: its pattern, model, tools, caps and trust zone, and the typed
+handoff it passes on. Code chooses every route; no model decides what runs next.</p>
+<div class="key" aria-label="Patterns"><span><i class="sw" style="border-color:var(--seq)"></i>Sequential</span><span><i class="sw" style="border-color:var(--router)"></i>Router</span><span><i class="sw" style="border-color:var(--orch)"></i>Orchestrator–workers</span><span><i class="sw" style="border-color:var(--evalopt)"></i>Evaluator–optimizer</span><span><i class="sw" style="border-color:var(--single)"></i>Single call</span><span><i class="sw" style="border-color:var(--loop)"></i>Tool loop</span><span><i class="sw" style="border-color:var(--code)"></i>Plain code</span><span><i class="sw" style="border-color:var(--human)"></i>Person</span></div>
+<div class="key" aria-label="Trust zones"><span><i class="sw" style="border-color:var(--b-web);background:var(--z-web)"></i>WEB · Reads untrusted content</span><span><i class="sw" style="border-color:var(--b-tools);background:var(--z-tools)"></i>NO TOOLS · Model with no tools</span><span><i class="sw" style="border-color:var(--b-code);background:var(--z-code)"></i>CODE · Code only, no model</span><span><i class="sw" style="border-color:var(--b-human);background:var(--z-human)"></i>PERSON · A person decides</span></div>
+</header>
+<section aria-labelledby="h-flow">
+<h2 id="h-flow">The flow</h2>
+<p>Steps run top to bottom for each company. Inside a step, arrows carry the handoff type
+they are labelled with; the dashed arrow is the draft loop's rewrite. Card outlines name the
+pattern, fills and badges the trust zone. Exits are recorded with their reason.</p>
+<div class="figure">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1326 2441" width="1326" height="2441" role="img" aria-labelledby="flow-title">
+<title id="flow-title">AdScout agent flow: each pipeline step with its agents, patterns, models, tools, caps, trust zones and typed handoffs</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker><marker id="arrow-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-loop" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+<rect class="band" x="8" y="2298" width="1310" height="131" rx="14"/>
+<rect class="band" x="8" y="1728" width="1310" height="536" rx="14"/>
+<rect class="band" x="8" y="830" width="1310" height="864" rx="14"/>
+<rect class="band" x="8" y="616" width="1310" height="180" rx="14"/>
+<rect class="band" x="8" y="436" width="1310" height="146" rx="14"/>
+<rect class="band" x="8" y="177" width="1310" height="225" rx="14"/>
+<rect class="band" x="8" y="12" width="1310" height="131" rx="14"/>
+<path class="edge" d="M139 131 V221" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="181" text-anchor="start">list[Lead]</text>
+<path class="edge" d="M254 245 H270 V206 H425 V221" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="200" text-anchor="start">company pages</text>
+<path class="edge" d="M254 245 H270 V206 H679 V221" marker-end="url(#arrow)"/>
+<text class="elabel" x="687" y="200" text-anchor="start">company name</text>
+<path class="edge" d="M139 330 V446" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="393" text-anchor="start">Enriched fields</text>
+<path class="edge" d="M139 570 V660" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="620" text-anchor="start">Enriched fields</text>
+<path class="edge" d="M254 684 H270 V645 H425 V660" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="639" text-anchor="start">Enriched fields</text>
+<path class="edge" d="M139 784 V874" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="834" text-anchor="start">Qualified lead</text>
+<path class="edge" d="M254 898 H270 V859 H425 V874" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="853" text-anchor="start">Enriched fields</text>
+<path class="edge" d="M425 1073 V1101 H425 V1127" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="1095" text-anchor="start">WorkerTask</text>
+<path class="edge" d="M425 1073 V1101 H679 V1127" marker-end="url(#arrow)"/>
+<path class="edge" d="M425 1073 V1101 H933 V1127" marker-end="url(#arrow)"/>
+<path class="edge" d="M254 898 H270 V859 H1187 V874" marker-end="url(#arrow)"/>
+<text class="elabel" x="1195" y="853" text-anchor="start">WorkerTask</text>
+<path class="edge" d="M425 1341 V1369 H425 V1395" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="1363" text-anchor="start">WorkerFindings</text>
+<path class="edge" d="M679 1341 V1369 H425 V1395" marker-end="url(#arrow)"/>
+<path class="edge" d="M933 1341 V1369 H425 V1395" marker-end="url(#arrow)"/>
+<path class="edge" d="M1187 1073 V1369 H425 V1395" marker-end="url(#arrow)"/>
+<path class="edge" d="M425 1504 V1532 H425 V1558" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="1526" text-anchor="start">list[VerifiedClaim]</text>
+<path class="edge" d="M139 1028 V1772" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="1405" text-anchor="start">Brief</text>
+<path class="edge" d="M254 1796 H270 V1757 H425 V1772" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="1751" text-anchor="start">Brief and media kit</text>
+<path class="edge" d="M425 1926 V1954 H425 V1980" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="1948" text-anchor="start">Draft</text>
+<path class="edge" d="M425 2074 V2102 H425 V2128" marker-end="url(#arrow)"/>
+<text class="elabel" x="433" y="2096" text-anchor="start">Draft and brief</text>
+<path class="edge loop" d="M540 2191 H566 V1850 H542" marker-end="url(#arrow-loop)"/>
+<text class="elabel" x="574" y="2028" text-anchor="start">Critique</text>
+<path class="edge" d="M139 1881 V2308" marker-end="url(#arrow)"/>
+<text class="elabel" x="149" y="2099" text-anchor="start">Draft</text>
+<g class="card p-seq z-code">
+<rect x="24" y="24" width="230" height="107" rx="10"/>
+<text class="tag" x="38" y="44">SEQUENTIAL</text>
+<text class="badge" x="242" y="44" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="64">Source seeds</text>
+<text class="id" x="38" y="82">source</text>
+<text class="io" x="38" y="97">SeedList → list[Lead]</text>
+<text class="exit" x="38" y="112">exits: duplicate, excluded</text>
+</g>
+<g class="card p-seq z-code">
+<rect x="24" y="223" width="230" height="107" rx="10"/>
+<text class="tag" x="38" y="243">SEQUENTIAL</text>
+<text class="badge" x="242" y="243" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="263">Enrich</text>
+<text class="id" x="38" y="281">enrich</text>
+<text class="io" x="38" y="296">list[Lead] → list[Enriched]</text>
+<text class="exit" x="38" y="311">exits: missing_key_fields</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="223" width="230" height="167" rx="10"/>
+<text class="tag" x="324" y="243">SINGLE CALL</text>
+<text class="badge" x="528" y="243" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="263">Extract fields</text>
+<text class="id" x="324" y="281">extractor</text>
+<text class="sub" x="324" y="296">Haiku 5.5 · low effort</text>
+<text class="sub" x="324" y="311">falls back to Sonnet 5.5</text>
+<text class="io" x="324" y="326">company pages → Extraction</text>
+</g>
+<g class="card p-loop z-web">
+<rect x="564" y="223" width="230" height="167" rx="10"/>
+<text class="tag" x="578" y="243">TOOL LOOP</text>
+<text class="badge" x="782" y="243" text-anchor="end">WEB</text>
+<text class="ttl" x="578" y="263">Search launches</text>
+<text class="id" x="578" y="281">launch_searcher</text>
+<text class="sub" x="578" y="296">Haiku 5.5 · low effort</text>
+<text class="sub" x="578" y="311">falls back to Sonnet 5.5</text>
+<text class="mono" x="578" y="326">tools: submit_launches,</text>
+<text class="mono" x="578" y="341">web_search</text>
+<text class="sub" x="578" y="356">≤ 2 calls · 1 search</text>
+<text class="io" x="578" y="371">company name → launches</text>
+</g>
+<g class="card p-code z-code">
+<rect x="24" y="448" width="230" height="122" rx="10"/>
+<text class="tag" x="38" y="468">PLAIN CODE</text>
+<text class="badge" x="242" y="468" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="488">Profile rules</text>
+<text class="id" x="38" y="506">rules</text>
+<text class="io" x="38" y="521">Enriched fields → Outcome</text>
+<text class="exit" x="38" y="536">exits: out_of_profile,</text>
+<text class="exit" x="38" y="551">missing_key_fields</text>
+</g>
+<g class="card p-router z-code">
+<rect x="24" y="662" width="230" height="122" rx="10"/>
+<text class="tag" x="38" y="682">ROUTER</text>
+<text class="badge" x="242" y="682" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="702">Score and route</text>
+<text class="id" x="38" y="720">score</text>
+<text class="io" x="38" y="735">Enriched fields → Scored</text>
+<text class="exit" x="38" y="750">exits: near_miss,</text>
+<text class="exit" x="38" y="765">below_threshold, score_failed</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="662" width="230" height="122" rx="10"/>
+<text class="tag" x="324" y="682">SINGLE CALL</text>
+<text class="badge" x="528" y="682" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="702">Rubric scorer</text>
+<text class="id" x="324" y="720">scorer</text>
+<text class="sub" x="324" y="735">Sonnet 5.5 · low effort</text>
+<text class="sub" x="324" y="750">falls back to Haiku 5.5</text>
+<text class="io" x="324" y="765">Enriched fields → ratings</text>
+</g>
+<g class="card p-orch z-code">
+<rect x="24" y="876" width="230" height="152" rx="10"/>
+<text class="tag" x="38" y="896">ORCHESTRATOR–WORKERS</text>
+<text class="badge" x="242" y="896" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="916">Research</text>
+<text class="id" x="38" y="934">research</text>
+<text class="sub" x="38" y="949">≤ 20 calls · 9 searches</text>
+<text class="sub" x="38" y="964">6 pages · $0.30 Haiku 5.5</text>
+<text class="sub" x="38" y="979">$0.90 Sonnet 5.5</text>
+<text class="io" x="38" y="994">Qualified lead → Brief</text>
+<text class="exit" x="38" y="1009">exits: research_failed</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="876" width="230" height="197" rx="10"/>
+<text class="tag" x="324" y="896">SINGLE CALL</text>
+<text class="badge" x="528" y="896" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="916">Lead: plan</text>
+<text class="id" x="324" y="934">research_plan</text>
+<text class="sub" x="324" y="949">Sonnet 5.5 · medium effort</text>
+<text class="sub" x="324" y="964">falls back to Haiku 5.5</text>
+<text class="io" x="324" y="979">Enriched fields → Plan</text>
+</g>
+<g class="card p-loop z-web">
+<rect x="310" y="1129" width="230" height="212" rx="10"/>
+<text class="tag" x="324" y="1149">TOOL LOOP</text>
+<text class="badge" x="528" y="1149" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="1169">Audience and channels</text>
+<text class="id" x="324" y="1187">worker_audience</text>
+<text class="sub" x="324" y="1202">Haiku 5.5 · low effort</text>
+<text class="sub" x="324" y="1217">falls back to Sonnet 5.5</text>
+<text class="mono" x="324" y="1232">tools: fetch_page,</text>
+<text class="mono" x="324" y="1247">submit_findings, web_search</text>
+<text class="sub" x="324" y="1262">≤ 6 calls · 3 searches</text>
+<text class="sub" x="324" y="1277">2 pages · 90 s</text>
+<text class="sub" x="324" y="1292">$0.10 Haiku 5.5</text>
+<text class="sub" x="324" y="1307">$0.40 Sonnet 5.5</text>
+<text class="io" x="324" y="1322">WorkerTask → WorkerFindings</text>
+</g>
+<g class="card p-loop z-web">
+<rect x="564" y="1129" width="230" height="212" rx="10"/>
+<text class="tag" x="578" y="1149">TOOL LOOP</text>
+<text class="badge" x="782" y="1149" text-anchor="end">WEB</text>
+<text class="ttl" x="578" y="1169">Ad activity</text>
+<text class="id" x="578" y="1187">worker_ads</text>
+<text class="sub" x="578" y="1202">Haiku 5.5 · low effort</text>
+<text class="sub" x="578" y="1217">falls back to Sonnet 5.5</text>
+<text class="mono" x="578" y="1232">tools: fetch_page,</text>
+<text class="mono" x="578" y="1247">submit_findings, web_search</text>
+<text class="sub" x="578" y="1262">≤ 6 calls · 3 searches</text>
+<text class="sub" x="578" y="1277">2 pages · 90 s</text>
+<text class="sub" x="578" y="1292">$0.10 Haiku 5.5</text>
+<text class="sub" x="578" y="1307">$0.40 Sonnet 5.5</text>
+<text class="io" x="578" y="1322">WorkerTask → WorkerFindings</text>
+</g>
+<g class="card p-loop z-web">
+<rect x="818" y="1129" width="230" height="212" rx="10"/>
+<text class="tag" x="832" y="1149">TOOL LOOP</text>
+<text class="badge" x="1036" y="1149" text-anchor="end">WEB</text>
+<text class="ttl" x="832" y="1169">Launches and sponsorships</text>
+<text class="id" x="832" y="1187">worker_launches</text>
+<text class="sub" x="832" y="1202">Haiku 5.5 · low effort</text>
+<text class="sub" x="832" y="1217">falls back to Sonnet 5.5</text>
+<text class="mono" x="832" y="1232">tools: fetch_page,</text>
+<text class="mono" x="832" y="1247">submit_findings, web_search</text>
+<text class="sub" x="832" y="1262">≤ 6 calls · 3 searches</text>
+<text class="sub" x="832" y="1277">2 pages · 90 s</text>
+<text class="sub" x="832" y="1292">$0.10 Haiku 5.5</text>
+<text class="sub" x="832" y="1307">$0.40 Sonnet 5.5</text>
+<text class="io" x="832" y="1322">WorkerTask → WorkerFindings</text>
+</g>
+<g class="card p-loop z-web">
+<rect x="1072" y="876" width="230" height="197" rx="10"/>
+<text class="tag" x="1086" y="896">TOOL LOOP</text>
+<text class="badge" x="1290" y="896" text-anchor="end">WEB</text>
+<text class="ttl" x="1086" y="916">Single agent (baseline)</text>
+<text class="id" x="1086" y="934">research_single</text>
+<text class="sub" x="1086" y="949">Sonnet 5.5 · medium effort</text>
+<text class="sub" x="1086" y="964">falls back to Haiku 5.5</text>
+<text class="mono" x="1086" y="979">tools: fetch_page,</text>
+<text class="mono" x="1086" y="994">submit_findings, web_search</text>
+<text class="sub" x="1086" y="1009">≤ 12 calls · 9 searches</text>
+<text class="sub" x="1086" y="1024">6 pages · $0.30 Haiku 5.5</text>
+<text class="sub" x="1086" y="1039">$0.90 Sonnet 5.5</text>
+<text class="io" x="1086" y="1054">WorkerTask → WorkerFindings</text>
+</g>
+<g class="card p-code z-code">
+<rect x="310" y="1397" width="230" height="107" rx="10"/>
+<text class="tag" x="324" y="1417">PLAIN CODE</text>
+<text class="badge" x="528" y="1417" text-anchor="end">CODE</text>
+<text class="ttl" x="324" y="1437">Claim verifier</text>
+<text class="id" x="324" y="1455">verifier</text>
+<text class="io" x="324" y="1470">WorkerFindings →</text>
+<text class="io" x="324" y="1485">list[VerifiedClaim]</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="1560" width="230" height="122" rx="10"/>
+<text class="tag" x="324" y="1580">SINGLE CALL</text>
+<text class="badge" x="528" y="1580" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="1600">Lead: merge</text>
+<text class="id" x="324" y="1618">research_merge</text>
+<text class="sub" x="324" y="1633">Sonnet 5.5 · medium effort</text>
+<text class="sub" x="324" y="1648">falls back to Haiku 5.5</text>
+<text class="io" x="324" y="1663">list[VerifiedClaim] → Brief</text>
+</g>
+<g class="card p-evalopt z-code">
+<rect x="24" y="1774" width="230" height="107" rx="10"/>
+<text class="tag" x="38" y="1794">EVALUATOR–OPTIMIZER</text>
+<text class="badge" x="242" y="1794" text-anchor="end">CODE</text>
+<text class="ttl" x="38" y="1814">Draft</text>
+<text class="id" x="38" y="1832">draft</text>
+<text class="io" x="38" y="1847">Brief → Draft</text>
+<text class="exit" x="38" y="1862">exits: draft_failed</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="1774" width="230" height="152" rx="10"/>
+<text class="tag" x="324" y="1794">SINGLE CALL</text>
+<text class="badge" x="528" y="1794" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="1814">Writer</text>
+<text class="id" x="324" y="1832">writer</text>
+<text class="sub" x="324" y="1847">Sonnet 5.5 · medium effort</text>
+<text class="sub" x="324" y="1862">falls back to Haiku 5.5</text>
+<text class="sub" x="324" y="1877">≤ $0.12 Haiku 5.5</text>
+<text class="sub" x="324" y="1892">$0.12 Sonnet 5.5</text>
+<text class="io" x="324" y="1907">Brief and media kit → Draft</text>
+</g>
+<g class="card p-code z-code">
+<rect x="310" y="1982" width="230" height="92" rx="10"/>
+<text class="tag" x="324" y="2002">PLAIN CODE</text>
+<text class="badge" x="528" y="2002" text-anchor="end">CODE</text>
+<text class="ttl" x="324" y="2022">Rule checker</text>
+<text class="id" x="324" y="2040">rule_checker</text>
+<text class="io" x="324" y="2055">Draft → RuleCheck</text>
+</g>
+<g class="card p-single z-web">
+<rect x="310" y="2130" width="230" height="122" rx="10"/>
+<text class="tag" x="324" y="2150">SINGLE CALL</text>
+<text class="badge" x="528" y="2150" text-anchor="end">WEB</text>
+<text class="ttl" x="324" y="2170">Critic</text>
+<text class="id" x="324" y="2188">critic</text>
+<text class="sub" x="324" y="2203">Sonnet 5.5 · low effort</text>
+<text class="sub" x="324" y="2218">falls back to Haiku 5.5</text>
+<text class="io" x="324" y="2233">Draft and brief → Critique</text>
+</g>
+<g class="card p-human z-human">
+<rect x="24" y="2310" width="230" height="107" rx="10"/>
+<text class="tag" x="38" y="2330">PERSON</text>
+<text class="badge" x="242" y="2330" text-anchor="end">PERSON</text>
+<text class="ttl" x="38" y="2350">Person approves</text>
+<text class="id" x="38" y="2368">approval</text>
+<text class="io" x="38" y="2383">Draft → Approval</text>
+<text class="exit" x="38" y="2398">exits: rejected</text>
+</g>
+</svg>
+</div>
+</section>
+<section aria-labelledby="h-nodes">
+<h2 id="h-nodes">Every node</h2>
+<p>The registry as a table. The model adapter refuses any request whose tools differ from
+its role's entry here, and no node holds a tool that sends, writes to the CRM or writes
+files.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Node</th><th>Step</th><th>Pattern</th><th>Model</th><th>Tools</th><th>Caps</th><th>Trust zone</th><th>Handoff in → out</th><th>Exits</th></tr></thead>
+<tbody>
+<tr><td><strong>Source seeds</strong><br><code>source</code></td><td>source</td><td>Sequential</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>SeedList</code> → <code>list[Lead]</code></td><td>duplicate, excluded</td></tr>
+<tr><td><strong>Enrich</strong><br><code>enrich</code></td><td>enrich</td><td>Sequential</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>list[Lead]</code> → <code>list[Enriched]</code></td><td>missing_key_fields</td></tr>
+<tr><td><strong>Extract fields</strong><br><code>extractor</code></td><td>enrich</td><td>Single call</td><td>Haiku 5.5 · low effort · falls back to Sonnet 5.5</td><td>—</td><td>—</td><td>Reads untrusted content</td><td><code>company pages</code> → <code>Extraction</code></td><td>—</td></tr>
+<tr><td><strong>Search launches</strong><br><code>launch_searcher</code></td><td>enrich</td><td>Tool loop</td><td>Haiku 5.5 · low effort · falls back to Sonnet 5.5</td><td><code>submit_launches</code>, <code>web_search</code></td><td>≤ 2 calls · 1 search</td><td>Reads untrusted content</td><td><code>company name</code> → <code>launches</code></td><td>—</td></tr>
+<tr><td><strong>Profile rules</strong><br><code>rules</code></td><td>rules</td><td>Plain code</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>Enriched fields</code> → <code>Outcome</code></td><td>out_of_profile, missing_key_fields</td></tr>
+<tr><td><strong>Score and route</strong><br><code>score</code></td><td>score</td><td>Router</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>Enriched fields</code> → <code>Scored</code></td><td>near_miss, below_threshold, score_failed</td></tr>
+<tr><td><strong>Rubric scorer</strong><br><code>scorer</code></td><td>score</td><td>Single call</td><td>Sonnet 5.5 · low effort · falls back to Haiku 5.5</td><td>—</td><td>—</td><td>Reads untrusted content</td><td><code>Enriched fields</code> → <code>ratings</code></td><td>—</td></tr>
+<tr><td><strong>Research</strong><br><code>research</code></td><td>research</td><td>Orchestrator–workers</td><td>—</td><td>—</td><td>≤ 20 calls · 9 searches · 6 pages · $0.30 Haiku 5.5 · $0.90 Sonnet 5.5</td><td>Code only, no model</td><td><code>Qualified lead</code> → <code>Brief</code></td><td>research_failed</td></tr>
+<tr><td><strong>Lead: plan</strong><br><code>research_plan</code></td><td>research</td><td>Single call</td><td>Sonnet 5.5 · medium effort · falls back to Haiku 5.5</td><td>—</td><td>—</td><td>Reads untrusted content</td><td><code>Enriched fields</code> → <code>Plan</code></td><td>—</td></tr>
+<tr><td><strong>Audience and channels</strong><br><code>worker_audience</code></td><td>research</td><td>Tool loop</td><td>Haiku 5.5 · low effort · falls back to Sonnet 5.5</td><td><code>fetch_page</code>, <code>submit_findings</code>, <code>web_search</code></td><td>≤ 6 calls · 3 searches · 2 pages · 90 s · $0.10 Haiku 5.5 · $0.40 Sonnet 5.5</td><td>Reads untrusted content</td><td><code>WorkerTask</code> → <code>WorkerFindings</code></td><td>—</td></tr>
+<tr><td><strong>Ad activity</strong><br><code>worker_ads</code></td><td>research</td><td>Tool loop</td><td>Haiku 5.5 · low effort · falls back to Sonnet 5.5</td><td><code>fetch_page</code>, <code>submit_findings</code>, <code>web_search</code></td><td>≤ 6 calls · 3 searches · 2 pages · 90 s · $0.10 Haiku 5.5 · $0.40 Sonnet 5.5</td><td>Reads untrusted content</td><td><code>WorkerTask</code> → <code>WorkerFindings</code></td><td>—</td></tr>
+<tr><td><strong>Launches and sponsorships</strong><br><code>worker_launches</code></td><td>research</td><td>Tool loop</td><td>Haiku 5.5 · low effort · falls back to Sonnet 5.5</td><td><code>fetch_page</code>, <code>submit_findings</code>, <code>web_search</code></td><td>≤ 6 calls · 3 searches · 2 pages · 90 s · $0.10 Haiku 5.5 · $0.40 Sonnet 5.5</td><td>Reads untrusted content</td><td><code>WorkerTask</code> → <code>WorkerFindings</code></td><td>—</td></tr>
+<tr><td><strong>Single agent (baseline)</strong><br><code>research_single</code></td><td>research</td><td>Tool loop</td><td>Sonnet 5.5 · medium effort · falls back to Haiku 5.5</td><td><code>fetch_page</code>, <code>submit_findings</code>, <code>web_search</code></td><td>≤ 12 calls · 9 searches · 6 pages · $0.30 Haiku 5.5 · $0.90 Sonnet 5.5</td><td>Reads untrusted content</td><td><code>WorkerTask</code> → <code>WorkerFindings</code></td><td>—</td></tr>
+<tr><td><strong>Claim verifier</strong><br><code>verifier</code></td><td>research</td><td>Plain code</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>WorkerFindings</code> → <code>list[VerifiedClaim]</code></td><td>—</td></tr>
+<tr><td><strong>Lead: merge</strong><br><code>research_merge</code></td><td>research</td><td>Single call</td><td>Sonnet 5.5 · medium effort · falls back to Haiku 5.5</td><td>—</td><td>—</td><td>Reads untrusted content</td><td><code>list[VerifiedClaim]</code> → <code>Brief</code></td><td>—</td></tr>
+<tr><td><strong>Draft</strong><br><code>draft</code></td><td>draft</td><td>Evaluator–optimizer</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>Brief</code> → <code>Draft</code></td><td>draft_failed</td></tr>
+<tr><td><strong>Writer</strong><br><code>writer</code></td><td>draft</td><td>Single call</td><td>Sonnet 5.5 · medium effort · falls back to Haiku 5.5</td><td>—</td><td>≤ $0.12 Haiku 5.5 · $0.12 Sonnet 5.5</td><td>Reads untrusted content</td><td><code>Brief and media kit</code> → <code>Draft</code></td><td>—</td></tr>
+<tr><td><strong>Rule checker</strong><br><code>rule_checker</code></td><td>draft</td><td>Plain code</td><td>—</td><td>—</td><td>—</td><td>Code only, no model</td><td><code>Draft</code> → <code>RuleCheck</code></td><td>—</td></tr>
+<tr><td><strong>Critic</strong><br><code>critic</code></td><td>draft</td><td>Single call</td><td>Sonnet 5.5 · low effort · falls back to Haiku 5.5</td><td>—</td><td>—</td><td>Reads untrusted content</td><td><code>Draft and brief</code> → <code>Critique</code></td><td>—</td></tr>
+<tr><td><strong>Person approves</strong><br><code>approval</code></td><td>approve</td><td>Person</td><td>—</td><td>—</td><td>—</td><td>A person decides</td><td><code>Draft</code> → <code>Approval</code></td><td>rejected</td></tr>
+</tbody></table></div>
+<p class="note">11 of 11 agents read untrusted content and so see no
+private data; 5 hold tools, all of them read-only. Generated by
+<code>scripts/diagrams.py</code> from <code>src/adscout/pipeline/registry.py</code>; the
+gate fails when this page differs from a fresh generation.</p>
+</section>
+</div>
+</body>
+</html>

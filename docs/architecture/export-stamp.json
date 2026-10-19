@@ -1,43 +1,63 @@
 {
-  "workspace_sha256": "fea34118c9329522b3b6a7c6561aa586a12923e8eb2c2afc8b9faf542aeda594",
+  "workspace_sha256": "83e3385bdf23af5a84d2d9561f0b4b4e99e7469ee0b493b87d0001a9a61ae4e5",
   "exported_with": "structurizr-2026.09.19-playwright.war on Microsoft OpenJDK 21.0.12.1",
-  "exported_on": "2026-10-18",
+  "exported_on": "2026-10-19",
   "files": [
     {
       "path": "svg/Context.svg",
-      "sha256": "d7d50787ffd114a65fac55083ce8a1bb980f3de9cf5be42798ff7a95b56c8e68"
+      "sha256": "7462bad0b82fe21b31fbc1dc4b894be902f13ec33da060ef620434d181b3e278"
     },
     {
       "path": "svg/Context-key.svg",
-      "sha256": "e8fd15056c049439c94c507dbf74be51291cffecfd4e788cc39d40003291b7c6"
+      "sha256": "84453b05e8c97a17473965e805f5065f67d29b1a4f4dd8b87e21195039e62475"
     },
     {
       "path": "mermaid/structurizr-Context.mmd",
-      "sha256": "7c471e199be3571b05adb58626ba7a168b11005c0f4b1b59be7197677dba44d0"
+      "sha256": "40520f3edee5c9e48ce5180620343c42616b56cb0f2d104943ed133cb711d579"
     },
     {
       "path": "svg/ContainersBuilt.svg",
-      "sha256": "02fce2943faffae84928cf8fa3d6f8538b53a68761522ec4735a5381875b01ae"
+      "sha256": "41a4d645e1c42cb95ba352e6882571cb85108f67bfd3e9ae4c8065ed370ebef8"
     },
     {
       "path": "svg/ContainersBuilt-key.svg",
-      "sha256": "9b314d7a43d64656e317cf6e39f9f4e01d83c746b3107de1d0882975f0acfd2e"
+      "sha256": "3d104af9f947c0ee9829025915ec27a15c793ee6d0b04196b568331a91bd4020"
     },
     {
       "path": "mermaid/structurizr-ContainersBuilt.mmd",
-      "sha256": "0e35a792b8580ac5a1d98eae770abb5eefd4dc55e6c8b1f59d93892df3b3c390"
+      "sha256": "7e05ac5c658afb992409cda64cf9b92ae5522626088d7b61531f3169a7bbb6aa"
     },
     {
       "path": "svg/ContainersTarget.svg",
-      "sha256": "d2f2e8d5d2c719a98371b7ce562810ad84aa35beac9c2a72b2665d355d67b185"
+      "sha256": "dba2d22002bf8901ff74567d6f4ea574b7f8797ea333151f20918a082fa11f6b"
     },
     {
       "path": "svg/ContainersTarget-key.svg",
-      "sha256": "77b47698c800488bb1187d396252ff2ebaec5e889682a4d4ed361834e248dc7f"
+      "sha256": "c56b723f6d459f657936990e66167d3e159e083c577d17819a09c2fa79d0ae71"
     },
     {
       "path": "mermaid/structurizr-ContainersTarget.mmd",
-      "sha256": "a160dd26ffd5ef588d6e319dc9b72138f3c390a570b8bc9ca45dff532927ee15"
+      "sha256": "4d0df5bbf615214218c94a3659b29a399bcfcab9b3ade5d6b6a8f1539bafaa27"
+    },
+    {
+      "path": "svg/ResearchTeam.svg",
+      "sha256": "68966925513f17e4d7c689181b223242b4fe8fb2442bd112fdebcc6113efb08f"
+    },
+    {
+      "path": "svg/ResearchTeam-key.svg",
+      "sha256": "b3e7fa844962318c5ecac92a07c56ede59e86ac7b3bf0cd2ab487f4034d8ce18"
+    },
+    {
+      "path": "mermaid/structurizr-ResearchTeam.mmd",
+      "sha256": "f55861fc31563808103602dec2f6cd41db6bd0b111d8627375df7b9cd30fa09f"
+    },
+    {
+      "path": "agents.md",
+      "sha256": "8f41f0bbc51639d3b99874131779e766068bf4174a254d45d923b0ed3ae59556"
+    },
+    {
+      "path": "agent-flow.html",
+      "sha256": "76357b973ff05381b89b71e75dde5773a26e41b7fbd8fedb2fd576380de9721f"
     }
   ]
 }

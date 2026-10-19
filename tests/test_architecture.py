@@ -10,17 +10,21 @@ import erd
 
 FOLDER = architecture.FOLDER
 PLANNED = {
-    "Model provider": 2,
-    "Enrichment API": 2,
-    "Search API": 3,
-    "Company websites": 3,
-    "CRM sandbox": 4,
-    "Sandbox inbox": 4,
-    "Tracing service": 5,
-    "Approval queue": 4,
-    "Funnel dashboard": 6,
+    "CRM sandbox": 3,
+    "Sandbox inbox": 3,
+    "Tracing service": 3,
 }
-BUILT = ("Command-line pipeline", "Pipeline database", "Local fake CRM", "Config files")
+BUILT = (
+    "Command-line pipeline",
+    "Pipeline database",
+    "Local fake CRM",
+    "Config files",
+    "Local workspace",
+    "Model provider",
+    "Public data APIs",
+    "Web search",
+    "Company websites",
+)
 
 
 def copy_folder(tmp_path: Path) -> Path:
@@ -68,7 +72,12 @@ def test_stamp_ignores_line_endings(tmp_path: Path) -> None:
 
 
 def test_views_are_context_built_and_target() -> None:
-    assert architecture.view_keys() == ["Context", "ContainersBuilt", "ContainersTarget"]
+    assert architecture.view_keys() == [
+        "Context",
+        "ContainersBuilt",
+        "ContainersTarget",
+        "ResearchTeam",
+    ]
 
 
 def test_planned_elements_are_tagged_with_their_phase() -> None:

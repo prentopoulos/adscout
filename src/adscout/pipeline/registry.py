@@ -188,6 +188,7 @@ REGISTRY: tuple[Node, ...] = (
         "code_only",
         "Qualified lead",
         "Brief",
+        caps=LEAD_RESEARCH_CAPS,  # per lead, across the team; the research step enforces it
         exits=("research_failed",),
     ),
     Node(
@@ -317,6 +318,26 @@ REGISTRY: tuple[Node, ...] = (
         "Approval",
         exits=("rejected",),
     ),
+)
+
+# Typed handoffs inside a step, and from the last step to the person: (from, to, type). Each
+# type is the sender's output or the receiver's input; a step's own chain follows the
+# pipeline order. The diagrams are drawn from these and the nodes above.
+FLOWS: tuple[tuple[str, str, str], ...] = (
+    ("enrich", "extractor", "company pages"),
+    ("enrich", "launch_searcher", "company name"),
+    ("score", "scorer", "Enriched fields"),
+    ("research", "research_plan", "Enriched fields"),
+    *(("research_plan", worker, "WorkerTask") for worker in WORKERS),
+    ("research", "research_single", "WorkerTask"),
+    *((worker, "verifier", "WorkerFindings") for worker in WORKERS),
+    ("research_single", "verifier", "WorkerFindings"),
+    ("verifier", "research_merge", "list[VerifiedClaim]"),
+    ("draft", "writer", "Brief and media kit"),
+    ("writer", "rule_checker", "Draft"),
+    ("rule_checker", "critic", "Draft and brief"),
+    ("critic", "writer", "Critique"),
+    ("draft", "approval", "Draft"),
 )
 
 BY_ID = {node.id: node for node in REGISTRY}

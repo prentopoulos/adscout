@@ -17,6 +17,7 @@ erDiagram
         TEXT approver
         TEXT reason
         TEXT decided_at
+        TEXT approved_subject_sha256
     }
     briefs {
         INTEGER brief_id PK
@@ -233,6 +234,20 @@ erDiagram
         TEXT options_json
         TEXT cost_summary_json
     }
+    sandbox_messages {
+        TEXT message_id PK
+        TEXT approval_id FK
+        TEXT lead_id FK
+        TEXT destination
+        TEXT sender
+        TEXT subject
+        TEXT body
+        TEXT created_at
+    }
+    sandbox_suppressions {
+        TEXT lead_id PK, FK
+        TEXT created_at
+    }
     schema_migrations {
         INTEGER version PK
         TEXT name
@@ -251,6 +266,14 @@ erDiagram
         TEXT criteria_json
         INTEGER sample
         TEXT model_call_id FK
+    }
+    simulated_deals {
+        TEXT lead_id PK, FK
+        TEXT stage
+        INTEGER amount_cents
+        TEXT currency
+        INTEGER simulated
+        TEXT updated_at
     }
     source_calls {
         TEXT call_id PK
@@ -345,9 +368,13 @@ erDiagram
     runs }o--|| config_snapshots : "seed_list_hash"
     runs }o--|| config_snapshots : "site_list_hash"
     runs }o--|| config_snapshots : "stub_script_hash"
+    sandbox_messages }o--|| approvals : "approval_id"
+    sandbox_messages }o--|| leads : "lead_id"
+    sandbox_suppressions }o--|| leads : "lead_id"
     scores }o--|| leads : "lead_id"
     scores }o--|| model_calls : "model_call_id"
     scores }o--|| runs : "run_id"
+    simulated_deals }o--|| leads : "lead_id"
     source_calls }o--|| leads : "lead_id"
     source_calls }o--|| model_calls : "model_call_id"
     source_calls }o--|| runs : "run_id"

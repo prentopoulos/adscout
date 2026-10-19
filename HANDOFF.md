@@ -1,163 +1,122 @@
 # Current handoff
 
-Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state before resuming.
+Read PROJECT.md and current user instructions. Inspect Git/OpenSpec state before resuming.
 
-## Current checkpoint
+## Current checkpoint · 2026-10-19
 
-Phase 2 (AI pipeline) is in progress on branch `phase-2/ai-pipeline`, OpenSpec change
-`phase-2-ai-pipeline`. Tasks 1.1–1.4, 2.1–2.6 and 3.1 are done (13 of 46), each in its own
-commit with the gate green; `tasks.md` is the record.
+Branch `phase-2/ai-pipeline`; original change `phase-2-ai-pipeline` remains in progress.
+The owner requested an MVP of the remaining project within one usage window and delegated
+condensation/simplification. Scope commit `40da88d` records the smaller `local-mvp` change.
+This does not waive gates, establish live quality, or complete/archive original Phase 2.
+No remote, push, merge, paid call or account creation has occurred.
 
-- Built so far: runtime dependencies anthropic 1.15.0, httpx2 2.14.0 and langgraph 1.2.16
-  (pip-audit clean); the LangGraph spike passed, so LangGraph stays (outcome in design
-  decision 24); migration 0002; segment config v2 with the rubric; the dated price table;
-  the model adapter (fake, replay and live modes, spend reservation, budget errors,
-  retry and fallback, record-and-replay cache, prompt files with versions); the polite
-  fetcher with robots.txt, pacing and egress rules. As-built notes are in the design under
-  decisions 24 and 21 and the data model.
-- Owner to review before the first live run: the score anchor wording in
-  `config/segments/gaming-hardware-na.yaml` was drafted by the agent (criteria, weights,
-  threshold and band are the owner's).
-- Found by the spike: any of `LANGSMITH_TRACING`, `LANGSMITH_TRACING_V2`, `LANGCHAIN_TRACING`
-  or `LANGCHAIN_TRACING_V2` set to `true` makes LangGraph post graph state to LangSmith;
-  task 7.1's guard must refuse all four.
-- Open for task 5.4: a claim quote copied from a page could contain a person's name, which
-  §5 forbids storing; the verifier or the claims writer needs a rule for it.
+The local implementation is built: real pipeline code using synthetic sites and scripted
+model responses; a loopback workspace for human review, local CRM sync, local sandbox
+messages/unsubscribe and simulated deals; generated diagrams and a README. Browser visual
+inspection remains pending because the tool environment could not reach the loopback URL.
+See [verification and review](docs/local-mvp-verification.md).
 
-- Grilling ran on 2026-10-18 in three rounds; the owner accepted every recommendation. On the
-  way the owner merged the playbook's Phases 2–6 into two MVP phases (Phase 2: every model
-  step; Phase 3: approval, CRM, send, dashboard, Langfuse Cloud and showcase), made the
-  research step multi-agent, and took five ideas from a crewAI sales-pipeline course.
-  Decisions are in PROJECT.md §2–4 and §6 and the change's design, with who made each.
-- Constitution amended to 1.1.0 (8488886): several read-only research agents, each with
-  caps, under a per-run spend cap; no agent reading untrusted content gets private data.
-- Owner to-dos before live runs (tasks 9 and 10): approve 30 seeds and the site list, label
-  the seeds blind, name the fictional publisher, create the Anthropic account and "adscout"
-  workspace ($45 limit, auto-reload off), buy $20 of prepaid credit, put the key and a project
-  mailbox in `.env`. The owner is on Claude Pro, which includes no API credits.
-- A private claude.ai artifact shows the target agent architecture; task 8.4 replaces it with
-  the page generated from the agent registry.
+## Run the MVP
 
-Phase 1 (thin end-to-end pipeline with stub steps) is complete. OpenSpec change
-`phase-1-thin-pipeline` is archived on branch `phase-1/thin-pipeline`, which merges into `main`
-with a merge commit on the owner's go-ahead. The code review ran and its findings are resolved
-(Verification below).
+```powershell
+uv run --locked adscout demo
+```
 
-- Grilling ran on 2026-10-18; the owner accepted every recommendation (Q1–Q16). Decisions are
-  in PROJECT.md §2–4 and §6 and in the archived change's design, with who made each.
-- First segment: gaming hardware brands in North America (settled with the owner; do not
-  reopen).
-- Seeds: 8bitdo.com, corsair.com, nzxt.com, razer.com and turtlebeach.com, each checked once on
-  its home page under the owner's scoped live-read decision (PROJECT.md §6). steelseries.com
-  answered HTTP 403 and was left out.
-- The scripted stub outcomes follow one-off desk research the owner asked for (design
-  decision 15; sources in `config/stubs/gaming-hardware-na.yaml`): Corsair, Razer and Turtle
-  Beach approved and synced; NZXT rejected at approval; 8BitDo below the score threshold. They
-  are the agent's judgement, not the owner's labels.
-
-Phase 0 (toolchain, local gate, offline evaluation scaffold) was merged on 2026-10-18 (f5706ec);
-its verification record is in commit 8c79625's HANDOFF.md.
+Open http://127.0.0.1:8765. The default database is `data/demo.db`; subsequent runs preserve
+decisions. `--db data/another-demo.db` starts a separate demo without deleting anything.
+Use `--prepare` to populate without serving. See [README](README.md) for the walkthrough.
+No credentials needed. The inbox is SQLite, not an email service; all revenue is simulated.
 
 ## Implemented behavior
 
-- Package `adscout` 0.2.0 (Python 3.13, src layout, `uv.lock`); runtime dependencies pydantic
-  and PyYAML.
-- Config: `config/segments/<id>.yaml` (strict, nulls with reasons), `config/seeds/<id>.csv`
-  (company-level columns only), `config/stubs/<id>.yaml` (scripted stub outcomes; a real
-  company's outcome needs a rationale and sources). Values that look like an email address or
-  phone number are refused. JSON Schemas in `config/schemas/`.
-- Database: SQLite at `data/adscout.db` (gitignored; `--db` or `ADSCOUT_DB`), numbered SQL
-  migrations with checksums and a backup before each upgrade, committed
-  `src/adscout/db/schema.sql`, triggers that refuse any change or deletion of a lead's source
-  fields, views `v_funnel` and `v_lead_journey`, a guard against personal-contact columns.
-- Commands: `adscout db upgrade`, `run`, `approve --stub`, `sync`, `runs`, `funnel`, `check`,
-  `export`; `scripts/demo.py` chains the whole flow. All offline.
-- Pipeline: real `source` step (domain dedupe, exclusions, lead creation with UUIDv7 IDs and
-  agent version `<package>+g<commit>[.dirty]`, prompt version `none`), five scripted stub
-  steps, a run that stops at approval, a stub approver bound to the draft's SHA-256, and the
-  single CRM writer into a local fake CRM (dedupe by domain, owned fields only, person edits
-  kept and logged). Each step works outside any transaction and writes in one short one. One
-  live run at a time; a dead `running` run is marked `interrupted`; leads of an unfinished run
-  re-enter the next run.
-- Run records: `runs`, `step_runs`, `lead_step_outcomes` with the system version and explained
-  nulls. `adscout check` validates a run from the database alone. `adscout export` writes JSON
-  Lines with OpenTelemetry GenAI and Langfuse names (`src/adscout/schemas/run-export.schema.json`).
-- Diagrams: `docs/architecture/workspace.dsl` (context, built and target container views),
-  SVG and Mermaid exports with a stamp, and `docs/architecture/erd.md` generated from the
-  schema. Gate tests fail on drift without needing Java.
-- Gate: as in Phase 0, with a 90% line-coverage threshold on `src/` and `scripts/`.
+- Package 0.2.0, Python 3.13, uv lock; anthropic/httpx2/langgraph runtime dependencies.
+- Real source, enrichment, profile rules, weighted rubric score/router, research team
+  (lead plus three workers or single-agent baseline), claim verifier, writer/checker/critic.
+  The registry supplies graphs, tool allowlists and generated flow documentation.
+- Fake/replay/live model transports, price table, Decimal cost, spend reservation, transient
+  retries, one escalation, role prompt/schema versions, call sinks and replay/page cache.
+- Polite fetcher: robots, rate limits, egress and site-list refusal, source call records.
+  LangSmith tracing variables refused; role contexts exclude private data; ten planted
+  injection pages with clean twins tested offline.
+- SQLite schema 3: migration 0003 adds reviewed-subject hashes, sandbox messages and
+  suppressions, and explicitly simulated USD deals. Backups/checksums and schema/ERD updated.
+- Human review binds both subject and body. Stale decisions and tampering cannot authorize
+  delivery. Partial research and unresolved critic objections are visible before approval.
+  Generic operator identity; draft editing is deferred.
+- Existing one CRM writer remains the only CRM write path, preserving person edits.
+  Repeated scores use routing sample 1 in both dashboard and CRM.
+- One local send function: human approval, unchanged text, synthetic domain, CRM record,
+  fixed synthetic sender/footer, unsubscribe and idempotence. No external send adapter.
+- Local HTTP UI: fixed 127.0.0.1 bind, strict Host/Origin, CSRF, bounded POST forms,
+  escaped content and restrictive CSP. No multi-user/login claim.
+- Local span tree and model/source-call export with cost summaries: `adscout trace`,
+  `export`, `check`, `runs`, `funnel`, `rescore`; evaluation comparison tooling remains.
+- Registry HTML/Markdown, C4 context/container/research component SVG and Mermaid exports,
+  ERD, stamps and drift tests. Private artifact republishing remains deferred.
 
-## Phase 1 verification (2026-10-18)
+## Verification
 
-- **Gate:** all 12 steps pass at c957258, the last code commit: 218 tests, coverage of `src/`
-  and `scripts/` 94%, 6 scaffold cases.
-- **Evidence runs:** from a clean worktree at c957258 (the main tree has the owner's untracked
-  `.codex/config.toml`, which marks it dirty), `scripts/demo.py` on the five real seeds wrote
-  three runs, each `succeeded`, `code_dirty` 0, agent version `0.1.0+gc957258643cd`, and
-  `adscout check` pass. Exports in `evidence/runs/phase-1-20261018T170334Z-{585a29,ba73a2,8e454e}.jsonl`.
-  Pipeline: 5 sourced, 1 below threshold at score (8BitDo), 4 drafts; approval: 3 approved,
-  1 rejected (NZXT); CRM sync: 3 written to the fake CRM. A separate script validated all 46
-  export lines against the committed schema and recomputed every step's counts, the funnel
-  chain, the explained nulls and the stub labels from the exports alone: no problems. This is a
-  structural check of a stub pipeline, not an AI evaluation (not_run).
-- **Dependency audit:** `uv run --locked pip-audit --skip-editable` (pip-audit 2.10.1) on
-  2026-10-18: "No known vulnerabilities found" after pydantic and PyYAML became runtime
-  dependencies. The review fixes changed no dependency.
-- **Code review:**
-  - Inline, by the implementing agent, against every spec requirement and the design's
-    non-negotiables check: it corrected the design where the build differed (Langfuse release
-    instead of the unconfirmed `gen_ai.agent.version`; WebKit, not Chromium), bda1bb3.
-  - `/code-review high` of `main...phase-1/thin-pipeline`, run by a separate agent session
-    (same model, fresh context, not a human review; it could not run the tests because of the
-    temp-folder problem below). It reported 10 findings; all were fixed in c1b7e0c and c957258
-    with regression tests: leads of a failed run stuck as duplicates; approval loading the
-    unused seed list; tracebacks for migration, SQLite and Git errors; approval and sync
-    reading their work before taking the run lock; stub labels and `fail_at_step: source`
-    accepted but broken; export null reasons under raw column names; Windows "access denied"
-    read as a dead process; duplicated helpers; the write lock held during a step's work.
-  - Answered without a change: re-syncing logs a `no_op` CRM write for every approval each
-    time, which the spec's "log every write" asks for.
+- Gate: all 12 steps pass; 518 tests and 90 evaluation tests pass, 94.81% coverage.
+  Final consolidated log: ignored `.local/mvp-gate-consolidated.log`.
+- Focused tests: 63 database/architecture/diagram/workspace tests passed. Final workspace
+  security, flag-display and repeated-score regressions: 9 passed. Ruff lint/format and
+  strict mypy (92 source files) pass.
+- Initial full gate: 516 passed, one false-positive CRM scanner failure, 94.44% coverage;
+  90 evaluation tests pass. Fixed the scanner to inspect actual SQL strings via AST.
+  Initial failure and later logs retained separately in ignored `.local/`.
+- Dependency audit: `uv run --locked pip-audit --skip-editable --progress-spinner off`:
+  no known vulnerabilities found; editable AdScout skipped. No dependency changed for MVP.
+- Actual loopback HTTP smoke in an isolated process: HTTP 200 with review and evidence
+  content. Full POST workflow tested through the real handler with sockets blocked.
+  Chrome timed out on loopback; file preview was explicitly blocked by browser URL policy.
+  No visual desktop/mobile or actual browser click-through pass is claimed.
+- Manual self-review against local spec and constitution completed; findings/regressions
+  recorded in `docs/local-mvp-verification.md`. No independent reviewer available here.
+  Original whole-phase closure review is still open.
 
-## Findings and limitations
+## Deferred original work and decisions
 
-- **Temp folder:** in the agent's shell on this PC, `%TEMP%\pytest-of-Peter` (created
-  2026-10-04) denies access, so pytest's `tmp_path` fails there. Runs set
-  `PYTEST_DEBUG_TEMPROOT` to a short writable folder; `C:\Users\Peter\AppData\Local\Temp\p`
-  worked on 2026-10-18, while the deeper agent scratchpad hit Windows' 260-character path
-  limit in the digest tests. Deleting that folder may fix it.
-- **Untracked `.codex/config.toml`** (the owner's, not committed) makes the main tree dirty, so
-  evidence runs come from a clean worktree. Committing or ignoring it is the owner's call.
-- **Diagram tooling (owner-approved, 2026-10-18):** Microsoft OpenJDK 21.0.12.1 unzipped to
-  `C:\Users\Peter\tools\jdk-21.0.12.1+1` (zip SHA-256 matched Microsoft's published
-  `192441a9…5ce07f`; no installer, no PATH change; Java 11 stays the default), and
-  `C:\Users\Peter\tools\structurizr\structurizr-2026.09.19-playwright.war` (no checksum is
-  published; SHA-256 `7b717f14…077d90` as downloaded). The first SVG export downloaded
-  Playwright's WebKit to `%LOCALAPPDATA%\ms-playwright`. Commands are in the showcase skill's C4
-  reference and the header of `docs/architecture/workspace.dsl`.
-- **Target container view** is legible but its planned-system lines cross some labels near the
-  pipeline; arranging it by hand belongs with the Phase 6 showcase work.
-- **A `running` run recorded on another host name** (for example after renaming the PC) blocks
-  every new run, and no command clears it; it would need a manual SQL update.
-- **The agent version needs a Git checkout;** a Phase 6 container needs a build-time stamp.
-- **The secrets scan** matches any name containing KEY, TOKEN, SECRET or PASSWORD; two
-  OpenTelemetry token-count attribute names in `src/adscout/export.py` are allowlisted with a
-  reason. Confirm each provider's key prefix when its account is created.
-- **The commit check** compares the branch with `main`; commits made directly on `main` are not
-  checked, and Git's default `Revert "…"` subjects fail it.
-- **The link check** fails on links to gitignored files, such as the local playbook PDF.
-- **Ruff 0.17** also formats Markdown code blocks, so `pyproject.toml` limits ruff to Python
-  files.
-- **OpenSpec telemetry:** the gate and `.claude/settings.json` turn it off; other terminals and
-  harnesses send a usage event unless `OPENSPEC_TELEMETRY=0` is set there.
-- **Open for later phases:** the fictional publisher's name (before drafts run live); whether
-  Haiku 5.5 supports web search (after the account exists); the minutes-per-account
-  definition (Phase 3), with the owner timing their own research on the five seeds before
-  then; whether to cover the posting's automation tools (the deferred n8n variant); the CRM
-  sandbox details (Phase 3).
+Original task 6.1: real-seed media kit waits for owner publisher name; the fixture kit is
+enough for demo. Task 8.4 local generation/exports/tests are built; private republishing is
+not done. Tasks 9–10 (30 seeds, sites, labels, precommitted plans and paid studies) and
+original full-phase review/version/archive remain open. Original task 11.3's capability
+map and handoff are updated for this local checkpoint, not evidence of live completion.
 
-## Next action
+Before any original live study: owner approval of rubric anchors, seed/site lists, labels,
+publisher, account/credit/key/contact and relevant PROJECT.md gates. Resolve the research
+comparison's unequal step caps (single 12 versus team 20) before its plan is committed.
+The person-name detector is heuristic and needs owner scrutiny on live claims. No tier
+winner, multi-agent advantage or measured business outcome has been established.
 
-On `phase-2/ai-pipeline`, continue the OpenSpec apply workflow at task 3.2 (the site-list
-model and loader). Offline tasks need no gate; desk research (9.1, 9.2) runs under the
-owner's scoped decisions in PROJECT.md §6; live tasks (section 10) wait for the owner's
-account, credit and approvals.
+Deferred from original Phase 3: cloud CRM/inbox/tracing, hosted CI, Docker and video.
+No real outreach or personal-contact data is available. Publication and exposure gates
+remain unresolved. The local inbox is for software tests, not approval of an email service.
+
+## Environment and recovery
+
+- The owner's untracked `.codex/config.toml` remains untouched; it makes ordinary checkout
+  runs dirty. Do not stage, ignore or erase it. Clean-tree live evidence needs another checkout.
+- In this tool environment, use `.local/tmp` for TEMP, TMP and PYTEST_DEBUG_TEMPROOT, and
+  `.local/uv-cache` for UV_CACHE_DIR. Default temp/cache permissions can break SQLite tests.
+- Structurizr exports use the already-installed JDK 21 and WAR under `C:/Users/Peter/tools`.
+  Existing Playwright browsers live under `C:/Users/Peter/AppData/Local/ms-playwright`;
+  pass that as PLAYWRIGHT_BROWSERS_PATH rather than redownloading. Re-export before stamping.
+- Preserve failed runs, databases and caches. A dead local run is marked interrupted on
+  retry. Another-host running records require operator investigation. Old code cannot
+  downgrade schema 3; preserve the migration backup when investigating a regression.
+
+## Earlier phase evidence
+
+Phase 0 merged at f5706ec. Phase 1 code review fixes and gate at c957258: 218 tests,
+94% coverage and six scaffold cases. Three clean-tree Phase 1 stub runs and exports in
+`evidence/runs/phase-1-20261018T170334Z-{585a29,ba73a2,8e454e}.jsonl` passed independent
+checks (5 sources, 4 drafts, 3 approvals/CRM writes). They establish pipeline structure,
+not AI behavior. Detailed historical evidence is retained in Git history.
+
+## Exact next action
+
+From a normal local terminal, run `adscout demo` and follow the README's five browser steps;
+inspect desktop and narrow-screen layout. That is the remaining local verification item.
+Then choose whether to resume deferred live validation or keep the offline MVP as the
+portfolio cut. Do not merge/archive original Phase 2 merely because the local demo works;
+its original gated tasks and whole-branch closure review remain open.

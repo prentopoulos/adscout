@@ -11,7 +11,8 @@ CREATE TABLE approvals (
     approver_kind TEXT NOT NULL CHECK (approver_kind IN ('stub', 'person')),
     approver TEXT NOT NULL,
     reason TEXT,
-    decided_at TEXT NOT NULL,
+    decided_at TEXT NOT NULL, approved_subject_sha256 TEXT
+    CHECK (approved_subject_sha256 IS NULL OR length(approved_subject_sha256) = 64),
     CHECK (decision = 'approved' OR reason IS NOT NULL)
 ) STRICT;
 
@@ -284,6 +285,22 @@ CREATE TABLE "runs" (
     CHECK (status != 'failed' OR error_category IS NOT NULL)
 ) STRICT;
 
+CREATE TABLE sandbox_messages (
+    message_id TEXT PRIMARY KEY,
+    approval_id TEXT NOT NULL UNIQUE REFERENCES approvals (approval_id),
+    lead_id TEXT NOT NULL REFERENCES leads (lead_id),
+    destination TEXT NOT NULL CHECK (destination = 'sandbox@adscout.test'),
+    sender TEXT NOT NULL CHECK (sender = 'AdScout Demo Publisher (synthetic)'),
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE sandbox_suppressions (
+    lead_id TEXT PRIMARY KEY REFERENCES leads (lead_id),
+    created_at TEXT NOT NULL
+) STRICT;
+
 CREATE TABLE schema_migrations (
     version INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
@@ -302,6 +319,15 @@ CREATE TABLE scores (
     created_at TEXT NOT NULL
 , criteria_json TEXT NOT NULL DEFAULT '[]'
     CHECK (json_valid(criteria_json)), sample INTEGER NOT NULL DEFAULT 1 CHECK (sample >= 1), model_call_id TEXT REFERENCES model_calls (call_id)) STRICT;
+
+CREATE TABLE simulated_deals (
+    lead_id TEXT PRIMARY KEY REFERENCES leads (lead_id),
+    stage TEXT NOT NULL CHECK (stage IN ('pipeline', 'won', 'lost')),
+    amount_cents INTEGER NOT NULL CHECK (amount_cents BETWEEN 0 AND 100000000),
+    currency TEXT NOT NULL DEFAULT 'USD' CHECK (currency = 'USD'),
+    simulated INTEGER NOT NULL DEFAULT 1 CHECK (simulated = 1),
+    updated_at TEXT NOT NULL
+) STRICT;
 
 CREATE TABLE source_calls (
     call_id TEXT PRIMARY KEY CHECK (length(call_id) = 36),

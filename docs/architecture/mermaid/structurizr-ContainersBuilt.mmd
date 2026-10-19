@@ -6,23 +6,40 @@ graph LR
 
     1["<div style='font-weight: bold'>Ad sales researcher</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Works at a publisher; picks a<br />segment, reviews the funnel<br />and approves drafts.</div>"]
     style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Model provider</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Anthropic's Messages API:<br />field extraction, scoring,<br />the research team and the<br />draft loop.</div>"]
+    style 2 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    3["<div style='font-weight: bold'>Web search</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>The model provider's<br />server-side search tool;<br />results are untrusted text.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Public data APIs</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Wikidata and SEC EDGAR:<br />company size, region and<br />filings; no key needed.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    5["<div style='font-weight: bold'>Company websites</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Public pages, read politely<br />(robots.txt, a delay per<br />host) as untrusted data.</div>"]
+    style 5 fill:#999999,stroke:#6b6b6b,color:#ffffff
 
     subgraph 9 ["AdScout"]
       style 9 fill:#ffffff,stroke:#0b4884,color:#0b4884
 
-      10["<div style='font-weight: bold'>Command-line pipeline</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python CLI]</div><div style='font-size: 80%; margin-top:10px'>Sources seeds, runs each step<br />(stubs in Phase 1), approves<br />with a stub approver, syncs<br />through the one CRM writer<br />and checks every run.</div>"]
+      10["<div style='font-weight: bold'>Command-line pipeline</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python CLI]</div><div style='font-size: 80%; margin-top:10px'>Runs a segment through<br />enrichment, rules, scoring,<br />the research team and the<br />draft loop; leads stop at<br />approval. Checks and traces<br />every run.</div>"]
       style 10 fill:#1168bd,stroke:#0b4884,color:#ffffff
-      11["<div style='font-weight: bold'>Config files</div><div style='font-size: 70%; margin-top: 0px'>[Container: YAML and CSV files]</div><div style='font-size: 80%; margin-top:10px'>Segment rules, seed list and<br />the stub script with its<br />sources.</div>"]
-      style 11 fill:#1168bd,stroke:#0b4884,color:#ffffff
-      12[("<div style='font-weight: bold'>Pipeline database</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite file]</div><div style='font-size: 80%; margin-top:10px'>Companies, leads with fixed<br />source fields, step outcomes,<br />drafts, approvals and run<br />records.</div>")]
-      style 12 fill:#1168bd,stroke:#0b4884,color:#ffffff
-      13[("<div style='font-weight: bold'>Local fake CRM</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite tables]</div><div style='font-size: 80%; margin-top:10px'>Stand-in for the CRM sandbox<br />until Phase 4: accounts,<br />field owners and a write log.</div>")]
-      style 13 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      21["<div style='font-weight: bold'>Config files</div><div style='font-size: 70%; margin-top: 0px'>[Container: YAML and CSV files]</div><div style='font-size: 80%; margin-top:10px'>Segment rules, seed list,<br />site list, media kit and<br />price table.</div>"]
+      style 21 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      22[("<div style='font-weight: bold'>Pipeline database</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite file]</div><div style='font-size: 80%; margin-top:10px'>Companies, leads, enriched<br />fields, scores, claims,<br />drafts, approvals, spans and<br />every model and source call.</div>")]
+      style 22 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      23[("<div style='font-weight: bold'>Local fake CRM</div><div style='font-size: 70%; margin-top: 0px'>[Container: SQLite tables]</div><div style='font-size: 80%; margin-top:10px'>Local sandbox: accounts,<br />field owners and a write log;<br />no external service.</div>")]
+      style 23 fill:#1168bd,stroke:#0b4884,color:#ffffff
+      24["<div style='font-weight: bold'>Local workspace</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python HTTP on 127.0.0.1]</div><div style='font-size: 80%; margin-top:10px'>Human review, CRM sync, local<br />sandbox inbox and funnel with<br />simulated revenue. Binds<br />approval to draft text;<br />unsubscribe blocks later<br />local delivery.</div>"]
+      style 24 fill:#1168bd,stroke:#0b4884,color:#ffffff
     end
 
-    1-- "<div>Runs a segment and the stub<br />approver</div><div style='font-size: 70%'>[Command line]</div>" -->10
-    10-- "<div>Reads segment rules, seeds<br />and the stub script</div><div style='font-size: 70%'>[YAML, CSV]</div>" -->11
-    10-- "<div>Stores leads, outcomes,<br />drafts and run records</div><div style='font-size: 70%'>[SQL]</div>" -->12
-    10-- "<div>Writes approved leads through<br />the one CRM writer</div><div style='font-size: 70%'>[SQL]</div>" -->13
+    1-- "<div>Runs a segment, traces and<br />checks runs</div><div style='font-size: 70%'>[Command line]</div>" -->10
+    1-- "<div>Reviews drafts and the<br />funnel; approves sandbox<br />actions</div><div style='font-size: 70%'>[HTTP on loopback]</div>" -->24
+    10-- "<div>Reads segment rules, seeds,<br />sites, the media kit and<br />prices</div><div style='font-size: 70%'>[YAML, CSV]</div>" -->21
+    10-- "<div>Stores leads, outcomes,<br />claims, drafts and call<br />records</div><div style='font-size: 70%'>[SQL]</div>" -->22
+    10-- "<div>Writes approved leads through<br />the one CRM writer</div><div style='font-size: 70%'>[SQL]</div>" -->23
+    24-- "<div>Reads evidence, records<br />approvals, local messages and<br />simulated deals</div><div style='font-size: 70%'>[SQL]</div>" -->22
+    24-- "<div>Syncs approved records<br />through the one CRM writer</div><div style='font-size: 70%'>[SQL]</div>" -->23
+    10-- "<div>Reads company facts</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" -->4
+    10-- "<div>Searches through the model's<br />server tool (research<br />workers, launch search)</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" -->3
+    10-- "<div>Sends checked requests</div><div style='font-size: 70%'>[HTTPS, JSON]</div>" -->2
+    10-- "<div>Fetches public pages</div><div style='font-size: 70%'>[HTTPS]</div>" -->5
 
   end
