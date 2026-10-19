@@ -11,6 +11,7 @@ serialized deterministically, so every lead of a run shares the cached prefix (d
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -67,9 +68,14 @@ def canonical_json(data: Any) -> str:
     return json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(", ", ": "))
 
 
+def neutralize(text: str, tag: str) -> str:
+    """Text that cannot close the data delimiter it sits in."""
+    return re.sub(rf"</\s*{re.escape(tag)}", rf"<\\/{tag}", text, flags=re.IGNORECASE)
+
+
 def data_block(tag: str, data: Any) -> str:
     """Untrusted data wrapped in delimiters the prompts tell the model never to obey."""
-    return f"<{tag}>\n{canonical_json(data)}\n</{tag}>"
+    return f"<{tag}>\n{neutralize(canonical_json(data), tag)}\n</{tag}>"
 
 
 def fixed_system(*parts: str) -> list[TextBlockParam]:

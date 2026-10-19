@@ -392,6 +392,12 @@ class Fetcher:
             kept = record("succeeded", detail="ok", http=status, size=size, digest=digest)
             return Page(url, target, status, content_type, body, kept.call_id, kept.span_id)
 
+    def refuse(
+        self, url: str, context: SourceContext, detail: str, kind: SourceKind = "page"
+    ) -> None:
+        """Record a read the caller decided not to make, such as a site the list skips."""
+        self._record(context, kind, url, "refused", detail=detail)
+
     def _send(self, url: str) -> tuple[httpx2.Response, bytes]:
         host = self._host(url)
         with host.lock:

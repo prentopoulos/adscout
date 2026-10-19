@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "launches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+          "source_url": {"type": "string"}
+        },
+        "required": ["name", "date", "source_url"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["launches"],
+  "additionalProperties": false
+}

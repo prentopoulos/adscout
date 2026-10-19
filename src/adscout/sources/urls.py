@@ -78,3 +78,26 @@ def _public(address: str) -> bool:
     except ValueError:
         return False
     return ip.is_global and not ip.is_multicast
+
+
+# Third-party sites never searched or read: social networks and people-search or contact
+# databases, so research stays on company-level sources (design decision 11; PROJECT.md §5).
+BLOCKED_DOMAINS = (
+    "beenverified.com",
+    "facebook.com",
+    "fastpeoplesearch.com",
+    "instagram.com",
+    "intelius.com",
+    "linkedin.com",
+    "mylife.com",
+    "peoplefinders.com",
+    "radaris.com",
+    "rocketreach.co",
+    "spokeo.com",
+    "tiktok.com",
+    "truepeoplesearch.com",
+    "twitter.com",
+    "whitepages.com",
+    "x.com",
+    "zoominfo.com",
+)

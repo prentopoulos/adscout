@@ -236,7 +236,7 @@ def _ad_signals(candidate: Candidate, categories: Sequence[str], today: date) ->
             kept.append({"tag": item["tag"], "kind": known.kind, "host": item.get("host")})
         else:
             rejected.append(item)
-    return _sorted(kept), rejected, "not a known ad or analytics tag"
+    return sorted(kept, key=lambda item: item["tag"]), rejected, "not a known ad or analytics tag"
 
 
 def _launches(candidate: Candidate, categories: Sequence[str], today: date) -> Result:

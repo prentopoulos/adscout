@@ -142,6 +142,38 @@ the grilling round; question numbers are those the owner answered.
     except claim quotes of at most 300 characters. Full pages live only in the gitignored
     replay cache. Synthetic test pages use `.example` and `.test` domains.
 
+**As built, enrichment (tasks 3.1–3.3, 2026-10-19).** Refinements within decisions 7–12:
+- **Fetcher modes** differ only in their HTTP transport: fixture files, a recording live
+  transport that stores every response in the replay cache, and a replay transport that
+  serves them; robots, pacing and limits run in all three. A robots.txt 404 means no rules;
+  a robots redirect is followed once on the same host. The size cap applies to the decoded
+  body. Proxy and certificate settings from the environment are ignored.
+- **APIs and robots.txt.** Wikidata's API and entity data and SEC EDGAR's XBRL API are read
+  through the fetcher with its contact User-Agent and one request per second, but without
+  robots.txt: robots.txt governs crawlers, and Wikimedia's disallows `/w/` and `Special:`
+  pages for them, while these endpoints are documented for programmatic use under the
+  Wikimedia API and User-Agent policies and SEC's fair-access rule. Company sites and every
+  research page keep robots.txt.
+- **Wikidata** matches a company by name and keeps only an item whose official website
+  (P856) is on the company's domain; a parent (P749) that is a person (P31 = Q5) is never
+  stored, and `owned by` (P127) is not read because it often names people. **SEC** gives the
+  latest full-year 10-K revenue from the first revenue tag the filer uses and employees when
+  tagged; its response field names are from EDGAR's frames format, since the API page does
+  not list them, and are checked again by the 5-seed run.
+- **Choosing values.** Employee count prefers SEC, then Wikidata, then the site; revenue is
+  kept only from SEC or for a company Wikidata calls public. Valid values from other
+  sources are kept as dropped, "superseded by" the chosen source. A creator sponsorship
+  never keeps the creator's name.
+- **Extraction** cites a page for every value; a value citing an unread page is dropped. A
+  key field (categories, sells in) failing its validator escalates the extraction once to
+  Sonnet, unless the answer already came from the Sonnet fallback.
+- **Launch search** hands its launches back through a strict client tool, `submit_launches`,
+  rather than structured output, because web search returns cited text, which structured
+  outputs refuse. A launch citing a URL outside the search results is dropped. If the
+  search call fails the lead goes on without it; only a budget stop ends the run.
+- **Test fixtures** for Wikidata and SEC are synthetic responses in the documented formats,
+  not recordings; recorded responses come from the 5-seed live run's replay cache.
+
 ### Models, cost and access
 
 13. **Provider and adapter (owner, R1 Q5).** Anthropic direct through the `anthropic` SDK

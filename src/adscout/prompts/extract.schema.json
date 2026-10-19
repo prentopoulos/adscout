@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "properties": {
+    "categories": {
+      "type": "object",
+      "properties": {
+        "values": {"type": "array", "items": {"type": "string"}},
+        "source_url": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      },
+      "required": ["values", "source_url"],
+      "additionalProperties": false
+    },
+    "sells_in": {
+      "type": "object",
+      "properties": {
+        "values": {"type": "array", "items": {"type": "string"}},
+        "source_url": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      },
+      "required": ["values", "source_url"],
+      "additionalProperties": false
+    },
+    "recent_launches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+          "source_url": {"type": "string"}
+        },
+        "required": ["name", "date", "source_url"],
+        "additionalProperties": false
+      }
+    },
+    "employee_count": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "count": {"type": "integer"},
+            "year": {"type": "string"},
+            "source_url": {"type": "string"}
+          },
+          "required": ["count", "year", "source_url"],
+          "additionalProperties": false
+        },
+        {"type": "null"}
+      ]
+    }
+  },
+  "required": ["categories", "sells_in", "recent_launches", "employee_count"],
+  "additionalProperties": false
+}
