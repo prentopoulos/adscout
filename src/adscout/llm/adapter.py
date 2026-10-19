@@ -18,11 +18,11 @@ import sqlite3
 import threading
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, ClassVar, Literal, Protocol
 
 import anthropic
 import httpx2
@@ -158,9 +158,19 @@ class CallContext:
         return trace_id_for(self.lead_id)
 
 
+class Recordable(Protocol):
+    """A row a run writes for a call or span; `write_order` puts parents before children."""
+
+    write_order: ClassVar[int]
+
+    def insert(self, connection: sqlite3.Connection) -> None: ...
+
+
 @dataclass(frozen=True)
 class CallRecord:
     """One `model_calls` row."""
+
+    write_order: ClassVar[int] = 1
 
     call_id: str
     run_id: str
@@ -197,7 +207,7 @@ class CallRecord:
     ended_at: str
 
     def insert(self, connection: sqlite3.Connection) -> None:
-        columns = [name for name in self.__dataclass_fields__ if name != "null_reasons"]
+        columns = [item.name for item in fields(self) if item.name != "null_reasons"]
         values = [getattr(self, name) for name in columns]
         connection.execute(
             f"INSERT INTO model_calls ({', '.join(columns)}, null_reasons_json) "  # noqa: S608
@@ -207,20 +217,27 @@ class CallRecord:
 
 
 class CallSink:
-    """Call records from any thread, held until the run writes them."""
+    """Model call, source call and span records from any thread, until the run writes them."""
 
     def __init__(self) -> None:
-        self._records: list[CallRecord] = []
+        self._records: list[Recordable] = []
         self._lock = threading.Lock()
 
-    def add(self, record: CallRecord) -> None:
+    def add(self, record: Recordable) -> None:
         with self._lock:
             self._records.append(record)
 
-    def drain(self) -> list[CallRecord]:
+    def drain(self) -> list[Recordable]:
         with self._lock:
             records, self._records = self._records, []
         return records
+
+    def model_calls(self) -> list["CallRecord"]:
+        """The model call records, drained; any other records stay."""
+        with self._lock:
+            calls = [record for record in self._records if isinstance(record, CallRecord)]
+            self._records = [r for r in self._records if not isinstance(r, CallRecord)]
+        return calls
 
 
 @dataclass(frozen=True)
@@ -571,8 +588,9 @@ class ModelAdapter:
         return result
 
 
-def write_calls(connection: sqlite3.Connection, records: Sequence[CallRecord]) -> None:
-    for record in records:
+def write_calls(connection: sqlite3.Connection, records: Sequence[Recordable]) -> None:
+    """Insert records, model calls before the source calls that name them."""
+    for record in sorted(records, key=lambda item: item.write_order):
         record.insert(connection)
 
 

@@ -8,6 +8,7 @@ names the run it reproduces; its calls cost nothing and keep the original cost. 
 bodies live only here, never in the pipeline database (decision 12).
 """
 
+import hashlib
 import json
 import sqlite3
 import threading
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS pages (
     url TEXT NOT NULL,
     occurrence INTEGER NOT NULL CHECK (occurrence >= 1),
     http_status INTEGER NOT NULL,
-    content_type TEXT,
+    headers_json TEXT NOT NULL CHECK (json_valid(headers_json)),
     body BLOB NOT NULL,
     content_sha256 TEXT NOT NULL CHECK (length(content_sha256) = 64),
     retrieved_at TEXT NOT NULL,
@@ -117,6 +118,44 @@ class ReplayCache:
         if response_json is None:
             raise ModelCallFailed(category, detail, fallback_allowed=bool(fallback_allowed))
         return Message.model_validate(json.loads(response_json)), Decimal(cost_usd)
+
+    def store_page(
+        self,
+        run_id: str,
+        url: str,
+        occurrence: int,
+        status: int,
+        headers: list[tuple[str, str]],
+        body: bytes,
+    ) -> None:
+        """One HTTP response a live fetch received, as the fetcher saw it."""
+        with self._lock:
+            self._connection.execute(
+                "INSERT INTO pages VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    run_id,
+                    url,
+                    occurrence,
+                    status,
+                    json.dumps(headers),
+                    body,
+                    hashlib.sha256(body).hexdigest(),
+                    utc_now(),
+                ),
+            )
+
+    def load_page(
+        self, run_id: str, url: str, occurrence: int
+    ) -> tuple[int, list[tuple[str, str]], bytes] | None:
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT http_status, headers_json, body FROM pages "
+                "WHERE run_id = ? AND url = ? AND occurrence = ?",
+                (run_id, url, occurrence),
+            ).fetchone()
+        if row is None:
+            return None
+        return int(row[0]), [tuple(pair) for pair in json.loads(row[1])], bytes(row[2])
 
     def responses(self, run_id: str) -> int:
         with self._lock:
