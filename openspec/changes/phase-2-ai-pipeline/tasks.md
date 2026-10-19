@@ -12,7 +12,7 @@
 - [x] 2.3 Lock-guarded spend reservation and per-run caps; cap-hit-mid-run and parallel-reservation tests
 - [x] 2.4 Retry, fallback and escalation in our own code, with tests
 - [x] 2.5 Record-and-replay cache in `data/cache.db`; replay runs at cost 0 with original cost kept; the $0 replay test
-- [ ] 2.6 Prompt files and digests in `src/adscout/prompts/`; stable cache-prefix and Haiku 100K guard tests
+- [x] 2.6 Prompt files and digests in `src/adscout/prompts/`; stable cache-prefix and Haiku 100K guard tests
 
 ## 3. Enrichment
 

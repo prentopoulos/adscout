@@ -510,9 +510,16 @@ class ModelAdapter:
                 max_searches=request.max_searches,
                 on=on,
             )
+            limit = self.prices.base_tier_limit(request.model, on)
         except MissingPrice as error:
             write("refused", category="missing_price", detail=str(error))
             raise ModelCallFailed("missing_price", str(error), fallback_allowed=False) from None
+        if limit is not None and prompt_tokens > limit:
+            # Haiku prompts stay under 100K tokens (decision 18): past that every token
+            # costs five times as much. An oversized prompt is a construction bug.
+            detail = f"about {prompt_tokens} prompt tokens, over the {limit}-token price tier"
+            write("refused", category="prompt_too_long", detail=detail)
+            raise ModelCallFailed("prompt_too_long", detail, fallback_allowed=False)
         try:
             reservation = self.ledger.reserve(Decimal(0) if self.mode == "replay" else worst)
         except BudgetExhausted as error:

@@ -14,7 +14,7 @@ from adscout.crm.writer import account_exists
 from adscout.db.connection import utc_now
 from adscout.ids import uuid7
 from adscout.pipeline.contracts import Lead, Outcome
-from adscout.pipeline.recorder import PROMPT_VERSION, Run, StepRecorder
+from adscout.pipeline.recorder import Run, StepRecorder
 
 
 def lead_source(segment_id: str, seed_list_hash: str) -> str:
@@ -120,7 +120,7 @@ def source(
                     segment.segment_id,
                     company_id,
                     lead_source(segment.segment_id, seed_list_hash),
-                    PROMPT_VERSION,
+                    run.prompt_version,
                     run.agent_version,
                     run.run_id,
                     utc_now(),

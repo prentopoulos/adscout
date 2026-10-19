@@ -27,7 +27,7 @@ from adscout.pipeline.contracts import Implementation, Outcome, Step
 
 RunKind = Literal["pipeline", "approval", "crm_sync", "rescore", "eval"]
 RunSource = Literal["stub", "fixture", "replay", "live"]
-PROMPT_VERSION = "none"  # no prompt exists until Phase 2 (Phase 1 design, decision 6)
+PROMPT_VERSION = "none"  # a run that calls no model uses no prompt (Phase 1 design, decision 6)
 NO_MODEL_CALL = "no model call in this step"
 STEP_NULL_REASONS = {
     "model": NO_MODEL_CALL,
@@ -130,11 +130,14 @@ class Run:
         null_reasons: dict[str, str],
         calls: CallSink | None = None,
         budgets: dict[str, float] | None = None,
+        prompt_version: str = PROMPT_VERSION,
     ) -> None:
         self.connection = connection
         # Model call records from the adapter, written with each step, failed ones included.
         self.calls = calls or CallSink()
         self.budgets = budgets if budgets is not None else dict(BUDGETS)
+        # The prompt set's version, which every lead this run creates carries (decision 21).
+        self.prompt_version = prompt_version
         self.kind = kind
         self.segment_id = segment_id
         self.source = source
@@ -187,7 +190,7 @@ class Run:
                     lock_digest(),
                     self.package_version,
                     self.agent_version,
-                    PROMPT_VERSION,
+                    self.prompt_version,
                     platform.python_version(),
                     platform.platform(),
                     schema_version(self.connection),

@@ -106,6 +106,11 @@ class PriceTable(BaseModel):
             )
         return price_set, prices
 
+    def base_tier_limit(self, model: str, on: date) -> int | None:
+        """The prompt size above which a model's prices rise, or None if they never do."""
+        _, prices = self.model_prices(model, on)
+        return prices.tiers[0].max_prompt_tokens
+
     def content_hash(self) -> str:
         return canonical_hash(self.model_dump(mode="json"))
 
