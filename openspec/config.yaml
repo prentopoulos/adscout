@@ -3,8 +3,8 @@ schema: spec-driven
 context: |
   AdScout: A portfolio advertiser prospecting and qualification agent: name a market segment and get ranked, enriched and scored brands with cited research briefs, pitch drafts approved by a person, CRM sandbox records and a funnel dashboard over simulated revenue.
   Read PROJECT.md for current scope and WORKFLOW.md for the phase workflow.
-  Pipeline: source, enrich, score (rules plus LLM rubric), research (one read-only ReAct agent), draft (write, check, revise), approve (a person), CRM sandbox.
-  Stack: Python 3.13 with uv, ruff, mypy and pytest (decided in Phase 0 grilling). Other pieces are playbook candidates (Claude or OpenAI SDK, HubSpot sandbox, SQLite or DuckDB, Langfuse, Streamlit), each decided in the grilling of the phase that first needs it (PROJECT.md §4).
+  Pipeline: source, enrich, rules, score (LLM rubric combined by code), research (a read-only team: a lead and three workers), draft (writer, rule checker, critic), approve (a person), CRM sandbox.
+  Stack: Python 3.13 with uv, ruff, mypy and pytest (Phase 0); SQLite (Phase 1); the anthropic SDK behind an in-house adapter, LangGraph for orchestration only, Claude web search and our own polite fetcher (Phase 2). Phase 3 pieces (approval UI, dashboard, HubSpot sandbox, Langfuse Cloud, Docker) are decided in its grilling (PROJECT.md §4).
   Scope: single user on the owner's PC; no hosted deployment; no real outreach.
   Data: public company-level data about real companies; synthetic personal contacts; simulated revenue.
   External services (model API, search/fetch, enrichment, HubSpot, Langfuse, sandbox inbox) sit behind PROJECT.md ⛔ gates for spend, accounts, live reads, sends, publishing and deployment.

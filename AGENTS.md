@@ -18,8 +18,8 @@ qualified lead and funnel or revenue figures.
 - Real companies appear only as public company-level data; personal contacts are synthetic;
   revenue is simulated.
 - No real outreach, no hosted deployment, no Git remote until the publishing gate is resolved.
-- Multi-agent orchestration, fine-tuning, self-hosted models and the n8n variant are out of
-  scope or deferred.
+- Fine-tuning, self-hosted models and the n8n variant are out of scope or deferred. The
+  multi-agent research step and writer–critic loop are in scope (PROJECT.md §2).
 - The stack is a playbook proposal; each piece is decided in the grilling of the phase that
   first needs it (PROJECT.md §4).
 

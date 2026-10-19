@@ -4,6 +4,23 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
+Phase 2 (AI pipeline) is specified, not built. Branch `phase-2/ai-pipeline`, OpenSpec change
+`phase-2-ai-pipeline`; no task has started.
+
+- Grilling ran on 2026-10-18 in three rounds; the owner accepted every recommendation. On the
+  way the owner merged the playbook's Phases 2–6 into two MVP phases (Phase 2: every model
+  step; Phase 3: approval, CRM, send, dashboard, Langfuse Cloud and showcase), made the
+  research step multi-agent, and took five ideas from a crewAI sales-pipeline course.
+  Decisions are in PROJECT.md §2–4 and §6 and the change's design, with who made each.
+- Constitution amended to 1.1.0 (8488886): several read-only research agents, each with
+  caps, under a per-run spend cap; no agent reading untrusted content gets private data.
+- Owner to-dos before live runs (tasks 9 and 10): approve 30 seeds and the site list, label
+  the seeds blind, name the fictional publisher, create the Anthropic account and "adscout"
+  workspace ($45 limit, auto-reload off), buy $20 of prepaid credit, put the key and a project
+  mailbox in `.env`. The owner is on Claude Pro, which includes no API credits.
+- A private claude.ai artifact shows the target agent architecture; task 8.4 replaces it with
+  the page generated from the agent registry.
+
 Phase 1 (thin end-to-end pipeline with stub steps) is complete. OpenSpec change
 `phase-1-thin-pipeline` is archived on branch `phase-1/thin-pipeline`, which merges into `main`
 with a merge commit on the owner's go-ahead. The code review ran and its findings are resolved
@@ -115,15 +132,15 @@ its verification record is in commit 8c79625's HANDOFF.md.
   files.
 - **OpenSpec telemetry:** the gate and `.claude/settings.json` turn it off; other terminals and
   harnesses send a usage event unless `OPENSPEC_TELEMETRY=0` is set there.
-- **Open for later phases** (Phase 1 design, Open Questions): what counts as a qualified lead and
-  the score scale and threshold (Phase 2); the minutes-per-account definition (Phase 5), with
-  the owner timing their own research on the five seeds before then; whether to cover the
-  posting's automation tools (the deferred n8n variant); the CRM sandbox product (Phase 4).
+- **Open for later phases:** the fictional publisher's name (before drafts run live); whether
+  Haiku 5.5 supports web search (after the account exists); the minutes-per-account
+  definition (Phase 3), with the owner timing their own research on the five seeds before
+  then; whether to cover the posting's automation tools (the deferred n8n variant); the CRM
+  sandbox details (Phase 3).
 
 ## Next action
 
-If `phase-1/thin-pipeline` is not yet merged into `main`, ask the owner for the merge
-go-ahead, merge with `git merge --no-ff`, confirm it landed and delete the branch. Then clear the
-context and run `/next-phase` to start Phase 2 (enrichment with field validation, profile rules
-and LLM fit scoring, PROJECT.md §6). Its grilling must answer the model cost and access items in
-PROJECT.md §4 and the qualified-lead definition before the first model call.
+On `phase-2/ai-pipeline`, start the OpenSpec apply workflow at task 1.1, then the LangGraph
+spike (1.2), whose result decides how the registry drives orchestration. Offline tasks need no
+gate; live tasks (section 10) wait for the owner's account, credit and approvals in PROJECT.md
+§6.

@@ -16,9 +16,10 @@ sponsorships from an entertainment, gaming and tech publisher, drafts a first pi
 promising brand for a person to approve, writes approved records to a CRM sandbox, and shows a
 funnel dashboard that joins leads to mock revenue.
 
-It exists to demonstrate the AI Operations Analyst skill set end to end: workflows with one
-agentic step, guardrails as code, two-layer evaluation, cost per qualified lead and a revenue
-feedback loop.
+It exists to demonstrate the AI Operations Analyst skill set end to end: a workflow whose
+research step is a small team of read-only agents and whose drafts go through a writer and a
+critic, each pattern used where it fits and measured against a simpler baseline, guardrails
+as code, two-layer evaluation, cost per qualified lead and a revenue feedback loop.
 
 It is not a production system, not affiliated with or endorsed by any company named in the
 playbook, and not evidence of real sales results: it sends no real outreach, holds no real
@@ -27,22 +28,25 @@ personal contact data, and its revenue is simulated.
 ## 2. Current scope boundary
 
 - In scope (playbook build plan): segment and ideal-customer config, seed list, enrichment
-  with field validation, rules plus LLM fit scoring, a read-only research agent with cited
-  briefs, draft-and-check pitch writing, an approval queue, CRM sandbox sync, an offline
-  evaluation suite, tracing with cost per lead, and a dashboard over mock revenue.
+  with field validation, rules plus LLM fit scoring, a read-only multi-agent research step
+  (a lead and three workers) with cited briefs, a writer–critic draft loop with a rule
+  checker, an approval queue, CRM sandbox sync, an offline evaluation suite, tracing with
+  cost per lead, and a dashboard over mock revenue (multi-agent added by the owner,
+  2026-10-18).
 - Data: public company-level information about real companies; personal contact data is
   synthetic; revenue is mock and labelled simulated.
 - Runs single-user on the owner's PC. No hosted deployment.
-- Out of scope: real sends, real personal data, multi-agent orchestration, fine-tuning,
-  self-hosted models, Kubernetes. Deferred: an n8n low-code variant of the source, enrich and
-  draft steps (playbook option), a classic lead-scoring model (needs real outcomes).
+- Out of scope: real sends, real personal data, fine-tuning, self-hosted models, Kubernetes.
+  Deferred: an n8n low-code variant of the source, enrich and draft steps (playbook option), a
+  classic lead-scoring model (needs real outcomes).
 - First segment (owner, 2026-10-18): gaming hardware brands in North America, meaning
   peripherals, PC components, prebuilt gaming PCs and console accessories from brands that sell
   to consumers in the US and Canada, wherever they are headquartered. Phase 1 runs five real
   seed companies, name and domain only.
-- TBD: which steps call live services versus recorded fixtures in each phase; the full
-  seed-list size (playbook proposal: 20 to 50 companies), decided in Phase 2 with the
-  live-read gate's run size.
+- Phase 2 (owner, 2026-10-18): 30 seed companies from agent desk research, approved and
+  labelled good, maybe or poor by the owner; live runs of 5, then 30. Source, enrich, rules,
+  score, research and draft are real; approval and CRM stay stubs for synthetic leads only,
+  and real leads stop at approval until Phase 3.
 
 ## 3. Acceptance and evidence
 
@@ -54,9 +58,15 @@ personal contact data, and its revenue is simulated.
   (all pass), about 10 planted-injection pages (all pass), and cost per qualified lead and
   minutes per account for a full segment run (minutes per account added by the owner,
   2026-10-17, from playbook slide 20). Optional: the same suite on two models, compared by
-  cost per qualified lead. Before Phase 5 the owner times their own manual research on the
+  cost per qualified lead. Before Phase 3 the owner times their own manual research on the
   five seed companies under a short written routine, as the minutes-per-account baseline
   (owner, 2026-10-18).
+- MVP sizes (owner, 2026-10-18): 30 owner-labelled companies with precision in the top 10
+  (not 60 and top 20); enrichment hand-checked on 10 companies (not 40); 10 briefs checked
+  against their sources (not 20); 10 planted-injection pages, all passing offline and live;
+  about 30 rules and 30 draft cases, all passing. Phase 2 also compares Haiku and Sonnet for
+  scoring and multi-agent against single-agent research, each by a rule committed before
+  measuring (Phase 2 design).
 - Business-level outcomes (reply, meeting and revenue rates) cannot be measured without real
   sends; the dashboard demonstrates the loop with simulated revenue and says so.
 - Only measured numbers are reported; bracketed playbook targets stay TBD until measured.
@@ -71,11 +81,12 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
   Docker; Langfuse for tracing; promptfoo or pytest for evals; GitHub Actions for CI;
   Streamlit, Metabase or Looker Studio for the dashboard and approval queue.
 - Each stack piece is decided in the grilling of the phase that first needs it (owner,
-  2026-10-17): database in Phase 1; model SDK and the model cost and access items below in
-  Phase 2; search, fetch and enrichment sources in Phases 2–3; approval UI in Phase 4;
-  tracing host in Phase 5; dashboard and Docker in Phase 6. A phase that decides a piece
-  checks it against the later choices it constrains, for example the Phase 1 database and
-  run-record design against the Phase 5 tracing and Phase 6 dashboard candidates. Tools are
+  2026-10-17; phases renumbered when the owner merged them, 2026-10-18): database in Phase 1;
+  model SDK, the model cost and access items, search, fetch, enrichment sources and the
+  agent framework in Phase 2; approval UI, tracing host, dashboard and Docker in Phase 3. A
+  phase that decides a piece checks it against the later choices it constrains, for example
+  the Phase 1 database and run-record design against the Phase 3 tracing and dashboard
+  candidates. Tools are
   chosen for the posting's skill list (SQL, Python, APIs, CRMs, BI, automation) and market
   familiarity, with vendor-specific pieces behind thin adapters.
 - Decided in Phase 0 grilling, 2026-10-17 ("owner" marks owner calls; the rest are settled,
@@ -87,10 +98,10 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
     format), mypy (strict), pytest with pytest-socket (no network in tests) and pytest-cov,
     pip-audit.
   - Gate command `uv run --locked python scripts/gate.py`, a standard-library script, built
-    in Phase 0. No pre-commit hook. CI waits for Phase 5.
+    in Phase 0. No pre-commit hook. CI waits for Phase 3.
   - Offline evaluation harness on pytest under `evals/`, with case and result formats as JSON
-    Schema following the eval-review skill (owner). Inspect AI or promptfoo is reconsidered
-    in Phase 2 or 5.
+    Schema following the eval-review skill (owner). Inspect AI and promptfoo were
+    reconsidered in Phase 2 and not added (settled, Phase 2 design).
   - Evaluation run records are kept in gitignored `evals/runs/` and never deleted
     automatically; runs cited as phase evidence are committed (owner).
   - Dependency audit with pip-audit at each phase close, outside the offline gate (owner;
@@ -119,23 +130,39 @@ for model/prompt/evaluation, retrieval, training, runtime-state or operational c
   - Diagrams: Structurizr's `-playwright` war on Microsoft OpenJDK 21, installed on the
     owner's PC outside the repo; no hosted editor. ERD as generated Mermaid (settled).
   - Gate coverage threshold 90% on `src/` and `scripts/`, raised only (settled).
-  - Agent framework (provider SDK loop or LangGraph) is decided in Phase 3; model tiers,
-    access and fallback stay with Phase 2 (below).
-- Model cost and access, TBD: Phase 2 grilling must answer each item before the first model
-  call. Options are in the AI-ops skill's `llm-rag.md` (§ Reduce spend, § Gateway and
-  budgets) and `design-choices.md`.
-  - Model access route behind a thin in-house adapter: direct provider SDK, OpenRouter (no
-    markup on model prices, 5.5% fee on credit purchases; OpenRouter FAQ, retrieved
-    2026-10-17) or LiteLLM.
-  - Model tier per step and the fallback model (playbook proposal: fast tier for extraction
-    and scoring, workhorse tier for research and drafts).
-  - Token and cost recording per step from the first model call, with a dated price table.
-  - A local record-and-replay cache of model responses and fetched pages, keyed by input,
-    prompt version and model, so development reruns cost nothing.
-  - A per-run spend cap and output-length limits enforced in code.
-  - Prompt caching for the fixed prompt prefix, and the Batch API for steps that can wait.
-- External services and access: no accounts, keys or paid plans exist for this project yet.
-  Each is behind the gates in §6.
+- Decided in Phase 2 grilling, 2026-10-18, three rounds (owner calls unless marked settled;
+  basis, sources and the full list in the Phase 2 design). These answer the model cost and
+  access items left TBD after Phase 1:
+  - Model access: Anthropic direct through the `anthropic` SDK behind an in-house adapter
+    with fake, replay and live modes; the key in `.env`, read only by the adapter.
+  - Models: Haiku 5.5 for extraction and research workers; Sonnet 5.5 for the research lead,
+    writer and critic and, provisionally, scoring. Each step uses the cheapest tier within a
+    predeclared margin of the best on its own metric; Haiku against Sonnet is measured for
+    scoring and the workers. Fallback to the other tier once, in our own code.
+  - Cost: every call recorded with tokens, cache use, search fees and cost from a dated price
+    table; a lock-guarded spend reservation before each call under a per-run cap; budget
+    errors stop the run. Prompt caching on; Batch API off.
+  - Record-and-replay cache in gitignored `data/cache.db`; replays cost $0 and keep the
+    original cost.
+  - Prompts as files in `src/adscout/prompts/` with a `p-` + 12-hex digest as the prompt
+    version.
+  - Agent framework: LangGraph for orchestration only (graphs built from an agent registry),
+    with every model call in our own typed functions; a day-one spike checks it under
+    `mypy --strict`, with our own orchestration as the fallback. crewAI is not used.
+  - Sources: each company's own site through a polite fetcher (robots.txt, pacing, an
+    owner-approved site list, a project contact in the User-Agent), Wikidata, SEC EDGAR and
+    Claude's server web search (`web_search_20250305`, direct callers only); pages are read
+    through our own `fetch_page` tool with provenance and egress rules. No YouTube subscriber
+    counts (30-day storage limit).
+  - Score: per-criterion 1–5 ratings against anchors combined by code into 0–100, threshold
+    60, near-miss band 55–59 sent to a person.
+  - Observability: trace fields on every call, an end-of-run cost table and
+    `adscout trace`; Langfuse Cloud's free plan is planned for Phase 3 (owner); no Datadog.
+  - Diagrams: an agent-flow diagram generated from the registry (Mermaid and a
+    self-contained HTML page shown to the owner as a private artifact) beside the C4 model.
+- External services and access: no account, key or paid plan exists for this project yet.
+  The owner is on the Claude Pro plan, which includes no API credits. Each service is behind
+  the gates in §6.
 - Architecture diagrams: C4 as code, drawn to the c4model.com notation guide (context and
   container views, plus an ERD once there is a data schema). One Structurizr DSL model in
   `docs/architecture/`, exported to SVG, with Mermaid where a README shows a diagram
@@ -193,28 +220,40 @@ and recorded gate decisions come before them.
 
 ## 6. Milestones and gates
 
-Milestones are ordered by dependency. Phases 2–6 follow the playbook's six-day build plan;
-their order and boundaries are confirmed in grilling before each phase.
+Milestones are ordered by dependency; their order and boundaries are confirmed in grilling
+before each phase. Decision (owner, 2026-10-18): the playbook's Phases 2–6 are merged into two
+MVP phases that still cover the whole build plan, with smaller evaluation samples, to finish
+faster. Phase 2 holds every step that calls a model; Phase 3 holds the human, CRM and showcase
+side.
 
 | Phase | Deliverable | Status |
 |---|---|---|
 | 0 | Toolchain, lockfile, quality gate (constitution copy check, verbatim digests, secrets scan, no-network tests, commit messages, links), smoke checks; offline AI evaluation scaffold | Done |
 | 1 | Thin end-to-end pipeline on five seed companies with stub steps: segment and ideal-customer config, seed list, local database schema for companies, scores, briefs, drafts, approvals and runs; C4 architecture diagrams as code | Done |
-| 2 | Enrichment with field validation, deterministic profile rules and LLM fit scoring with structured output and reasons; answers the model cost and access TBDs in §4 | Planned |
-| 3 | Read-only research agent: search and fetch tools, step cap, page budget, a citation per claim | Planned |
-| 4 | Draft writer and rule checker, approval queue, CRM sandbox sync with source and version tags, sandbox-only send | Planned |
-| 5 | Offline evaluation suite in CI and tracing with tokens and cost per lead | Planned |
-| 6 | Dashboard over mock revenue, README, Dockerfile, short walkthrough video | Planned |
+| 2 | AI pipeline on real companies: enrichment with field validation, deterministic profile rules, LLM fit scoring with structured output and reasons, a read-only research agent (search and fetch tools, step cap, page budget, a citation per claim), draft writer and rule checker; per-step offline evaluations and cost per call; answers the model cost and access TBDs in §4. Real leads stop at approval | Planned |
+| 3 | Approval queue and dashboard over mock revenue in one local app, CRM sandbox sync with source and version tags, sandbox-only send, CI workflow, README, Dockerfile, short walkthrough video | Planned |
 
 ### ⛔ Before spending money or paid quota
 
 - [ ] Operator confirms the provider, the paid item (model API calls, enrichment or search
   API, tracing plan, 21st.dev credits, hosted CI beyond free minutes) and a budget cap.
+- Decision (owner, 2026-10-18): Phase 2 may spend on Anthropic API calls, web search fees
+  included, from prepaid Console credit (the owner's Pro plan includes none): a dedicated
+  "adscout" workspace with a $45 spend limit and auto-reload off; credit bought by the owner
+  in two purchases, $20 before the first live run and about $25 after the 5-seed run
+  re-estimates cost per qualified lead; the per-run caps in the Phase 2 design, enforced in
+  code. Scope: Phase 2. A higher limit (about $60 if Haiku lacks web search) needs a new
+  decision.
 
 ### ⛔ Before creating accounts, keys or credentials
 
 - [ ] Operator creates or approves each account (model provider, HubSpot developer or test
   account, search or enrichment API, Langfuse, sandbox inbox) and stores its key in `.env`.
+- Decision (owner, 2026-10-18): for Phase 2 the owner creates an Anthropic Console
+  organization and its "adscout" workspace, stores the API key in `.env` as
+  `ANTHROPIC_API_KEY`, confirms web search is enabled, and creates a dedicated project mailbox
+  whose address goes in `.env` as `ADSCOUT_CONTACT` for the fetcher's User-Agent. Langfuse
+  Cloud's free plan is planned for Phase 3 and is created then.
 
 ### ⛔ Before live reads from external data sources
 
@@ -233,6 +272,17 @@ their order and boundaries are confirmed in grilling before each phase.
   seeds to set their scripted stub outcomes from public sources. Scope: that desk research
   only, done on 2026-10-18 (Phase 1 design); pipeline searches, fetches and enrichment stay
   gated.
+- Decision (owner, 2026-10-18): the agent may run web searches to propose 30 Phase 2 seed
+  companies, about 6 of them edge cases, each with sources. Scope: that desk research only.
+- Decision (owner, 2026-10-18): the agent may fetch robots.txt and the terms page of each
+  proposed seed domain once, to fill `config/site-checks/gaming-hardware-na.yaml` for the
+  owner's approval. Scope: those checks only.
+- Decision (owner, 2026-10-18): the Phase 2 pipeline may read company sites on the approved
+  site list, Wikidata, SEC EDGAR and Claude's web search, under the fetch policy, page and
+  search budgets in the Phase 2 design; run sizes 5, then 30 seeds, plus the evaluation runs
+  the design lists. Live runs wait for the owner's approval of the seed list and site list.
+  The Wikidata and SEC probe from the agent's session was authorized but not run; the 5-seed
+  run checks source coverage instead.
 
 ### ⛔ Before any message is sent
 
@@ -244,6 +294,8 @@ their order and boundaries are confirmed in grilling before each phase.
 - [ ] Operator confirms adding a Git remote, repository visibility, pushing, and publishing
   any README, deck or video, after the showcase skill's pre-publication check (no secrets, no
   real personal data, simulated revenue labelled, no claimed affiliation).
+- Decision (owner, 2026-10-18): a private claude.ai artifact shown only to the owner, such as
+  the architecture diagrams, is not publishing; sharing its link is, and needs this gate.
 
 ### ⛔ Before deploying or exposing a service
 
