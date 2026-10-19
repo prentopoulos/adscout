@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Any, Literal
 
 from adscout.config import SegmentConfig, load_segment
+from adscout.drafts.media_kit import load_media_kit
+from adscout.drafts.rules import Draft, Sentence, check
 from adscout.research.handoffs import Claim
 from adscout.research.verifier import FetchedPage, drop_reason, normalize_url, verify
 from adscout.rules import apply_rules
@@ -129,9 +131,37 @@ def claim_verifier(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
     return Outcome("fail", f"expected {want}, got {got}", metrics)
 
 
+MEDIA_KITS = ROOT / "tests" / "fixtures" / "config" / "media-kit"
+
+
+def draft_rules(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
+    """The real rule checker passes or fails the draft, for the rules the case names."""
+    kit = load_media_kit(MEDIA_KITS / f"{inputs['media_kit']}.yaml")
+    draft = Draft(
+        inputs["draft"]["subject"],
+        [Sentence(item["text"], item["supports"]) for item in inputs["draft"]["sentences"]],
+    )
+    problems = check(
+        draft,
+        company=inputs["company"],
+        publisher=kit.name,
+        claims=inputs["claims"],
+        facts={fact.id: fact.text for fact in kit.facts},
+        allowlist=kit.allowlist,
+    )
+    got = {"passes": not problems, "rules": sorted({problem.rule for problem in problems})}
+    want = {"passes": expected["passes"], "rules": sorted(expected.get("rules", []))}
+    metrics: dict[str, float | int | None] = {"problems": len(problems)}
+    detail = "; ".join(str(problem) for problem in problems) or "no problem"
+    if got == want:
+        return Outcome("pass", f"as expected: {detail}", metrics)
+    return Outcome("fail", f"expected {want}, got {got}: {detail}", metrics)
+
+
 EVALUATORS: dict[str, tuple[str, Callable[[dict[str, Any], dict[str, Any]], Outcome]]] = {
     "funnel_conservation": ("2", funnel_conservation),
     "cost_per_qualified_lead": ("2", cost_per_qualified_lead),
     "profile_rules": ("1", profile_rules),
     "claim_verifier": ("1", claim_verifier),
+    "draft_rules": ("1", draft_rules),
 }

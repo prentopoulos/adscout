@@ -36,9 +36,9 @@
 
 ## 6. Drafts
 
-- [ ] 6.1 Media-kit model and `config/media-kit/<publisher_id>.yaml` for the owner-named fictional publisher, after checking the name is not a real company
-- [ ] 6.2 Writer with supported sentences, the deterministic rule checker and `evals/cases/drafts.jsonl` (about 30 cases, all passing)
-- [ ] 6.3 Critic and the rewrite loop with `draft_failed` and `critic_unresolved`
+- [ ] 6.1 Media-kit model and `config/media-kit/<publisher_id>.yaml` for the owner-named fictional publisher, after checking the name is not a real company (model, loader and a synthetic fixture done; the real file waits for the owner's publisher name)
+- [x] 6.2 Writer with supported sentences, the deterministic rule checker and `evals/cases/drafts.jsonl` (about 30 cases, all passing)
+- [x] 6.3 Critic and the rewrite loop with `draft_failed` and `critic_unresolved`
 
 ## 7. Security
 

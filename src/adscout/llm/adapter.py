@@ -236,6 +236,20 @@ class CallSink:
             records, self._records = self._records, []
         return records
 
+    def spent(self, lead_id: str, step: str) -> Decimal:
+        """What one lead's calls in one step have cost so far, from the records held."""
+        with self._lock:
+            return sum(
+                (
+                    Decimal(str(record.cost_usd))
+                    for record in self._records
+                    if isinstance(record, CallRecord)
+                    and record.lead_id == lead_id
+                    and record.step == step
+                ),
+                Decimal(0),
+            )
+
     def model_calls(self) -> list["CallRecord"]:
         """The model call records, drained; any other records stay."""
         with self._lock:

@@ -1,0 +1,20 @@
+# A synthetic media kit for tests. The publisher and every fact are made up.
+schema_version: "1"
+publisher_id: fixture-publisher
+name: Fixture Gaming Media
+fictional: true
+name_check:
+  checked_on: 2026-10-19
+  method: Synthetic test fixture on a reserved name; never shown outside tests.
+  result: Not a real company.
+facts:
+  - id: mk-audience
+    text: Fixture Gaming Media reaches 2.4 million monthly readers in the US and Canada.
+    simulated: true
+  - id: mk-video
+    text: Its video channels draw 900,000 views a month from PC and console players.
+    simulated: true
+  - id: mk-formats
+    text: It sells sponsored reviews, newsletter placements and launch-week takeovers.
+    simulated: true
+allowlist: [PC, US, Canada, YouTube, Twitch]

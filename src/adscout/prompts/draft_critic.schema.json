@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "verdict": {"type": "string", "enum": ["approve", "revise"]},
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "aspect": {"type": "string", "enum": ["relevance", "specificity", "tone", "ask", "relationship"]},
+          "problem": {"type": "string"}
+        },
+        "required": ["aspect", "problem"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["verdict", "issues"],
+  "additionalProperties": false
+}
