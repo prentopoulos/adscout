@@ -242,6 +242,27 @@ the grilling round; question numbers are those the owner answered.
     fails, the same registry drives our own code. crewAI loses on its `pydantic<2.13` pin,
     default telemetry and prompt ownership; the Claude Agent SDK is Alpha and runs a CLI
     subprocess; the beta tool runner does not resume `pause_turn`.
+
+    **Spike outcome (task 1.2, 2026-10-18): passed; LangGraph stays and the fallback is not
+    needed.** `src/adscout/pipeline/graph_spike.py` and `tests/test_graph_spike.py`, on
+    langgraph 1.2.16 and langchain-core 1.6.12, pass `mypy --strict` with no `type: ignore`
+    and run with sockets blocked. Shown: `TypedDict` states with an `operator.add` reducer;
+    `Send` fan-out carrying frozen pydantic tasks; `invoke(..., version="v2").value` returns the
+    typed state; findings arrive in dispatch order whatever the completion order, so per-lead
+    serialization stays deterministic; `max_concurrency` 3 held with six workers (worker
+    threads, peak 3); a rewrite counter stops the loop after two rewrites and `recursion_limit`
+    raises `GraphRecursionError` as a backstop; `draw_mermaid()` works offline. Findings for
+    the build: an exception escaping one `Send` branch fails the whole graph, so each worker
+    node catches its own errors and returns a failed finding (ASI08); `END` is typed `str`, so
+    routers return `str`; the run config is passed as an inline dict literal, which mypy reads
+    as `RunnableConfig` without importing `langchain_core` (a transitive, undeclared
+    dependency); langsmith registers a pytest plugin, which `pyproject.toml` disables; and
+    LangSmith tracing turns on when any of `LANGSMITH_TRACING`,
+    `LANGSMITH_TRACING_V2`, `LANGCHAIN_TRACING` or `LANGCHAIN_TRACING_V2` is `true`, after
+    which LangGraph posts the graph state to api.smith.langchain.com (seen as blocked DNS
+    lookups in a socket-blocked experiment). The task 7.1 guard therefore checks all four
+    names and refuses to run, without importing `langsmith`. The spike module is replaced by
+    the registry-built graphs in task 5.1.
 25. **Team shape (owner, R3 Q3).** Strictly, parallel sectioning with an LLM lead, called
     "orchestrator–workers (fixed roster)" in the docs. Code dispatches three workers: audience
     and channels; ad activity; recent launches and sponsorships. The lead's plan call (no

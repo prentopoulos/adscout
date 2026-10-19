@@ -58,7 +58,8 @@ plugins = ["pydantic.mypy"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["scripts", "."]
-addopts = ["--disable-socket", "--strict-markers", "-ra"]
+# langsmith (via langgraph) registers a pytest plugin; AdScout never uses it.
+addopts = ["--disable-socket", "--strict-markers", "-ra", "-p", "no:langsmith_plugin"]
 
 [dependency-groups]
 dev = [
