@@ -1,5 +1,9 @@
 ## Why
 
+**2026-10-19 owner update:** The immediate delivery is the smaller local workflow in
+`../local-mvp/`. Outstanding live studies and cloud integrations remain follow-up work;
+this proposal's original acceptance is not claimed complete by the local MVP.
+
 Phase 1 built the pipeline's skeleton with scripted stubs. The owner merged the playbook's
 Phases 2–6 into two MVP phases to finish faster (PROJECT.md §6, 2026-10-18): this phase makes
 every step that calls a model real, and Phase 3 adds the human, CRM and showcase side. The

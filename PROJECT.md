@@ -50,6 +50,21 @@ personal contact data, and its revenue is simulated.
 
 ## 3. Acceptance and evidence
 
+### Local MVP cut (owner, 2026-10-19)
+
+The owner requested an MVP of the rest of the project within the current coding-usage
+window and delegated condensation and simplification. The immediate milestone is the
+existing AI pipeline plus a loopback approval UI, local CRM sandbox, local sandbox inbox
+with unsubscribe, and a dashboard over explicitly simulated revenue. Use synthetic demo
+companies and the existing fixture publisher. Standard-library HTTP and SQLite reuse the
+current stack; no new service is required. See `openspec/changes/local-mvp/`.
+
+The 30-company study, owner labels, live runs, model/design comparisons, real publisher
+kit, hosted CRM/inbox/tracing, CI hosting, Docker and walkthrough video are deferred.
+Original Phase 2 tasks remain open as follow-up; a local MVP is not live validation or
+completion of the original phase. All constitution rules and operator gates still apply.
+The next implementation is authorized on the current branch without another phase session.
+
 - Each phase is shown to work by the local gate plus its OpenSpec tasks' named checks.
 - Model-level evaluation (playbook slide 20 proposal, targets TBD until a baseline run): rules
   on about 30 seeded edge cases (all pass), enrichment field accuracy on about 40

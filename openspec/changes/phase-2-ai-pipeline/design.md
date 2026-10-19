@@ -1,5 +1,10 @@
 ## Context
 
+**2026-10-19 owner update:** Prioritize the local MVP described in `../local-mvp/design.md`.
+Local review, CRM sandbox, inbox and simulated dashboard are now authorized. Remaining
+live runs and comparisons, owner labels, branded kit and private-artifact republishing
+are deferred; keep their original requirements and gates for later validation.
+
 Phase 1 left a pipeline whose `source` step is real and whose `enrich`, `rules`, `score`,
 `research` and `draft` steps are scripted stubs, with run records, an independent run check,
 an OpenTelemetry/Langfuse-named export, a fake CRM and C4 diagrams (HANDOFF.md). Package

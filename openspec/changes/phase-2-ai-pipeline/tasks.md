@@ -1,5 +1,9 @@
 ## 1. Foundations
 
+> Owner scope reduction, 2026-10-19: finish the local MVP in `local-mvp` first. Remaining
+> live studies, labels, real publisher kit and private-artifact republishing are deferred,
+> not passed. Local diagrams, review and handoff work are shared with that milestone.
+
 - [x] 1.1 Add `anthropic` and `langgraph` (and `httpx2` if not already direct) as runtime dependencies, relock, extend the declared-dependency test, run pip-audit on the new set, and set PROJECT.md §6 Phase 2 to In progress with the first implementation commit
 - [x] 1.2 LangGraph spike: a typed two-node graph with a `Send` fan-out and a bounded loop under `mypy --strict` and the socket block; record the outcome in design.md, and if it fails switch the registry to drive our own orchestration (decision 24)
 - [x] 1.3 Migration `0002` (Phase 2 tables, widened CHECK lists, `replay` source, quote length limit) with table rebuilds; regenerate `schema.sql` and the ERD; upgrade-from-Phase-1 and trigger tests
