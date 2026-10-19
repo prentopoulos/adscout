@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from adscout.config import SeedRow, SegmentConfig
 from adscout.export import ExportLine
+from adscout.llm.prices import PriceTable
 from adscout.pipeline.stubs import StubScript
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,6 +29,7 @@ def schema_files() -> dict[str, type[BaseModel]]:
         "config/schemas/segment.schema.json": SegmentConfig,
         "config/schemas/seed-row.schema.json": SeedRow,
         "config/schemas/stub-script.schema.json": StubScript,
+        "config/schemas/price-table.schema.json": PriceTable,
         "src/adscout/schemas/run-export.schema.json": ExportLine,
     }
 

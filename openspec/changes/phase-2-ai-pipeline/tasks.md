@@ -7,7 +7,7 @@
 
 ## 2. Model access
 
-- [ ] 2.1 Dated price table `config/prices/anthropic.yaml` (models, cache, long-prompt and search prices, retrieval date) and the cost function with tests
+- [x] 2.1 Dated price table `config/prices/anthropic.yaml` (models, cache, long-prompt and search prices, retrieval date) and the cost function with tests
 - [ ] 2.2 Adapter with fake, replay and live modes; key handling; `model_calls` rows with usage, trace fields and call roles; budget errors as `budget_exhausted`
 - [ ] 2.3 Lock-guarded spend reservation and per-run caps; cap-hit-mid-run and parallel-reservation tests
 - [ ] 2.4 Retry, fallback and escalation in our own code, with tests

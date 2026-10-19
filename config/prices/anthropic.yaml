@@ -1,0 +1,40 @@
+# Anthropic API prices, in US dollars per million tokens (MTok) unless named otherwise.
+# Every model call is costed from the price set in force on the call's date (Phase 2 design,
+# decisions 16 and 20); a model with no row there is refused before the call is sent.
+# Add a new price set when prices change; never edit one that calls were priced with.
+schema_version: "1"
+provider: anthropic
+currency: USD
+price_sets:
+  - effective_from: 2026-10-18
+    retrieved_on: 2026-10-18
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    # "$10 per 1,000 searches"; a search that errors is not billed.
+    web_search_per_1000: 10.00
+    # Global routing (no inference_geo), standard speed, no Batch API.
+    models:
+      claude-haiku-5-5:
+        # Priced by prompt length: input, cache writes and cache reads together. A request
+        # over 100,000 prompt tokens pays the second tier for every token, output included.
+        tiers:
+          - max_prompt_tokens: 100000
+            input: 0.10
+            cache_write_5m: 0.125
+            cache_write_1h: 0.20
+            cache_read: 0.01
+            output: 0.50
+          - max_prompt_tokens: null
+            input: 0.50
+            cache_write_5m: 0.625
+            cache_write_1h: 1.00
+            cache_read: 0.05
+            output: 2.50
+      claude-sonnet-5-5:
+        # Full 1M context at standard prices; cache hits at 0.05x the input price.
+        tiers:
+          - max_prompt_tokens: null
+            input: 2.00
+            cache_write_5m: 2.50
+            cache_write_1h: 4.00
+            cache_read: 0.10
+            output: 10.00

@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "ModelPrices": {
+      "additionalProperties": false,
+      "properties": {
+        "tiers": {
+          "items": {
+            "$ref": "#/$defs/TierPrices"
+          },
+          "minItems": 1,
+          "title": "Tiers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tiers"
+      ],
+      "title": "ModelPrices",
+      "type": "object"
+    },
+    "PriceSet": {
+      "additionalProperties": false,
+      "properties": {
+        "effective_from": {
+          "format": "date",
+          "title": "Effective From",
+          "type": "string"
+        },
+        "retrieved_on": {
+          "format": "date",
+          "title": "Retrieved On",
+          "type": "string"
+        },
+        "source": {
+          "pattern": "^https://",
+          "title": "Source",
+          "type": "string"
+        },
+        "web_search_per_1000": {
+          "minimum": 0,
+          "title": "Web Search Per 1000",
+          "type": "number"
+        },
+        "models": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ModelPrices"
+          },
+          "minProperties": 1,
+          "title": "Models",
+          "type": "object"
+        }
+      },
+      "required": [
+        "effective_from",
+        "retrieved_on",
+        "source",
+        "web_search_per_1000",
+        "models"
+      ],
+      "title": "PriceSet",
+      "type": "object"
+    },
+    "TierPrices": {
+      "additionalProperties": false,
+      "description": "Per-MTok prices for prompts up to `max_prompt_tokens` (no limit when null).",
+      "properties": {
+        "max_prompt_tokens": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Max Prompt Tokens"
+        },
+        "input": {
+          "minimum": 0,
+          "title": "Input",
+          "type": "number"
+        },
+        "cache_write_5m": {
+          "minimum": 0,
+          "title": "Cache Write 5M",
+          "type": "number"
+        },
+        "cache_write_1h": {
+          "minimum": 0,
+          "title": "Cache Write 1H",
+          "type": "number"
+        },
+        "cache_read": {
+          "minimum": 0,
+          "title": "Cache Read",
+          "type": "number"
+        },
+        "output": {
+          "minimum": 0,
+          "title": "Output",
+          "type": "number"
+        }
+      },
+      "required": [
+        "max_prompt_tokens",
+        "input",
+        "cache_write_5m",
+        "cache_write_1h",
+        "cache_read",
+        "output"
+      ],
+      "title": "TierPrices",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "provider": {
+      "const": "anthropic",
+      "title": "Provider",
+      "type": "string"
+    },
+    "currency": {
+      "const": "USD",
+      "title": "Currency",
+      "type": "string"
+    },
+    "price_sets": {
+      "items": {
+        "$ref": "#/$defs/PriceSet"
+      },
+      "minItems": 1,
+      "title": "Price Sets",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "provider",
+    "currency",
+    "price_sets"
+  ],
+  "title": "PriceTable",
+  "type": "object"
+}
