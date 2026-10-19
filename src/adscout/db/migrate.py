@@ -108,9 +108,19 @@ def upgrade(path: Path, folder: Path = MIGRATIONS) -> list[str]:
         if existed and applied(connection):
             backup(connection, path, todo[0])
         connection.execute(CREATE_MIGRATIONS_TABLE)
+        # SQLite's table-rebuild procedure: foreign keys off (outside any transaction), then
+        # a foreign-key check inside each migration's transaction before it commits.
+        connection.execute("PRAGMA foreign_keys = OFF")
         for migration in todo:
             with transaction(connection):
                 connection.executescript(migration.sql)
+                broken = connection.execute("PRAGMA foreign_key_check").fetchall()
+                if broken:
+                    first = broken[0]
+                    raise MigrationError(
+                        f"{migration.name} leaves {len(broken)} broken foreign key(s), "
+                        f"first in {first['table']} row {first['rowid']} → {first['parent']}"
+                    )
                 connection.execute(
                     "INSERT INTO schema_migrations (version, name, sha256, applied_at) "
                     "VALUES (?, ?, ?, ?)",

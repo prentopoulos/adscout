@@ -455,6 +455,33 @@ critic notes. Exit reasons add `score_failed`, `near_miss` and `research_failed`
 `critic_unresolved`; `runs.kind` adds `rescore` and `eval`; `runs.source` adds `replay`;
 `runs.error_category` uses `budget_exhausted` for cap stops.
 
+**As built (task 1.3, 2026-10-18).** `0002_ai_pipeline.sql` follows the list above with
+these refinements, each within the decisions it serves:
+- **Spans.** Decision 36 put trace fields on `step_runs`, but a `step_runs` row covers every
+  lead of a run while a trace is one lead. A `spans` table therefore holds the spans that are
+  not calls: one `step` span per lead per step (a root) and one `invoke_agent` span per agent
+  invocation. `model_calls` (`chat`) and `source_calls` (`execute_tool`) carry their own
+  trace, span and parent span IDs, so a worker's calls nest under its agent span, which nests
+  under the lead's research span. Parent IDs are not foreign keys, as in OpenTelemetry;
+  `adscout check` verifies them.
+- **System version.** `config_snapshots` gains the kinds `site_list`, `media_kit` and
+  `price_table`, and `runs` gains their hashes, `options_json` (research design, score
+  repeats, spend cap) and `cost_summary_json` (the end-of-run cost table).
+- **Records.** `model_calls` rows are written once when the call ends, refused calls
+  included (`status` `refused` with an error category); a replay row costs 0 and must carry
+  its original cost. `source_calls` rows cost 0, and a search audit row names the model call
+  that paid for it. `enrichment_fields` keeps dropped values with the validator's reason.
+  `claims` keeps every emitted claim with its verification fields; `claim_key` is the ID the
+  merge and the writer cite. `model_calls`, `source_calls` and `claims` are append-only by
+  trigger. Briefs gain the `failed` status (kept for the person when research fails); a real
+  brief must name its design and verifier version and keeps its claims only in `claims`.
+  Scores gain per-criterion ratings, the repeat number and the model call; drafts gain the
+  rule-check results, publisher and brief.
+- **Runner.** The migration runner follows SQLite's table-rebuild procedure: foreign keys off
+  for the migration, `PRAGMA foreign_key_check` before each commit, and a migration that
+  leaves a broken foreign key is rolled back. Views are dropped and recreated around the
+  rebuilds.
+
 ## Rule, check and phase map
 
 | §5 rule | Check built in Phase 2 | Later |

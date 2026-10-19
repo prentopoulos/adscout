@@ -15,7 +15,7 @@ from adscout import cli
 from adscout.config import ConfigError
 from adscout.crm.writer import CrmWriteRefused, write_account
 from adscout.db.connection import connect, utc_now
-from adscout.db.migrate import MigrationError, upgrade
+from adscout.db.migrate import MigrationError, migrations, upgrade
 from adscout.pipeline.recorder import RunFailed, RunInProgress, process_alive
 from adscout.pipeline.run import (
     DatabaseNotReady,
@@ -222,7 +222,7 @@ def test_run_records_the_system_version(db: sqlite3.Connection) -> None:
     run_id = run_pipeline(db, synthetic())
     run = rows(db, "SELECT * FROM runs WHERE run_id = ?", run_id)[0]
     assert len(run["code_revision"]) == 40 and len(run["lock_digest"]) == 64
-    assert run["prompt_version"] == "none" and run["schema_version"] == 1
+    assert run["prompt_version"] == "none" and run["schema_version"] == len(migrations())
     for name in ("icp_config_hash", "seed_list_hash", "stub_script_hash"):
         snapshot = rows(db, "SELECT kind FROM config_snapshots WHERE content_hash = ?", run[name])
         assert len(snapshot) == 1, name

@@ -27,6 +27,29 @@ erDiagram
         TEXT summary
         TEXT claims_json
         TEXT created_at
+        TEXT design
+        TEXT summary_points_json
+        TEXT gaps_json
+        TEXT caps_json
+        INTEGER dropped_claims
+        TEXT verifier_version
+    }
+    claims {
+        INTEGER claim_id PK
+        INTEGER brief_id FK
+        TEXT claim_key
+        TEXT agent_name
+        TEXT topic
+        TEXT text
+        TEXT source_url
+        TEXT quote
+        TEXT fetch_call_id FK
+        INTEGER url_fetched_in_run
+        INTEGER quote_found
+        INTEGER numbers_ok
+        INTEGER verified
+        TEXT verifier_version
+        TEXT created_at
     }
     companies {
         INTEGER company_id PK
@@ -66,6 +89,29 @@ erDiagram
         TEXT body
         TEXT body_sha256
         TEXT status
+        TEXT created_at
+        TEXT sentences_json
+        TEXT checks_json
+        TEXT critic_notes_json
+        TEXT publisher_id
+        INTEGER brief_id FK
+    }
+    enrichment_fields {
+        INTEGER field_id PK
+        INTEGER enrichment_id FK
+        TEXT lead_id FK
+        TEXT run_id FK
+        TEXT field
+        TEXT value_json
+        TEXT source_url
+        TEXT source_kind
+        TEXT method
+        TEXT source_call_id FK
+        TEXT model_call_id FK
+        TEXT retrieved_at
+        TEXT as_of
+        TEXT status
+        TEXT status_detail
         TEXT created_at
     }
     enrichments {
@@ -114,6 +160,42 @@ erDiagram
         TEXT created_run_id FK
         TEXT created_at
     }
+    model_calls {
+        TEXT call_id PK
+        TEXT run_id FK
+        TEXT step FK
+        TEXT lead_id FK
+        TEXT role
+        TEXT agent_name
+        TEXT model
+        TEXT effort
+        TEXT prompt_version
+        TEXT call_role
+        TEXT mode
+        TEXT status
+        TEXT error_category
+        TEXT error_detail
+        TEXT request_sha256
+        INTEGER input_tokens
+        INTEGER cache_write_tokens
+        INTEGER cache_read_tokens
+        INTEGER output_tokens
+        INTEGER web_search_requests
+        REAL search_fee_usd
+        REAL cost_usd
+        REAL original_cost_usd
+        REAL reserved_usd
+        TEXT price_date
+        INTEGER latency_ms
+        TEXT stop_reason
+        TEXT trace_id
+        TEXT span_id
+        TEXT parent_span_id
+        TEXT operation
+        TEXT null_reasons_json
+        TEXT started_at
+        TEXT ended_at
+    }
     runs {
         TEXT run_id PK
         TEXT kind
@@ -142,6 +224,11 @@ erDiagram
         TEXT null_reasons_json
         INTEGER pid
         TEXT host
+        TEXT site_list_hash FK
+        TEXT media_kit_hash FK
+        TEXT price_table_hash FK
+        TEXT options_json
+        TEXT cost_summary_json
     }
     schema_migrations {
         INTEGER version PK
@@ -158,6 +245,48 @@ erDiagram
         TEXT reasons_json
         TEXT null_reasons_json
         TEXT created_at
+        TEXT criteria_json
+        INTEGER sample
+        TEXT model_call_id FK
+    }
+    source_calls {
+        TEXT call_id PK
+        TEXT run_id FK
+        TEXT step FK
+        TEXT lead_id FK
+        TEXT kind
+        TEXT target
+        TEXT mode
+        TEXT status
+        TEXT robots_decision
+        INTEGER http_status
+        INTEGER bytes
+        TEXT content_sha256
+        TEXT results_json
+        TEXT model_call_id FK
+        TEXT detail
+        REAL cost_usd
+        INTEGER latency_ms
+        TEXT trace_id
+        TEXT span_id
+        TEXT parent_span_id
+        TEXT operation
+        TEXT started_at
+        TEXT ended_at
+    }
+    spans {
+        TEXT span_id PK
+        TEXT trace_id
+        TEXT parent_span_id
+        TEXT run_id FK
+        TEXT lead_id FK
+        TEXT step FK
+        TEXT operation
+        TEXT agent_name
+        TEXT status
+        TEXT detail
+        TEXT started_at
+        TEXT ended_at
     }
     step_runs {
         TEXT run_id PK, FK
@@ -183,12 +312,20 @@ erDiagram
     approvals }o--|| runs : "run_id"
     briefs }o--|| leads : "lead_id"
     briefs }o--|| runs : "run_id"
+    claims }o--|| briefs : "brief_id"
+    claims }o--|| source_calls : "fetch_call_id"
     companies }o--|| runs : "created_run_id"
     crm_writes }o--|| approvals : "approval_id"
     crm_writes }o--|| leads : "lead_id"
     crm_writes }o--|| runs : "run_id"
+    drafts }o--|| briefs : "brief_id"
     drafts }o--|| leads : "lead_id"
     drafts }o--|| runs : "run_id"
+    enrichment_fields }o--|| enrichments : "enrichment_id"
+    enrichment_fields }o--|| leads : "lead_id"
+    enrichment_fields }o--|| model_calls : "model_call_id"
+    enrichment_fields }o--|| runs : "run_id"
+    enrichment_fields }o--|| source_calls : "source_call_id"
     enrichments }o--|| leads : "lead_id"
     enrichments }o--|| runs : "run_id"
     fake_crm_account_fields }o--|| fake_crm_accounts : "crm_account_id"
@@ -196,10 +333,24 @@ erDiagram
     lead_step_outcomes }o--|| step_runs : "run_id, step"
     leads }o--|| companies : "company_id"
     leads }o--|| runs : "created_run_id"
+    model_calls }o--|| leads : "lead_id"
+    model_calls }o--|| runs : "run_id"
+    model_calls }o--|| step_runs : "run_id, step"
     runs }o--|| config_snapshots : "icp_config_hash"
+    runs }o--|| config_snapshots : "media_kit_hash"
+    runs }o--|| config_snapshots : "price_table_hash"
     runs }o--|| config_snapshots : "seed_list_hash"
+    runs }o--|| config_snapshots : "site_list_hash"
     runs }o--|| config_snapshots : "stub_script_hash"
     scores }o--|| leads : "lead_id"
+    scores }o--|| model_calls : "model_call_id"
     scores }o--|| runs : "run_id"
+    source_calls }o--|| leads : "lead_id"
+    source_calls }o--|| model_calls : "model_call_id"
+    source_calls }o--|| runs : "run_id"
+    source_calls }o--|| step_runs : "run_id, step"
+    spans }o--|| leads : "lead_id"
+    spans }o--|| runs : "run_id"
+    spans }o--|| step_runs : "run_id, step"
     step_runs }o--|| runs : "run_id"
 ```

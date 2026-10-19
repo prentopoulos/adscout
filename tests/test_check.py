@@ -77,9 +77,10 @@ def test_rising_funnel_fails(db: sqlite3.Connection, flow: list[str]) -> None:
 
 
 def test_unlabelled_stub_row_fails(db: sqlite3.Connection, flow: list[str]) -> None:
-    db.execute("UPDATE briefs SET implementation = 'real' WHERE run_id = ?", (flow[0],))
+    # Briefs cannot be relabelled at all: a real brief needs a design (migration 0002).
+    db.execute("UPDATE drafts SET implementation = 'real' WHERE run_id = ?", (flow[0],))
     problems = check_run(db, flow[0]).problems
-    assert any(problem.startswith("briefs:") for problem in problems)
+    assert any(problem.startswith("drafts:") for problem in problems)
 
 
 def test_stub_brief_with_claims_fails(db: sqlite3.Connection, flow: list[str]) -> None:
