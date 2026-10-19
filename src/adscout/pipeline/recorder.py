@@ -25,8 +25,8 @@ from adscout.llm.adapter import CallSink, write_calls
 from adscout.llm.budget import BudgetExhausted
 from adscout.pipeline.contracts import Implementation, Outcome, Step
 
-RunKind = Literal["pipeline", "approval", "crm_sync"]
-RunSource = Literal["stub", "fixture", "live"]
+RunKind = Literal["pipeline", "approval", "crm_sync", "rescore", "eval"]
+RunSource = Literal["stub", "fixture", "replay", "live"]
 PROMPT_VERSION = "none"  # no prompt exists until Phase 2 (Phase 1 design, decision 6)
 NO_MODEL_CALL = "no model call in this step"
 STEP_NULL_REASONS = {

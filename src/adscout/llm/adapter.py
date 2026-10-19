@@ -237,6 +237,14 @@ class Transport(Protocol):
     def send(self, request: ModelRequest, key: str) -> Sent: ...
 
 
+class ResponseRecorder(Protocol):
+    """Keeps what a live call returned, an error included, so a replay can reproduce it."""
+
+    def response(self, key: str, message: Message, cost_usd: Decimal) -> None: ...
+
+    def failure(self, key: str, failure: Exception) -> None: ...
+
+
 @dataclass(frozen=True)
 class ModelResult:
     message: Message
@@ -405,14 +413,14 @@ class ModelAdapter:
         sink: CallSink,
         *,
         today: Callable[[], date] = lambda: datetime.now(UTC).date(),
-        record: Callable[[str, Message, Decimal], None] | None = None,
+        recorder: ResponseRecorder | None = None,
     ) -> None:
         self.transport = transport
         self.prices = prices
         self.ledger = ledger
         self.sink = sink
         self.today = today
-        self.record_response = record
+        self.recorder = recorder
 
     @property
     def mode(self) -> Mode:
@@ -438,6 +446,8 @@ class ModelAdapter:
             category: str | None = None,
             detail: str | None = None,
         ) -> None:
+            if self.mode == "replay" and original is None:
+                original = Decimal(0)  # a failed or refused call cost nothing the first time
             reasons = {}
             if usage is None:
                 reason = NO_RESPONSE.format(status=status, category=category)
@@ -515,6 +525,8 @@ class ModelAdapter:
             failure = classify(error)
             category = getattr(failure, "category", "client_error")
             write("failed", reserved=worst, category=category, detail=str(failure))
+            if self.mode == "live" and self.recorder is not None:
+                self.recorder.failure(key, failure)
             if failure is error:
                 raise
             raise failure from None
@@ -527,8 +539,8 @@ class ModelAdapter:
             charged, original = (priced.tokens_usd, priced.search_fee_usd), None
             price_date = priced.price_date
         self.ledger.settle(reservation, charged[0] + charged[1])
-        if self.mode == "live" and self.record_response is not None:
-            self.record_response(key, sent.message, charged[0] + charged[1])
+        if self.mode == "live" and self.recorder is not None:
+            self.recorder.response(key, sent.message, charged[0] + charged[1])
         write(
             "succeeded",
             reserved=worst,
