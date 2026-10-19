@@ -49,12 +49,18 @@ CREATE TABLE claims (
     quote_found INTEGER NOT NULL CHECK (quote_found IN (0, 1)),
     numbers_ok INTEGER NOT NULL CHECK (numbers_ok IN (0, 1)),
     names_individual INTEGER NOT NULL DEFAULT 0 CHECK (names_individual IN (0, 1)),
+    carries_link INTEGER NOT NULL DEFAULT 0 CHECK (carries_link IN (0, 1)),
     verified INTEGER NOT NULL CHECK (verified IN (0, 1)),
     drop_reason TEXT,
     verifier_version TEXT NOT NULL,
     created_at TEXT NOT NULL,
     UNIQUE (brief_id, claim_key),
-    CHECK (verified = (url_fetched_in_run AND quote_found AND numbers_ok AND NOT names_individual)),
+    CHECK (
+        verified = (
+            url_fetched_in_run AND quote_found AND numbers_ok
+            AND NOT names_individual AND NOT carries_link
+        )
+    ),
     CHECK ((verified = 1) = (drop_reason IS NULL)),
     CHECK (verified = 0 OR (fetch_call_id IS NOT NULL AND length(quote) >= 20)),
     CHECK (names_individual = 0 OR quote = '')

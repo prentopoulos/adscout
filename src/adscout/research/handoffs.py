@@ -56,6 +56,7 @@ class VerifiedClaim(Handoff):
     quote_found: bool
     numbers_ok: bool
     names_individual: bool = False
+    carries_link: bool = False
     verifier_version: str
 
     @property
@@ -65,6 +66,7 @@ class VerifiedClaim(Handoff):
             and self.quote_found
             and self.numbers_ok
             and not self.names_individual
+            and not self.carries_link
         )
 
 

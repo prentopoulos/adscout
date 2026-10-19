@@ -17,7 +17,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from adscout.research.handoffs import Claim, VerifiedClaim
 
-VERIFIER_VERSION = "v1"
+VERIFIER_VERSION = "v2"
 MIN_QUOTE = 20
 PREFIX = {
     "worker_audience": "A",
@@ -27,6 +27,9 @@ PREFIX = {
 }
 # A number not glued to a preceding letter: "K1" is a name, "2M" and "RTX 4090" have numbers.
 NUMBER = re.compile(r"(?<![A-Za-z])\d+(?:[.,]\d+)*")
+# A link in a claim's text or quote: the source URL travels separately, so a link inside
+# is page text aimed at a reader, the shape of an exfiltration or second-order injection.
+LINK = re.compile(r"https?://|www\.|\b[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}/\S", re.IGNORECASE)
 # Curly quotes and dashes (by code point) read as their plain forms.
 QUOTES = str.maketrans(
     {
@@ -125,6 +128,7 @@ def verify(
                 quote_found=quote_found,
                 numbers_ok=numbers(claim.text) <= numbers(claim.quote),
                 names_individual=names_individual(claim, company),
+                carries_link=any(LINK.search(text) for text in (claim.text, claim.quote)),
                 verifier_version=VERIFIER_VERSION,
             )
         )
@@ -140,4 +144,6 @@ def drop_reason(claim: VerifiedClaim) -> str | None:
         return "it has a number its quote does not"
     if claim.names_individual:
         return "it names a person"
+    if claim.carries_link:
+        return "it carries a link"
     return None

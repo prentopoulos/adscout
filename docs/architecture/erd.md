@@ -48,6 +48,7 @@ erDiagram
         INTEGER quote_found
         INTEGER numbers_ok
         INTEGER names_individual
+        INTEGER carries_link
         INTEGER verified
         TEXT drop_reason
         TEXT verifier_version

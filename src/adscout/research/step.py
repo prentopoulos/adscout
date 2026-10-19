@@ -322,8 +322,8 @@ def store(connection: sqlite3.Connection, run_id: str, researched: Researched) -
         connection.execute(
             "INSERT INTO claims (brief_id, claim_key, agent_name, topic, text, source_url, "
             "quote, fetch_call_id, url_fetched_in_run, quote_found, numbers_ok, "
-            "names_individual, verified, drop_reason, verifier_version, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "names_individual, carries_link, verified, drop_reason, verifier_version, "
+            "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 brief_id,
                 claim.claim_id,
@@ -337,6 +337,7 @@ def store(connection: sqlite3.Connection, run_id: str, researched: Researched) -
                 int(claim.quote_found),
                 int(claim.numbers_ok),
                 int(withheld),
+                int(claim.carries_link),
                 int(claim.verified),
                 drop_reason(claim),
                 claim.verifier_version,

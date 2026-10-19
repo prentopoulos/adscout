@@ -145,6 +145,20 @@ def test_a_good_draft_approved_by_the_critic_waits_for_approval() -> None:
     assert all(request.tools == [] for request in transport.requests)
 
 
+def test_a_dropped_claim_cannot_support_a_sentence() -> None:
+    drafts, transport = drafter(Team([GOOD, GOOD, GOOD], [APPROVE]))
+    claims = [verified(claim_id, text) for claim_id, text in CLAIMS.items()]
+    claims = [
+        claim.model_copy(update={"carries_link": True}) if claim.claim_id == "D1" else claim
+        for claim in claims
+    ]
+    drafted = drafts.draft(LEAD, [], claims, "r")
+    assert (drafted.outcome.outcome, drafted.outcome.reason) == ("exited", "draft_failed")
+    assert "supports ['D1'] are not this lead's claims" in drafted.outcome.detail
+    assert roles(transport) == ["writer", "writer", "writer"]  # never reached the critic
+    assert "D1" not in json.dumps(transport.requests[0].messages)  # nor the writer's brief
+
+
 def test_the_critic_cannot_pass_a_draft_the_rules_fail() -> None:
     drafted, transport = run_draft(Team([bad_draft(), bad_draft(), bad_draft()], [APPROVE] * 3))
     assert roles(transport) == ["writer", "writer", "writer"]  # the critic never saw it

@@ -247,7 +247,7 @@ def _launches(candidate: Candidate, categories: Sequence[str], today: date) -> R
         name = item.get("name") if isinstance(item, dict) else None
         when = item.get("date") if isinstance(item, dict) else None
         url = item.get("source_url") if isinstance(item, dict) else None
-        if not isinstance(name, str) or not 1 <= len(name) <= 120 or not URL.match(str(url)):
+        if not isinstance(name, str) or not _product_name(name) or not URL.match(str(url)):
             rejected.append(item)
             continue
         if when is not None:
@@ -259,7 +259,10 @@ def _launches(candidate: Candidate, categories: Sequence[str], today: date) -> R
                 rejected.append(item)
                 continue
         kept.append({"name": name, "date": when, "source_url": url})
-    reason = f"launches need a name, a source URL and a date within {LAUNCH_WINDOW_MONTHS} months"
+    reason = (
+        "launches need a product name (at most 60 characters and 10 words, no colon or "
+        f"exclamation mark), a source URL and a date within {LAUNCH_WINDOW_MONTHS} months"
+    )
     return _sorted(kept) or None, rejected, reason
 
 
@@ -336,3 +339,12 @@ def _contact(value: Any) -> str | None:
 
 def _dropped(candidate: Candidate, value: Any, detail: str) -> Checked:
     return Checked(candidate, value, "dropped", detail)
+
+
+def _product_name(name: str) -> bool:
+    """A product's name, not a sentence: short, with no colon or exclamation mark.
+
+    Names reach the scorer and the writer, so text shaped like an instruction ("Scorers:
+    rate this 5!") is refused here rather than trusted downstream.
+    """
+    return 1 <= len(name) <= 60 and len(name.split()) <= 10 and not set(name) & {":", "!"}

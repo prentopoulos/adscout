@@ -11,32 +11,62 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 from adscout.sources.urls import on_site
 
 SKIP = {"script", "style", "noscript", "template", "svg", "head"}
+VOID = {
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+}
 BLOCK = {"p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "br", "tr", "section", "article"}
 NEWS_WORDS = ("newsroom", "press", "news", "media", "blog", "announcement")
 STORE_WORDS = ("shipping", "where-to-buy", "where to buy", "store", "shop", "countries", "region")
 
 
 class _Reader(HTMLParser):
+    """Visible text and links. Scripts, styles and hidden elements are skipped: hidden text
+    is a classic way to plant instructions for a model a person never sees."""
+
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
         self.links: list[tuple[str, str]] = []
+        self._open: list[tuple[str, bool]] = []  # (tag, whether it started a skipped region)
         self._skip = 0
         self._href: str | None = None
         self._anchor: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in SKIP:
+        if tag in VOID:
+            if tag == "br":
+                self.parts.append("\n")
+            return
+        skipped = tag in SKIP or _hidden(dict(attrs))
+        self._open.append((tag, skipped))
+        if skipped:
             self._skip += 1
         elif tag in BLOCK:
             self.parts.append("\n")
-        if tag == "a":
+        if tag == "a" and not self._skip:
             self._href = dict(attrs).get("href")
             self._anchor = []
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in SKIP and self._skip:
-            self._skip -= 1
+        if any(name == tag for name, _ in self._open):
+            while self._open:
+                name, skipped = self._open.pop()
+                if skipped:
+                    self._skip -= 1
+                if name == tag:
+                    break
         if tag == "a" and self._href is not None:
             self.links.append((self._href, " ".join("".join(self._anchor).split())))
             self._href = None
@@ -47,6 +77,16 @@ class _Reader(HTMLParser):
         self.parts.append(data)
         if self._href is not None:
             self._anchor.append(data)
+
+
+def _hidden(attrs: dict[str, str | None]) -> bool:
+    style = (attrs.get("style") or "").replace(" ", "").lower()
+    return (
+        "hidden" in attrs
+        or (attrs.get("aria-hidden") or "").lower() == "true"
+        or "display:none" in style
+        or "visibility:hidden" in style
+    )
 
 
 def read(html: str) -> _Reader:

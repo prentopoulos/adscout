@@ -93,7 +93,8 @@ class Drafter:
             fixed=(kit_text(self.kit),),
             user=data_block("brief", brief),
         )
-        known_claims = {claim.claim_id: claim.claim.text for claim in claims}
+        # Only verified claims can support a sentence, whatever the caller passed in.
+        known_claims = {claim.claim_id: claim.claim.text for claim in claims if claim.verified}
         attempts: list[Attempt] = []
         for number in range(1, MAX_REWRITES + 2):
             attempt = Attempt(number)
