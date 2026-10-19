@@ -21,6 +21,7 @@ from typing import Any, Literal
 from adscout.db.connection import transaction, utc_now
 from adscout.db.migrate import schema_version
 from adscout.ids import ROOT, agent_version, code_version, new_run_id
+from adscout.llm.adapter import CallSink, write_calls
 from adscout.pipeline.contracts import Implementation, Outcome, Step
 
 RunKind = Literal["pipeline", "approval", "crm_sync"]
@@ -126,8 +127,11 @@ class Run:
         source: RunSource,
         snapshots: dict[str, Snapshot],
         null_reasons: dict[str, str],
+        calls: CallSink | None = None,
     ) -> None:
         self.connection = connection
+        # Model call records from the adapter, written with each step, failed ones included.
+        self.calls = calls or CallSink()
         self.kind = kind
         self.segment_id = segment_id
         self.source = source
@@ -237,6 +241,7 @@ class Run:
         try:
             yield recorder
             with transaction(self.connection):
+                write_calls(self.connection, self.calls.drain())
                 for write in recorder.writes:
                     write()
                 ended_at = utc_now()
@@ -262,12 +267,14 @@ class Run:
                 self.end_step(step, "succeeded", clock, recorder)
         except BaseException:
             with transaction(self.connection):
+                write_calls(self.connection, self.calls.drain())
                 self.end_step(step, "failed", clock, None)
             raise
 
     def end_step(
         self, step: Step, status: str, clock: float, recorder: StepRecorder | None
     ) -> None:
+        self.total_calls(step)
         self.connection.execute(
             "UPDATE step_runs SET status = ?, ended_at = ?, duration_ms = ?, kept = ?, "
             "exited = ? WHERE run_id = ? AND step = ?",
@@ -277,6 +284,36 @@ class Run:
                 round((time.perf_counter() - clock) * 1000),
                 recorder.kept if recorder else None,
                 recorder.exited if recorder else None,
+                self.run_id,
+                step,
+            ),
+        )
+
+    def total_calls(self, step: Step) -> None:
+        """A step's model, token and cost totals: the sums of its `model_calls` rows.
+
+        Input tokens count everything the model read: uncached input, cache writes and
+        cache reads, as OpenTelemetry's `gen_ai.usage.input_tokens` does.
+        """
+        totals = self.connection.execute(
+            "SELECT count(*) AS calls, group_concat(DISTINCT model) AS models, "
+            "sum(coalesce(input_tokens, 0) + coalesce(cache_write_tokens, 0) "
+            "+ coalesce(cache_read_tokens, 0)) AS input_tokens, "
+            "sum(coalesce(output_tokens, 0)) AS output_tokens, sum(cost_usd) AS cost_usd "
+            "FROM model_calls WHERE run_id = ? AND step = ?",
+            (self.run_id, step),
+        ).fetchone()
+        if not totals["calls"]:
+            return
+        models = ",".join(sorted(totals["models"].split(",")))
+        self.connection.execute(
+            "UPDATE step_runs SET model = ?, input_tokens = ?, output_tokens = ?, cost_usd = ?, "
+            "null_reasons_json = '{}' WHERE run_id = ? AND step = ?",
+            (
+                models,
+                totals["input_tokens"],
+                totals["output_tokens"],
+                totals["cost_usd"],
                 self.run_id,
                 step,
             ),

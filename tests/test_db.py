@@ -18,18 +18,15 @@ from adscout.db.migrate import (
     MigrationError,
     dump_schema,
     migrations,
-    pending,
     schema_version,
     upgrade,
 )
 from adscout.db.snapshot import fresh_schema
 from adscout.ids import agent_version, code_version, uuid7
-from adscout.pipeline import run as pipeline
-from adscout.pipeline.run import SegmentFiles
 from conftest import run_git
 
 LEAD_ID = "0192f0c1-0000-7000-8000-000000000001"
-FIXTURE_CONFIG = Path(__file__).resolve().parent / "fixtures" / "config"
+PHASE_1_ROWS = Path(__file__).resolve().parent / "fixtures" / "phase-1-rows.sql"
 # The number of the next migration a test plants in a copy of the migrations folder.
 NEXT = f"{len(migrations()) + 1:04d}"
 
@@ -375,20 +372,15 @@ def table_rows(
     }
 
 
-def test_upgrade_from_phase_1_keeps_every_row_and_trigger(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_upgrade_from_phase_1_keeps_every_row_and_trigger(tmp_path: Path) -> None:
+    # The rows the merged Phase 1 code wrote for the synthetic fixtures, on its schema.
     phase_1 = tmp_path / "phase-1-migrations"
     phase_1.mkdir()
     shutil.copy(MIGRATIONS / "0001_initial.sql", phase_1)
-    monkeypatch.setattr(pipeline, "pending", lambda connection: pending(connection, phase_1))
     path = tmp_path / "adscout.db"
     upgrade(path, phase_1)
     connection = connect(path)
-    files = SegmentFiles.load(FIXTURE_CONFIG, "synthetic-demo")
-    pipeline.run_pipeline(connection, files)
-    pipeline.run_stub_approval(connection, files.segment, files.script)
-    pipeline.run_crm_sync(connection, files.segment)
+    connection.executescript(PHASE_1_ROWS.read_text(encoding="utf-8"))
     columns = {
         table: [row[1] for row in connection.execute(f"PRAGMA table_info({table})")]
         for table in PHASE_1_TABLES
