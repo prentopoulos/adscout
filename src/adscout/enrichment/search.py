@@ -34,7 +34,6 @@ SEARCH_TOOL = "web_search_20250305"
 SUBMIT = "submit_launches"
 MAX_TOKENS = 1_500
 EFFORT: Effort = "low"
-TOOLS = frozenset({"web_search", SUBMIT})
 
 
 @dataclass(frozen=True)

@@ -29,7 +29,6 @@ from adscout.enrichment.fields import (
     valid_values,
 )
 from adscout.enrichment.pages import pick_pages
-from adscout.enrichment.search import TOOLS as SEARCH_TOOLS
 from adscout.enrichment.search import search_launches
 from adscout.enrichment.sec import Sec
 from adscout.enrichment.tags import detect
@@ -38,6 +37,7 @@ from adscout.llm.adapter import CallContext, ModelAdapter, ModelCallFailed
 from adscout.llm.invoke import HAIKU, CallsFailed
 from adscout.llm.prompts import Prompt
 from adscout.pipeline.contracts import Lead, Outcome
+from adscout.pipeline.registry import tools_for
 from adscout.sources.fetcher import Fetcher, FetchFailed, FetchRefused, Page, SourceContext
 from adscout.sources.site_list import SiteList, company_site_refusal
 from adscout.spans import SpanRecord, SpanStatus, step_span
@@ -107,7 +107,9 @@ class Enricher:
             agents.append(agent.close(agent_status, "extraction"))
         if "recent_launches" not in valid_values(rows):
             agent = span.child("launch_searcher")
-            context = self._context(run_id, lead, "launch_searcher", agent.span_id, SEARCH_TOOLS)
+            context = self._context(
+                run_id, lead, "launch_searcher", agent.span_id, tools_for("launch_searcher")
+            )
             try:
                 outcome = search_launches(
                     self.adapter,

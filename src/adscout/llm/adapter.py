@@ -510,9 +510,14 @@ class ModelAdapter:
                 )
             )
 
-        disallowed = sorted(request.tool_names - context.allowed_tools)
-        if disallowed:
-            detail = f"{context.agent_name} may not use {disallowed}"
+        # The tools must be exactly the role's registry entry (agent-security spec).
+        if request.tool_names != context.allowed_tools:
+            extra = sorted(request.tool_names - context.allowed_tools)
+            missing = sorted(context.allowed_tools - request.tool_names)
+            detail = (
+                f"{context.agent_name}'s tools differ from its registry entry: "
+                f"not allowed {extra}, missing {missing}"
+            )
             write("refused", category="tool_not_allowed", detail=detail)
             raise ModelCallFailed("tool_not_allowed", detail, fallback_allowed=False)
         try:
