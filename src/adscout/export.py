@@ -60,7 +60,7 @@ class RunRecord(ExportRecord):
     icp_config_hash: str | None = Field(alias="adscout.icp_config_hash")
     seed_list_hash: str | None = Field(alias="adscout.seed_list_hash")
     stub_script_hash: str | None = Field(alias="adscout.stub_script_hash")
-    budgets: dict[str, int] = Field(alias="adscout.budgets")
+    budgets: dict[str, int | float] = Field(alias="adscout.budgets")
     minutes_per_account: float | None = Field(alias="adscout.minutes_per_account")
 
 

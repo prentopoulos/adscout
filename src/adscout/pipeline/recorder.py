@@ -22,6 +22,7 @@ from adscout.db.connection import transaction, utc_now
 from adscout.db.migrate import schema_version
 from adscout.ids import ROOT, agent_version, code_version, new_run_id
 from adscout.llm.adapter import CallSink, write_calls
+from adscout.llm.budget import BudgetExhausted
 from adscout.pipeline.contracts import Implementation, Outcome, Step
 
 RunKind = Literal["pipeline", "approval", "crm_sync"]
@@ -34,7 +35,7 @@ STEP_NULL_REASONS = {
     "output_tokens": NO_MODEL_CALL,
     "cost_usd": NO_MODEL_CALL,
 }
-BUDGETS = {"model_calls": 0, "network_calls": 0}
+BUDGETS: dict[str, float] = {"model_calls": 0, "network_calls": 0}
 
 
 @dataclass(frozen=True)
@@ -128,10 +129,12 @@ class Run:
         snapshots: dict[str, Snapshot],
         null_reasons: dict[str, str],
         calls: CallSink | None = None,
+        budgets: dict[str, float] | None = None,
     ) -> None:
         self.connection = connection
         # Model call records from the adapter, written with each step, failed ones included.
         self.calls = calls or CallSink()
+        self.budgets = budgets if budgets is not None else dict(BUDGETS)
         self.kind = kind
         self.segment_id = segment_id
         self.source = source
@@ -191,7 +194,7 @@ class Run:
                     self.hashes.get("icp_config_hash"),
                     self.hashes.get("seed_list_hash"),
                     self.hashes.get("stub_script_hash"),
-                    json.dumps(BUDGETS),
+                    json.dumps(self.budgets, sort_keys=True),
                     json.dumps(self.null_reasons, sort_keys=True),
                     os.getpid(),
                     platform.node(),
@@ -342,6 +345,8 @@ class Run:
             self.finish("interrupted", "interrupted", "stopped by the user")
             raise
         except Exception as error:
-            self.finish("failed", "step_error", repr(error))
+            # A cap stop is its own category, so a report can tell it from a broken step.
+            category = error.category if isinstance(error, BudgetExhausted) else "step_error"
+            self.finish("failed", category, repr(error))
             raise RunFailed(self.run_id, repr(error)) from error
         self.finish("succeeded")

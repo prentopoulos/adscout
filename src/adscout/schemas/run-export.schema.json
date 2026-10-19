@@ -243,7 +243,14 @@
         },
         "adscout.budgets": {
           "additionalProperties": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
           },
           "title": "Adscout.Budgets",
           "type": "object"
