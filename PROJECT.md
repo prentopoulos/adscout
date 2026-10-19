@@ -230,7 +230,7 @@ side.
 |---|---|---|
 | 0 | Toolchain, lockfile, quality gate (constitution copy check, verbatim digests, secrets scan, no-network tests, commit messages, links), smoke checks; offline AI evaluation scaffold | Done |
 | 1 | Thin end-to-end pipeline on five seed companies with stub steps: segment and ideal-customer config, seed list, local database schema for companies, scores, briefs, drafts, approvals and runs; C4 architecture diagrams as code | Done |
-| 2 | AI pipeline on real companies: enrichment with field validation, deterministic profile rules, LLM fit scoring with structured output and reasons, a read-only research agent (search and fetch tools, step cap, page budget, a citation per claim), draft writer and rule checker; per-step offline evaluations and cost per call; answers the model cost and access TBDs in §4. Real leads stop at approval | Planned |
+| 2 | AI pipeline on real companies: enrichment with field validation, deterministic profile rules, LLM fit scoring with structured output and reasons, a read-only research agent (search and fetch tools, step cap, page budget, a citation per claim), draft writer and rule checker; per-step offline evaluations and cost per call; answers the model cost and access TBDs in §4. Real leads stop at approval | In progress |
 | 3 | Approval queue and dashboard over mock revenue in one local app, CRM sandbox sync with source and version tags, sandbox-only send, CI workflow, README, Dockerfile, short walkthrough video | Planned |
 
 ### ⛔ Before spending money or paid quota
