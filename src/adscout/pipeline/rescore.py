@@ -13,10 +13,11 @@ from typing import Any
 
 from adscout.config import SegmentConfig
 from adscout.llm.adapter import CallSink
+from adscout.llm.budget import SpendLedger
 from adscout.llm.prompts import load_prompt, prompt_set_version
 from adscout.pipeline.contracts import Lead
 from adscout.pipeline.models import ModelChoice, build_adapter, price_snapshot
-from adscout.pipeline.recorder import Run
+from adscout.pipeline.recorder import Run, RunKind
 from adscout.pipeline.run import require_migrated, segment_snapshot
 from adscout.rules import apply_rules
 from adscout.scoring import Scorer
@@ -58,7 +59,10 @@ def run_rescore(
     *,
     model: str,
     repeats: int = 1,
+    kind: RunKind = "rescore",
+    ledger: SpendLedger | None = None,
 ) -> str:
+    """Score the stored enrichments; an evaluation arm runs the same code as kind `eval`."""
     require_migrated(connection)
     choice.check()
     leads = stored_enrichments(connection, segment.segment_id)
@@ -66,7 +70,7 @@ def run_rescore(
         raise LookupError(f"segment {segment.segment_id} has no stored real enrichments to rescore")
     run = Run(
         connection,
-        "rescore",
+        kind,
         segment.segment_id,
         choice.source,
         {"icp_config_hash": segment_snapshot(segment), "price_table_hash": price_snapshot()},
@@ -86,7 +90,7 @@ def run_rescore(
             "replay_of": choice.replay_run_id,
         },
     )
-    adapter, cache = build_adapter(choice, run)
+    adapter, cache = build_adapter(choice, run, ledger)
     try:
         scorer = Scorer(adapter, load_prompt("score"), segment, model=model, repeats=repeats)
         with run.recording():

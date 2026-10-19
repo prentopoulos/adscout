@@ -68,8 +68,13 @@ def price_snapshot() -> Snapshot:
     return Snapshot("price_table", table.content_hash(), table.model_dump(mode="json"))
 
 
-def build_adapter(choice: ModelChoice, run: Run) -> tuple[ModelAdapter, ReplayCache | None]:
-    """The adapter for a run; its call records go to the run's sink. Call after `check`."""
+def build_adapter(
+    choice: ModelChoice, run: Run, ledger: SpendLedger | None = None
+) -> tuple[ModelAdapter, ReplayCache | None]:
+    """The adapter for a run; its call records go to the run's sink. Call after `check`.
+
+    Runs that share one cap, such as the two arms of a comparison, pass one ledger.
+    """
     cache: ReplayCache | None = None
     recorder: ResponseRecorder | None = None
     transport: Transport
@@ -87,7 +92,7 @@ def build_adapter(choice: ModelChoice, run: Run) -> tuple[ModelAdapter, ReplayCa
     adapter = ModelAdapter(
         transport,
         load_price_table(PRICE_TABLE),
-        SpendLedger(choice.cap_usd),
+        ledger or SpendLedger(choice.cap_usd),
         run.calls,
         recorder=recorder,
     )

@@ -24,7 +24,7 @@
 
 - [x] 4.1 Real `rules` step and `evals/cases/rules.jsonl` (about 30 cases, all passing)
 - [x] 4.2 Real `score` step: rubric prompt with anchors, structured output, code combination, cited-field check, router (`near_miss`, `below_threshold`, `score_failed`), `--score-repeats` (the step takes repeats; the `adscout run` flag is wired with the real pipeline in 5.1)
-- [ ] 4.3 `adscout rescore` and `python -m evals score-compare`
+- [x] 4.3 `adscout rescore` and `python -m evals score-compare`
 
 ## 5. Research team
 

@@ -27,7 +27,11 @@ GOOD = {
 
 @pytest.fixture
 def db_path(tmp_path: Path) -> Iterator[Path]:
-    path = tmp_path / "adscout.db"
+    yield build_db(tmp_path / "adscout.db")
+
+
+def build_db(path: Path) -> Path:
+    """A database holding four synthetic leads' stored enrichments from a finished run."""
     upgrade(path)
     connection = connect(path)
     run_id = "20261019T000000Z-aaaaaa"
@@ -62,7 +66,7 @@ def db_path(tmp_path: Path) -> Iterator[Path]:
                 (lead_id, run_id, json.dumps({"fields": version}), utc_now()),
             )
     connection.close()
-    yield path
+    return path
 
 
 def rescore(db_path: Path, *extra: str) -> int:
