@@ -23,6 +23,7 @@ from adscout.db.migrate import schema_version
 from adscout.ids import ROOT, agent_version, code_version, new_run_id
 from adscout.llm.adapter import CallSink, write_calls
 from adscout.llm.budget import BudgetExhausted
+from adscout.pipeline.contexts import refuse_tracing
 from adscout.pipeline.contracts import Implementation, Outcome, Step
 
 RunKind = Literal["pipeline", "approval", "crm_sync", "rescore", "eval"]
@@ -155,6 +156,7 @@ class Run:
         self.agent_version = agent_version(revision, dirty, self.package_version)
 
     def start(self) -> str:
+        refuse_tracing()  # before any row: tracing would post run data to LangSmith
         """Refuse if another run is live; mark dead `running` runs interrupted; record this one."""
         with transaction(self.connection):
             for row in self.connection.execute(

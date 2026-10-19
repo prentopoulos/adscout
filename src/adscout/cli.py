@@ -18,6 +18,7 @@ from adscout.db.migrate import MigrationError, upgrade
 from adscout.export import ExportRefused, export_lines, write_export
 from adscout.llm.adapter import LiveModeRefused
 from adscout.llm.invoke import HAIKU, SONNET
+from adscout.pipeline.contexts import TracingOn
 from adscout.pipeline.models import ModelChoice, ModelsNotChosen
 from adscout.pipeline.real import RunRefused, RunSettings, run_real_pipeline
 from adscout.pipeline.recorder import RunFailed, RunInProgress
@@ -41,6 +42,7 @@ DEFAULT_CONFIG_DIR = Path("config")
 # or locked, another live run, a failed run, a missing file, or no Git checkout to version.
 EXPECTED_ERRORS = (
     ConfigError,
+    TracingOn,
     DatabaseNotReady,
     RunInProgress,
     RunFailed,

@@ -21,6 +21,7 @@ from adscout.drafts.rules import Draft, Problem, Sentence, body, check
 from adscout.llm.adapter import CallContext, ModelAdapter, ModelCallFailed, ModelResult
 from adscout.llm.invoke import CallsFailed, InvalidOutput, invoke
 from adscout.llm.prompts import Prompt, data_block, request_for
+from adscout.pipeline.contexts import writer_brief
 from adscout.pipeline.contracts import Lead, Outcome
 from adscout.pipeline.registry import node
 from adscout.research.handoffs import SummaryPoint, VerifiedClaim
@@ -83,11 +84,7 @@ class Drafter:
         span = step_span(run_id, lead.lead_id, "draft")
         writer_node = node("writer")
         cap = (writer_node.caps.cost_usd if writer_node.caps else {}).get(writer_node.model or "")
-        brief = {
-            "company": lead.name,
-            "summary_points": [point.model_dump() for point in points],
-            "claims": [{"id": claim.claim_id, "text": claim.claim.text} for claim in claims],
-        }
+        brief = writer_brief(lead, points, claims)
         request = request_for(
             self.writer_prompt,
             writer_node.model or "",

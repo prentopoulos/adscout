@@ -10,11 +10,11 @@ output, retried once and then sent to the other tier.
 
 import re
 from collections.abc import Sequence
-from typing import Any
 
 from adscout.llm.adapter import CallContext, ModelAdapter, ModelCallFailed, ModelResult
 from adscout.llm.invoke import CallsFailed, InvalidOutput, invoke
-from adscout.llm.prompts import Prompt, data_block, request_for
+from adscout.llm.prompts import Prompt, request_for
+from adscout.pipeline.contexts import merge_context
 from adscout.pipeline.registry import WORKERS, Node
 from adscout.research.handoffs import SummaryPoint, VerifiedClaim
 from adscout.research.verifier import numbers
@@ -39,7 +39,7 @@ def plan(
     adapter: ModelAdapter,
     prompt: Prompt,
     node: Node,
-    lead_data: dict[str, Any],
+    user: str,
     context: CallContext,
 ) -> tuple[dict[str, list[str]], str | None]:
     """Questions for each worker; on a failed plan, the defaults and why."""
@@ -48,7 +48,7 @@ def plan(
         node.model or "",
         max_tokens=PLAN_TOKENS,
         effort=node.effort or "medium",
-        user=data_block("lead_data", lead_data),
+        user=user,
     )
     try:
         planned = invoke(adapter, request, context, parse_plan).value
@@ -87,21 +87,12 @@ def merge(
     context: CallContext,
 ) -> list[SummaryPoint]:
     """Summary points citing verified claim IDs; raises CallsFailed when none is valid."""
-    shown = [
-        {
-            "id": claim.claim_id,
-            "topic": claim.claim.topic,
-            "text": claim.claim.text,
-            "source_url": claim.claim.source_url,
-        }
-        for claim in claims
-    ]
     request = request_for(
         prompt,
         node.model or "",
         max_tokens=MERGE_TOKENS,
         effort=node.effort or "medium",
-        user=data_block("claims", shown),
+        user=merge_context(list(claims)),
     )
     by_id = {claim.claim_id: claim for claim in claims}
 

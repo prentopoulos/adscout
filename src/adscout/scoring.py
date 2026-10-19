@@ -21,7 +21,8 @@ from adscout.config import Criterion, SegmentConfig
 from adscout.db.connection import utc_now
 from adscout.llm.adapter import CallContext, Effort, ModelAdapter, ModelCallFailed, ModelRequest
 from adscout.llm.invoke import SONNET, CallsFailed, InvalidOutput, Invoked, invoke
-from adscout.llm.prompts import Prompt, data_block, request_for
+from adscout.llm.prompts import Prompt, request_for
+from adscout.pipeline.contexts import scorer_context
 from adscout.pipeline.contracts import Lead, Outcome
 from adscout.spans import SpanStatus, step_span
 
@@ -164,14 +165,13 @@ class Scorer:
         self.criteria = list(self.segment.criteria)
 
     def request(self, lead: Lead, fields: dict[str, Any]) -> ModelRequest:
-        lead_data = {"company": lead.name, "domain": lead.domain, "fields": fields}
         return request_for(
             self.prompt,
             self.model,
             max_tokens=MAX_TOKENS,
             effort=EFFORT,
             fixed=(criteria_text(self.criteria),),
-            user=data_block("lead_data", lead_data),
+            user=scorer_context(lead, fields),
         )
 
     def score(self, lead: Lead, fields: dict[str, Any], run_id: str) -> Scored:

@@ -28,6 +28,7 @@ from adscout.llm.adapter import CallContext, ModelAdapter
 from adscout.llm.budget import BudgetExhausted
 from adscout.llm.invoke import CallsFailed
 from adscout.llm.prompts import Prompt
+from adscout.pipeline.contexts import planner_context
 from adscout.pipeline.contracts import Lead, Outcome
 from adscout.pipeline.registry import LEAD_RESEARCH_CAPS, SINGLE_CAPS, WORKERS, node
 from adscout.research.handoffs import TOPICS, Brief, Design, SummaryPoint, VerifiedClaim, WorkerTask
@@ -192,7 +193,7 @@ class Researcher:
             self.adapter,
             self.prompts["research_plan"],
             lead_node,
-            {"company": lead.name, "domain": lead.domain, "fields": fields},
+            planner_context(lead, fields),
             self._context(run_id, lead, "research_plan", agent.span_id),
         )
         if note:
