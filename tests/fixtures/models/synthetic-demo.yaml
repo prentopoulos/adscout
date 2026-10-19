@@ -1,31 +1,674 @@
-# Scripted model answers for the synthetic fixture companies (fake mode). Every rating,
-# reason and token count here is made up for tests; none is a measurement of a real model.
+# Scripted model answers for the offline run of the real pipeline on synthetic
+# companies. Written by tests/fixtures/make_offline_run.py; every number is made up.
 answers:
+  draft_critic:
+    Alpha Gear:
+    - data:
+        issues: []
+        verdict: approve
+    Hotel Gear:
+    - data:
+        issues:
+        - aspect: ask
+          problem: The ask could name a date.
+        verdict: revise
+  draft_writer:
+    Alpha Gear:
+    - data:
+        sentences:
+        - supports:
+          - L1
+          text: Alpha Gear's K1 keyboard launch in September 2026 caught our attention.
+        - supports:
+          - D1
+          text: You already advertise on gaming video channels every month, so your buyers are clearly
+            watching.
+        - supports:
+          - mk-audience
+          text: Fixture Gaming Media reaches 2.4 million monthly readers in the US and Canada.
+        - supports:
+          - mk-video
+          text: Our video channels draw 900,000 views a month from PC and console players.
+        - supports:
+          - mk-formats
+          - L1
+          text: A launch-week takeover with sponsored reviews could put the K1 in front of those players
+            while interest is high.
+        - supports: []
+          text: Would you be open to a short call next week to talk through options and timing?
+        subject: A launch-week idea for Alpha Gear's K1
+    Golf Gear:
+    - data:
+        sentences:
+        - supports:
+          - L1
+          text: Golf Gear's G7 microphone sold 3 million units last year.
+        - supports:
+          - D1
+          text: You already advertise on gaming video channels every month, so your buyers are clearly
+            watching.
+        - supports:
+          - mk-audience
+          text: Fixture Gaming Media reaches 2.4 million monthly readers in the US and Canada.
+        - supports:
+          - mk-video
+          text: Our video channels draw 900,000 views a month from PC and console players.
+        - supports:
+          - mk-formats
+          - L1
+          text: A launch-week takeover with sponsored reviews could put the K1 in front of those players
+            while interest is high.
+        - supports: []
+          text: Would you be open to a short call next week to talk through options and timing?
+        subject: An idea for Golf Gear
+    Hotel Gear:
+    - data:
+        sentences:
+        - supports:
+          - L1
+          text: Hotel Gear's H5 headset launch in August 2026 caught our attention.
+        - supports:
+          - A1
+          text: Your headsets already reach PC and console gamers, so your buyers are easy to find.
+        - supports:
+          - mk-audience
+          text: Fixture Gaming Media reaches 2.4 million monthly readers in the US and Canada.
+        - supports:
+          - mk-video
+          text: Our video channels draw 900,000 views a month from PC and console players.
+        - supports:
+          - mk-formats
+          - L1
+          text: A launch-week takeover with sponsored reviews could put the H5 in front of those players
+            while interest is high.
+        - supports: []
+          text: Would you be open to a short call next week to talk through options and timing?
+        subject: A launch-week idea for Hotel Gear's H5
+  extract:
+    alpha.test:
+    - data:
+        categories:
+          source_url: https://alpha.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 1500
+          source_url: https://alpha.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-09
+          name: K1 keyboard
+          source_url: https://alpha.test/news
+        sells_in:
+          source_url: https://alpha.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    bravo.test:
+    - data:
+        categories:
+          source_url: https://bravo.test/
+          values:
+          - peripherals
+        employee_count: null
+        recent_launches:
+        - date: 2026-08
+          name: P2 pad
+          source_url: https://bravo.test/news
+        sells_in:
+          source_url: https://bravo.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    charlie.test:
+    - data:
+        categories:
+          source_url: https://charlie.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 400
+          source_url: https://charlie.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-07
+          name: C3 controller
+          source_url: https://charlie.test/news
+        sells_in:
+          source_url: https://charlie.test/shipping
+          values:
+          - US
+      input_tokens: 3000
+      output_tokens: 220
+    delta.test:
+    - data:
+        categories:
+          source_url: https://delta.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 90
+          source_url: https://delta.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-06
+          name: D4 cable
+          source_url: https://delta.test/news
+        sells_in:
+          source_url: https://delta.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    echo.test:
+    - data:
+        categories:
+          source_url: https://echo.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 200
+          source_url: https://echo.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-05
+          name: E5 stand
+          source_url: https://echo.test/news
+        sells_in:
+          source_url: https://echo.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    foxtrot.test:
+    - data:
+        categories:
+          source_url: https://foxtrot.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 800
+          source_url: https://foxtrot.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-04
+          name: F6 webcam
+          source_url: https://foxtrot.test/news
+        sells_in:
+          source_url: https://foxtrot.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    golf.test:
+    - data:
+        categories:
+          source_url: https://golf.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 600
+          source_url: https://golf.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-09
+          name: G7 microphone
+          source_url: https://golf.test/news
+        sells_in:
+          source_url: https://golf.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+    hotel.test:
+    - data:
+        categories:
+          source_url: https://hotel.test/
+          values:
+          - peripherals
+        employee_count:
+          count: 700
+          source_url: https://hotel.test/
+          year: '2026'
+        recent_launches:
+        - date: 2026-08
+          name: H5 headset
+          source_url: https://hotel.test/news
+        sells_in:
+          source_url: https://hotel.test/shipping
+          values:
+          - US
+          - CA
+      input_tokens: 3000
+      output_tokens: 220
+  research_merge:
+    alpha.test:
+    - data:
+        summary_points:
+        - claim_ids:
+          - A1
+          text: Alpha Gear sells keyboards and mice to PC and console gamers.
+        - claim_ids:
+          - L1
+          text: It launched the K1 keyboard in September 2026.
+    golf.test:
+    - data:
+        summary_points:
+        - claim_ids:
+          - L1
+          text: Golf Gear launched the G7 microphone in September 2026.
+    hotel.test:
+    - data:
+        summary_points:
+        - claim_ids:
+          - A1
+          text: Hotel Gear makes headsets for PC and console gamers.
+  research_plan:
+    alpha.test:
+    - data:
+        assignments:
+        - questions:
+          - worker_audience question?
+          worker: worker_audience
+        - questions:
+          - worker_ads question?
+          worker: worker_ads
+        - questions:
+          - worker_launches question?
+          worker: worker_launches
+    foxtrot.test:
+    - data:
+        assignments:
+        - questions:
+          - worker_audience question?
+          worker: worker_audience
+        - questions:
+          - worker_ads question?
+          worker: worker_ads
+        - questions:
+          - worker_launches question?
+          worker: worker_launches
+    golf.test:
+    - data:
+        assignments:
+        - questions:
+          - worker_audience question?
+          worker: worker_audience
+        - questions:
+          - worker_ads question?
+          worker: worker_ads
+        - questions:
+          - worker_launches question?
+          worker: worker_launches
+    hotel.test:
+    - data:
+        assignments:
+        - questions:
+          - worker_audience question?
+          worker: worker_audience
+        - questions:
+          - worker_ads question?
+          worker: worker_ads
+        - questions:
+          - worker_launches question?
+          worker: worker_launches
+  research_worker:
+    alpha.test|worker_ads:
+    - content:
+      - id: fetch_worker_ads
+        input:
+          url: https://alpha.test/
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_ads
+        input:
+          claims:
+          - quote: Alpha Gear advertises on gaming video channels every month.
+            source_url: https://alpha.test/
+            text: Alpha Gear advertises on gaming video channels every month.
+            topic: ad_activity
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    alpha.test|worker_audience:
+    - content:
+      - id: fetch_worker_audience
+        input:
+          url: https://alpha.test/
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_audience
+        input:
+          claims:
+          - quote: Alpha Gear makes keyboards and mice for PC and console gamers.
+            source_url: https://alpha.test/
+            text: Alpha Gear makes keyboards and mice for PC and console gamers.
+            topic: audience_channels
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    alpha.test|worker_launches:
+    - content:
+      - id: fetch_worker_launches
+        input:
+          url: https://alpha.test/news
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_launches
+        input:
+          claims:
+          - quote: Alpha Gear launched the K1 keyboard in September 2026.
+            source_url: https://alpha.test/news
+            text: Alpha Gear launched the K1 keyboard in September 2026.
+            topic: launches
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    foxtrot.test|worker_ads:
+    - text: I found nothing I can submit.
+    foxtrot.test|worker_audience:
+    - text: I found nothing I can submit.
+    foxtrot.test|worker_launches:
+    - text: I found nothing I can submit.
+    golf.test|worker_ads:
+    - content:
+      - id: fetch_worker_ads
+        input:
+          url: https://golf.test/
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_ads
+        input:
+          claims:
+          - quote: Golf Gear advertises on gaming video channels every month.
+            source_url: https://golf.test/
+            text: Golf Gear advertises on gaming video channels every month.
+            topic: ad_activity
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    golf.test|worker_audience:
+    - content:
+      - id: fetch_worker_audience
+        input:
+          url: https://golf.test/
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_audience
+        input:
+          claims:
+          - quote: Golf Gear makes microphones for PC and console gamers.
+            source_url: https://golf.test/
+            text: Golf Gear makes microphones for PC and console gamers.
+            topic: audience_channels
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    golf.test|worker_launches:
+    - content:
+      - id: fetch_worker_launches
+        input:
+          url: https://golf.test/news
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_launches
+        input:
+          claims:
+          - quote: Golf Gear launched the G7 microphone in September 2026.
+            source_url: https://golf.test/news
+            text: Golf Gear launched the G7 microphone in September 2026.
+            topic: launches
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    hotel.test|worker_ads:
+    - text: I found nothing I can submit.
+    hotel.test|worker_audience:
+    - content:
+      - id: fetch_worker_audience
+        input:
+          url: https://hotel.test/
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_audience
+        input:
+          claims:
+          - quote: Hotel Gear makes headsets for PC and console gamers.
+            source_url: https://hotel.test/
+            text: Hotel Gear makes headsets for PC and console gamers.
+            topic: audience_channels
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
+    hotel.test|worker_launches:
+    - content:
+      - id: fetch_worker_launches
+        input:
+          url: https://hotel.test/news
+        name: fetch_page
+        type: tool_use
+      input_tokens: 2000
+      output_tokens: 80
+      stop_reason: tool_use
+    - content:
+      - id: submit_worker_launches
+        input:
+          claims:
+          - quote: Hotel Gear launched the H5 headset in August 2026.
+            source_url: https://hotel.test/news
+            text: Hotel Gear launched the H5 headset in August 2026.
+            topic: launches
+          gaps: []
+        name: submit_findings
+        type: tool_use
+      input_tokens: 2600
+      output_tokens: 200
+      stop_reason: tool_use
   score:
     alpha.test:
-      - input_tokens: 1800
-        output_tokens: 160
-        data:
-          ratings:
-            - {criterion: audience, rating: 5, reason: Gaming peripherals first., cited_fields: [categories]}
-            - {criterion: ad_activity, rating: 4, reason: Ad pixels on the site., cited_fields: [ad_signals]}
-            - {criterion: budget_capacity, rating: 4, reason: About 1500 employees., cited_fields: [employee_count]}
-            - {criterion: recent_launches, rating: 3, reason: One launch this year., cited_fields: [recent_launches]}
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 5
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 4
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 4
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 3
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160
+    delta.test:
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 2
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 2
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 1
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 2
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160
+    echo.test:
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 4
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 4
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 3
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 1
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160
     foxtrot.test:
-      - input_tokens: 1700
-        output_tokens: 150
-        data:
-          ratings:
-            - {criterion: audience, rating: 4, reason: A gaming line., cited_fields: [categories]}
-            - {criterion: ad_activity, rating: 4, reason: Several ad pixels., cited_fields: [ad_signals]}
-            - {criterion: budget_capacity, rating: 3, reason: About 300 employees., cited_fields: [employee_count]}
-            - {criterion: recent_launches, rating: 1, reason: No launch found., cited_fields: []}
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 5
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 4
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 3
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 3
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160
     golf.test:
-      - input_tokens: 1700
-        output_tokens: 150
-        data:
-          ratings:
-            - {criterion: audience, rating: 3, reason: Some gaming products., cited_fields: [categories]}
-            - {criterion: ad_activity, rating: 2, reason: Analytics only., cited_fields: [ad_signals]}
-            - {criterion: budget_capacity, rating: 2, reason: About 120 employees., cited_fields: [employee_count]}
-            - {criterion: recent_launches, rating: 1, reason: No launch found., cited_fields: []}
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 4
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 4
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 4
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 3
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160
+    hotel.test:
+    - data:
+        ratings:
+        - cited_fields:
+          - categories
+          criterion: audience
+          rating: 5
+          reason: audience reason.
+        - cited_fields:
+          - ad_signals
+          criterion: ad_activity
+          rating: 4
+          reason: ad_activity reason.
+        - cited_fields:
+          - employee_count
+          criterion: budget_capacity
+          rating: 3
+          reason: budget_capacity reason.
+        - cited_fields:
+          - recent_launches
+          criterion: recent_launches
+          rating: 4
+          reason: recent_launches reason.
+      input_tokens: 1800
+      output_tokens: 160

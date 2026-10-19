@@ -333,6 +333,19 @@ the grilling round; question numbers are those the owner answered.
     lookups in a socket-blocked experiment). The task 7.1 guard therefore checks all four
     names and refuses to run, without importing `langsmith`. The spike module is replaced by
     the registry-built graphs in task 5.1.
+
+    **As built (task 5.1, 2026-10-19).** The pipeline graph is the chain of the registry's
+    step nodes (source, enrich, rules, score, research, draft); every step runs, so the
+    funnel always shows each step, and the per-lead router lives in the score step's
+    outcomes rather than as a graph edge. The research step's graph fans the workers out
+    with `Send`; the draft loop is a bounded loop in code (at most two rewrites), as in the
+    spike. `adscout run` now runs the real steps; `--stub` keeps the Phase 1 scripted run.
+    Offline runs take scripted answers (`--fixture-models`) and fixture sites
+    (`--fixture-sites`), or `--replay RUN_ID`; live runs need `--live`, `--max-spend-usd`,
+    the key, `ADSCOUT_CONTACT` and the approved site list, all checked before a run row is
+    written. A run records its media kit, price table and, when live, site list hashes, and
+    its options. `tests/fixtures/make_offline_run.py` writes synthetic sites and answers on
+    which a fake run reaches every Phase 2 exit.
 25. **Team shape (owner, R3 Q3).** Strictly, parallel sectioning with an LLM lead, called
     "orchestrator–workers (fixed roster)" in the docs. Code dispatches three workers: audience
     and channels; ad activity; recent launches and sponsorships. The lead's plan call (no

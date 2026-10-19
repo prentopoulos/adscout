@@ -1,6 +1,6 @@
 """Scripted model answers for fake-mode runs on synthetic fixture companies.
 
-A YAML file maps each role to each fixture domain's answers, in order; the last answer
+A YAML file maps each role to each fixture company's answers, in order; the last answer
 repeats when a role is asked more often. A request's role is the prompt its system text
 starts with, and its domain is the fixture domain its messages mention first. An answer is
 `data` (JSON returned as text), `text`, or raw `content` blocks, with optional usage counts.
@@ -42,9 +42,13 @@ class ScriptedModels:
         if role is None:
             raise LookupError("no scripted answers for this prompt")
         text = json.dumps(request.messages, default=str)
-        # The company comes first in every request; a later mention may be a cited source.
-        present = [name for name in self.answers[role] if name in text]
-        domain = min(present, key=text.index) if present else None
+        # A key is a company's domain or name, or "domain|worker" for one research worker;
+        # the company comes first in every request, so a later mention may be a source.
+        present = [
+            key for key in self.answers[role] if all(part in text for part in key.split("|"))
+        ]
+        present.sort(key=lambda key: (-key.count("|"), text.index(key.split("|")[0])))
+        domain = present[0] if present else None
         if domain is None:
             raise LookupError(f"no scripted {role} answer for the company in this request")
         with self._lock:

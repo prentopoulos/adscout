@@ -44,6 +44,8 @@ known-first-party = ["adscout", "checks", "conftest", "evals", "gate"]
 # Tests assert and run git, uv and the CLI as subprocesses with fixed arguments.
 "tests/**" = ["S101", "S603", "S607"]
 "evals/**" = ["S101", "S603", "S607"]
+# Fixture data: whole synthetic sentences read better unbroken.
+"tests/fixtures/**" = ["E501"]
 # The gate and its checks run git, uv and openspec with fixed arguments.
 "scripts/**" = ["S603", "S607"]
 

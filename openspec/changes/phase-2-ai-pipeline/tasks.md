@@ -23,16 +23,16 @@
 ## 4. Rules and scoring
 
 - [x] 4.1 Real `rules` step and `evals/cases/rules.jsonl` (about 30 cases, all passing)
-- [x] 4.2 Real `score` step: rubric prompt with anchors, structured output, code combination, cited-field check, router (`near_miss`, `below_threshold`, `score_failed`), `--score-repeats` (the step takes repeats; the `adscout run` flag is wired with the real pipeline in 5.1)
+- [x] 4.2 Real `score` step: rubric prompt with anchors, structured output, code combination, cited-field check, router (`near_miss`, `below_threshold`, `score_failed`), `--score-repeats` (wired into `adscout run` with the real pipeline in 5.1)
 - [x] 4.3 `adscout rescore` and `python -m evals score-compare`
 
 ## 5. Research team
 
-- [ ] 5.1 Agent registry and the pipeline, research and draft graphs built from it
+- [x] 5.1 Agent registry and the pipeline, research and draft graphs built from it
 - [x] 5.2 Worker loop: pinned `web_search` with direct callers, `max_uses`, blocked domains and location; `fetch_page` with the provenance and egress rules; `submit_findings`; per-worker and per-lead caps
 - [x] 5.3 Lead plan and merge calls and the strict handoff models
 - [x] 5.4 Claim verifier, `claims` storage and the verifier case set
-- [x] 5.5 Brief outcomes (`research_failed`, `research_partial`) and `--research-design single` (the step takes the design; the `adscout run` flag is wired with the real pipeline in 5.1)
+- [x] 5.5 Brief outcomes (`research_failed`, `research_partial`) and `--research-design single` (wired into `adscout run` with the real pipeline in 5.1)
 
 ## 6. Drafts
 

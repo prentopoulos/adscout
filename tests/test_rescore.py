@@ -15,7 +15,7 @@ from adscout.pipeline.models import ModelChoice, ModelsNotChosen
 from adscout.pipeline.rescore import stored_enrichments
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
-MODELS = FIXTURES / "models" / "synthetic-demo.yaml"
+MODELS = FIXTURES / "models" / "rescore.yaml"
 GOOD = {
     "categories": ["peripherals"],
     "sells_in": ["CA", "US"],

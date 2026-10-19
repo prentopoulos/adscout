@@ -12,13 +12,14 @@ from importlib.metadata import version
 from pathlib import Path
 
 from adscout.check import check_run
-from adscout.config import ConfigError, load_segment
+from adscout.config import ConfigError, load_seeds, load_segment
 from adscout.db.connection import connect, resolve_db_path
 from adscout.db.migrate import MigrationError, upgrade
 from adscout.export import ExportRefused, export_lines, write_export
 from adscout.llm.adapter import LiveModeRefused
 from adscout.llm.invoke import HAIKU, SONNET
 from adscout.pipeline.models import ModelChoice, ModelsNotChosen
+from adscout.pipeline.real import RunRefused, RunSettings, run_real_pipeline
 from adscout.pipeline.recorder import RunFailed, RunInProgress
 from adscout.pipeline.rescore import run_rescore
 from adscout.pipeline.run import (
@@ -30,6 +31,7 @@ from adscout.pipeline.run import (
     run_stub_approval,
 )
 from adscout.report import funnel, list_runs
+from adscout.sources.fetcher import ContactMissing
 
 MODELS = {"haiku": HAIKU, "sonnet": SONNET}
 
@@ -89,11 +91,44 @@ def report(run_id: str, kind: str) -> int:
 
 def run(args: argparse.Namespace) -> int:
     try:
-        files = SegmentFiles.load(args.config_dir, args.segment, args.seeds)
+        if args.stub:
+            files = SegmentFiles.load(args.config_dir, args.segment, args.seeds)
+            with database(args) as connection:
+                return report(run_pipeline(connection, files), "pipeline")
+        segment = load_segment(args.config_dir / "segments" / f"{args.segment}.yaml")
+        seeds = load_seeds(
+            args.seeds or args.config_dir / "seeds" / f"{args.segment}.csv", args.segment
+        )
+        settings = RunSettings(
+            models=model_choice(args),
+            media_kit=args.media_kit or default_media_kit(args.config_dir),
+            fixture_sites=args.fixture_sites,
+            site_list=args.site_list,
+            score_repeats=args.score_repeats,
+            research_design=args.research_design,
+            scorer_model=MODELS[args.scorer],
+        )
         with database(args) as connection:
-            return report(run_pipeline(connection, files), "pipeline")
-    except EXPECTED_ERRORS as error:
+            return report(run_real_pipeline(connection, segment, seeds, settings), "pipeline")
+    except (
+        *EXPECTED_ERRORS,
+        RunRefused,
+        ModelsNotChosen,
+        LiveModeRefused,
+        ContactMissing,
+    ) as error:
         return fail("run", error)
+
+
+def default_media_kit(config_dir: Path) -> Path:
+    """The one media kit in the config folder; the owner names the publisher (decision 32)."""
+    kits = sorted((config_dir / "media-kit").glob("*.yaml"))
+    if len(kits) != 1:
+        found = ", ".join(kit.name for kit in kits) or "none"
+        raise RunRefused(
+            f"pass --media-kit: expected one media kit in {config_dir / 'media-kit'}, found {found}"
+        )
+    return kits[0]
 
 
 def approve(args: argparse.Namespace) -> int:
@@ -232,6 +267,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     add_segment_options(run_parser)
     run_parser.add_argument("--seeds", type=Path, help="seed list CSV (default: the segment's)")
+    run_parser.add_argument(
+        "--stub", action="store_true", help="run the Phase 1 scripted stub steps instead"
+    )
+    add_model_options(run_parser)
+    run_parser.add_argument("--fixture-sites", type=Path, help="fixture company sites (offline)")
+    run_parser.add_argument("--media-kit", type=Path, help="the fictional publisher's media kit")
+    run_parser.add_argument("--site-list", type=Path, help="the owner-approved site list (live)")
+    run_parser.add_argument("--score-repeats", type=int, default=1)
+    run_parser.add_argument("--research-design", choices=("multi", "single"), default="multi")
+    run_parser.add_argument("--scorer", choices=sorted(MODELS), default="sonnet")
     run_parser.set_defaults(handler=run)
 
     approve_parser = commands.add_parser("approve", help="decide drafts waiting for approval")

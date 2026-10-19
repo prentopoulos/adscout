@@ -436,7 +436,7 @@ def test_approval_does_not_need_the_seed_list(tmp_path: Path) -> None:
     path = str(tmp_path / "cli.db")
     common = ["--segment", SYNTHETIC, "--config-dir", str(config), "--db", path]
     assert cli.main(["db", "upgrade", "--db", path]) == 0
-    assert cli.main(["run", *common]) == 0
+    assert cli.main(["run", "--stub", *common]) == 0
     (config / "seeds" / f"{SYNTHETIC}.csv").unlink()
     assert cli.main(["approve", "--stub", *common]) == 0
 
@@ -455,7 +455,7 @@ def test_commands_report_database_problems_without_a_traceback(
         lambda connection: (_ for _ in ()).throw(MigrationError("0001_initial was edited")),
     )
     common = ["--segment", SYNTHETIC, "--config-dir", str(FIXTURES), "--db", str(path)]
-    assert cli.main(["run", *common]) == 1
+    assert cli.main(["run", "--stub", *common]) == 1
     assert "0001_initial was edited" in capsys.readouterr().err
 
 
@@ -498,10 +498,10 @@ def test_unmigrated_database_is_refused(tmp_path: Path) -> None:
 def test_commands_run_the_flow(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     path = str(tmp_path / "cli.db")
     common = ["--segment", SYNTHETIC, "--config-dir", str(FIXTURES), "--db", path]
-    assert cli.main(["run", *common]) == 1  # no database yet
+    assert cli.main(["run", "--stub", *common]) == 1  # no database yet
     assert "db upgrade" in capsys.readouterr().err
     assert cli.main(["db", "upgrade", "--db", path]) == 0
-    assert cli.main(["run", *common]) == 0
+    assert cli.main(["run", "--stub", *common]) == 0
     assert cli.main(["approve", *common]) == 1  # --stub is required in Phase 1
     assert cli.main(["approve", "--stub", *common]) == 0
     assert cli.main(["sync", *common]) == 0
