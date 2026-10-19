@@ -216,6 +216,34 @@ the grilling round; question numbers are those the owner answered.
     prompt version `p-` + 12 hex of SHA-256 over the LF-normalized prompt and schema files;
     existing leads keep `none`.
 
+**As built, model access (tasks 2.1–2.6, 2026-10-18).** Refinements within decisions 13–21:
+- **Prices** were rechecked on the pricing page on 2026-10-18 and match the table above;
+  Haiku's long-prompt tier counts input, cache writes and cache reads together and raises
+  every price, output included. `config/prices/anthropic.yaml` holds dated price sets; a call
+  is priced with the set in force on its date.
+- **Retries.** The SDK's own retries are off, because they would retry the spend-cap 429.
+  Our live transport retries overload, server, rate-limit (honouring `retry-after`) and
+  connection errors up to three attempts. Budget errors, recognized as the docs describe
+  them (a 400 whose message begins "You have reached your specified … API usage limits", a
+  429 with `error_code` `enforced_spend_limit_reached`, a 402 `billing_error`, or "credit
+  balance is too low"), are never retried. The client gets the key and the API base URL
+  explicitly, so no saved profile or `ANTHROPIC_BASE_URL` can redirect a call, and error
+  text has the key redacted.
+- **Reservations** estimate a prompt's tokens as its UTF-8 bytes ÷ 3, plus 286 tool-use
+  system tokens when tools are present and 3,000 tokens per allowed search for its results.
+  Settling corrects each reservation to the actual cost, so a low estimate can let a run
+  overshoot its cap by at most the error on calls in flight; the workspace limit is the
+  backstop. The 5-seed live run compares estimates with measured usage.
+- **Fallback.** An invalid answer's retry carries the answer and the problem as new turns,
+  so its request hash differs and a replay can reproduce it. A Haiku request whose estimate
+  passes the 100K tier is refused before sending with no fallback: it is a construction bug.
+- **Replay cache** entries are keyed by the recorded run, the request hash and how many
+  times that run had seen the request, so three identical scoring requests replay as their
+  three answers; call errors are recorded too, so a replay walks the same retry and
+  fallback path. A replay names the run it reproduces and never reaches the network.
+- **Prompt set version.** A lead records the version of the whole prompt set (a digest over
+  every role's version) at its creation; each `model_calls` row records its role's version.
+
 ### Rules, scoring and routing
 
 22. **Rules (owner, R1 Q4).** Deterministic: sells in both US and CA; at least one allowed
