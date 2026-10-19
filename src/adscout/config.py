@@ -88,12 +88,39 @@ def canonical_hash(data: Any) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+# The enriched fields a score reason may cite (Phase 2 design, decision 7).
+ENRICHMENT_FIELDS = frozenset(
+    {
+        "categories",
+        "sells_in",
+        "hq_country",
+        "ownership",
+        "parent",
+        "employee_count",
+        "revenue_usd",
+        "social_accounts",
+        "ad_signals",
+        "recent_launches",
+        "sponsorships",
+    }
+)
+RATINGS = (1, 2, 3, 4, 5)
+# Fields the segment may leave null until decided, each with a reason in null_reasons.
+NULLABLE = ("size_range", "score_threshold", "near_miss_min", "criteria")
+
+
 class SizeRange(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
     metric: Literal["annual_revenue_usd", "employees"]
     min: float | None = Field(default=None, ge=0)
     max: float | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def check(self) -> Self:
+        if self.min is not None and self.max is not None and self.min > self.max:
+            raise ValueError(f"size_range min {self.min} exceeds max {self.max}")
+        return self
 
 
 class Exclusions(BaseModel):
@@ -103,12 +130,41 @@ class Exclusions(BaseModel):
     categories: list[str] = []
 
 
-class SegmentConfig(BaseModel):
-    """One segment and its ideal-customer rules. Undecided fields are null with a reason."""
+class Criterion(BaseModel):
+    """One score criterion: a 1-5 rating against written anchors, weighted by code."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    schema_version: Literal["1"]
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    name: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+    weight: float = Field(gt=0, le=1)
+    # The enriched fields this criterion's reasons may cite.
+    fields: list[str] = Field(min_length=1)
+    anchors: dict[int, str]
+
+    @model_validator(mode="after")
+    def check(self) -> Self:
+        unknown = sorted(set(self.fields) - ENRICHMENT_FIELDS)
+        if unknown:
+            raise ValueError(f"criterion {self.id}: unknown enriched fields {unknown}")
+        if tuple(sorted(self.anchors)) != RATINGS:
+            raise ValueError(f"criterion {self.id}: anchors must be given for ratings 1 to 5")
+        if not all(text.strip() for text in self.anchors.values()):
+            raise ValueError(f"criterion {self.id}: every anchor needs text")
+        return self
+
+
+class SegmentConfig(BaseModel):
+    """One segment and its ideal-customer rules. Undecided fields are null with a reason.
+
+    The score routes a lead: at or above `score_threshold` to research; from `near_miss_min`
+    up to the threshold to a person as a near miss; below `near_miss_min` out.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    schema_version: Literal["2"]
     segment_id: str = Field(pattern=SLUG)
     name: str = Field(min_length=1)
     scope: str = Field(min_length=1)
@@ -116,7 +172,9 @@ class SegmentConfig(BaseModel):
     categories: list[str] = Field(min_length=1)
     size_range: SizeRange | None
     exclusions: Exclusions
-    score_threshold: float | None
+    score_threshold: float | None = Field(ge=0, le=100)
+    near_miss_min: float | None = Field(ge=0, le=100)
+    criteria: list[Criterion] | None
     null_reasons: dict[str, str] = {}
 
     @model_validator(mode="after")
@@ -129,11 +187,27 @@ class SegmentConfig(BaseModel):
                 raise ValueError(f"category {category!r} is not a lowercase slug")
         missing = [
             name
-            for name in ("size_range", "score_threshold")
+            for name in NULLABLE
             if getattr(self, name) is None and not self.null_reasons.get(name)
         ]
         if missing:
             raise ValueError(f"null fields without a reason in null_reasons: {missing}")
+        stale = sorted(name for name in self.null_reasons if getattr(self, name, None) is not None)
+        unknown = sorted(set(self.null_reasons) - set(NULLABLE))
+        if stale or unknown:
+            raise ValueError(f"null_reasons for fields that are set or unknown: {stale + unknown}")
+        if self.near_miss_min is not None and (
+            self.score_threshold is None or self.near_miss_min >= self.score_threshold
+        ):
+            raise ValueError("near_miss_min must be below a set score_threshold")
+        if self.criteria is not None:
+            ids = [criterion.id for criterion in self.criteria]
+            if len(set(ids)) != len(ids) or not ids:
+                raise ValueError(f"criteria need distinct IDs: {ids}")
+            total = sum(criterion.weight for criterion in self.criteria)
+            if abs(total - 1) > 1e-9:
+                weights = {criterion.id: criterion.weight for criterion in self.criteria}
+                raise ValueError(f"criterion weights sum to {total:g}, not 1: {weights}")
         return self
 
     @property

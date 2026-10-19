@@ -6,6 +6,7 @@ import pytest
 
 from adscout.config import (
     ConfigError,
+    SizeRange,
     contact_kind,
     load_seeds,
     load_segment,
@@ -42,10 +43,47 @@ def test_committed_segment_loads() -> None:
     segment = load_segment(SEGMENT)
     assert segment.segment_id == "gaming-hardware-na"
     assert segment.regions == ["US", "CA"]
-    assert segment.size_range is None
-    assert segment.score_threshold is None
-    assert segment.null_reasons["size_range"] == "set in Phase 2 grilling"
-    assert segment.null_reasons["score_threshold"] == "set in Phase 2 grilling"
+    assert segment.size_range == SizeRange(metric="employees", min=50, max=None)
+    assert segment.score_threshold == 60
+    assert segment.near_miss_min == 55
+    assert segment.criteria is not None
+    assert {criterion.id: criterion.weight for criterion in segment.criteria} == {
+        "audience": 0.35,
+        "ad_activity": 0.30,
+        "budget_capacity": 0.20,
+        "recent_launches": 0.15,
+    }
+    assert segment.null_reasons == {}
+
+
+def test_weights_must_sum_to_one(tmp_path: Path) -> None:
+    path = write_segment(tmp_path, segment_text(**{"weight: 0.15": "weight: 0.10"}))
+    with pytest.raises(ConfigError, match=r"weights sum to 0\.95, not 1: .*recent_launches"):
+        load_segment(path)
+
+
+def test_anchor_for_every_rating(tmp_path: Path) -> None:
+    text = segment_text(**{"      2: One minor product refresh in the last 12 months.\n": ""})
+    with pytest.raises(ConfigError, match="recent_launches: anchors must be given for ratings"):
+        load_segment(write_segment(tmp_path, text))
+
+
+def test_criterion_cites_only_enriched_fields(tmp_path: Path) -> None:
+    text = segment_text(**{"fields: [recent_launches]": "fields: [recent_launches, ceo]"})
+    with pytest.raises(ConfigError, match=r"unknown enriched fields \['ceo'\]"):
+        load_segment(write_segment(tmp_path, text))
+
+
+def test_near_miss_must_sit_below_the_threshold(tmp_path: Path) -> None:
+    path = write_segment(tmp_path, segment_text(**{"near_miss_min: 55": "near_miss_min: 60"}))
+    with pytest.raises(ConfigError, match="near_miss_min must be below"):
+        load_segment(path)
+
+
+def test_null_reason_for_a_set_field_is_rejected(tmp_path: Path) -> None:
+    text = segment_text(**{"null_reasons: {}": "null_reasons:\n  score_threshold: undecided"})
+    with pytest.raises(ConfigError, match=r"set or unknown: \['score_threshold'\]"):
+        load_segment(write_segment(tmp_path, text))
 
 
 def test_unknown_field_is_rejected_by_name(tmp_path: Path) -> None:
@@ -61,9 +99,20 @@ def test_unquoted_no_is_not_read_as_a_boolean(tmp_path: Path) -> None:
 
 
 def test_null_without_reason_is_rejected(tmp_path: Path) -> None:
-    path = write_segment(tmp_path, segment_text(**{"  size_range: set in Phase 2 grilling\n": ""}))
-    with pytest.raises(ConfigError, match="size_range"):
-        load_segment(path)
+    text = segment_text(**{"score_threshold: 60": "score_threshold: null"})
+    with pytest.raises(ConfigError, match=r"without a reason in null_reasons: \['score_thr"):
+        load_segment(write_segment(tmp_path, text))
+
+
+def test_null_with_a_reason_loads(tmp_path: Path) -> None:
+    text = segment_text(
+        **{
+            "score_threshold: 60": "score_threshold: null",
+            "near_miss_min: 55": "near_miss_min: null",
+            "null_reasons: {}": "null_reasons:\n  score_threshold: x\n  near_miss_min: x",
+        }
+    )
+    assert load_segment(write_segment(tmp_path, text)).score_threshold is None
 
 
 def test_segment_id_must_match_the_file(tmp_path: Path) -> None:

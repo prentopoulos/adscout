@@ -3,7 +3,7 @@
 - [x] 1.1 Add `anthropic` and `langgraph` (and `httpx2` if not already direct) as runtime dependencies, relock, extend the declared-dependency test, run pip-audit on the new set, and set PROJECT.md §6 Phase 2 to In progress with the first implementation commit
 - [x] 1.2 LangGraph spike: a typed two-node graph with a `Send` fan-out and a bounded loop under `mypy --strict` and the socket block; record the outcome in design.md, and if it fails switch the registry to drive our own orchestration (decision 24)
 - [x] 1.3 Migration `0002` (Phase 2 tables, widened CHECK lists, `replay` source, quote length limit) with table rebuilds; regenerate `schema.sql` and the ERD; upgrade-from-Phase-1 and trigger tests
-- [ ] 1.4 Segment config: size range, threshold 60, near-miss band, criteria with anchors and weights; regenerate the JSON Schema; config tests
+- [x] 1.4 Segment config: size range, threshold 60, near-miss band, criteria with anchors and weights; regenerate the JSON Schema; config tests
 
 ## 2. Model access
 

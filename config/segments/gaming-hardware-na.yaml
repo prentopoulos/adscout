@@ -1,7 +1,7 @@
-# Segment and ideal-customer rules (PROJECT.md §2; Phase 1 design, decision 2).
-# Only company-level data belongs here. A field the segment has not decided yet is null,
-# with its reason under null_reasons.
-schema_version: "1"
+# Segment and ideal-customer rules (PROJECT.md §2; Phase 1 design, decision 2; Phase 2
+# design, decisions 22 and 23). Only company-level data belongs here. A field the segment
+# has not decided yet is null, with its reason under null_reasons.
+schema_version: "2"
 segment_id: gaming-hardware-na
 name: Gaming hardware brands in North America
 scope: >-
@@ -14,11 +14,73 @@ categories:
   - pc-components
   - prebuilt-pcs
   - console-accessories
-size_range: null
+# Profile rule: at least 50 employees, no maximum (owner, Phase 2 grilling R1 Q4).
+size_range:
+  metric: employees
+  min: 50
+  max: null
 exclusions:
   domains: []
   categories: []
-score_threshold: null
-null_reasons:
-  size_range: set in Phase 2 grilling
-  score_threshold: set in Phase 2 grilling
+# Routing on the 0-100 score (owner, R1 Q3): 60 and above goes to research; from 55 up to 60
+# is a near miss for a person, with no research spend; below 55 exits. Fixed before the
+# first live run.
+score_threshold: 60
+near_miss_min: 55
+# The model rates each criterion 1-5 against its anchors, citing enriched fields; code
+# combines the ratings as the weighted mean of (rating - 1) x 25. Weights and criteria are
+# the owner's (R1 Q3, R3 Q3); the anchor wording was drafted by the agent for the owner to
+# review before the first live run.
+criteria:
+  - id: audience
+    name: Audience fit
+    question: >-
+      How closely do the brand's buyers match the readers of a gaming and tech publisher:
+      gamers, PC builders and tech enthusiasts?
+    weight: 0.35
+    fields: [categories, recent_launches, social_accounts]
+    anchors:
+      1: Its products are not aimed at gamers or tech enthusiasts; gaming is incidental.
+      2: It has some gaming products, but mainly sells to a general or business audience.
+      3: It has a gaming line or sub-brand beside a larger non-gaming business.
+      4: Gaming is a main line for the brand, with gaming-focused social accounts.
+      5: It sells gaming hardware first, to gamers and PC enthusiasts, with gaming-focused social accounts.
+  - id: ad_activity
+    name: Advertising activity
+    question: >-
+      What evidence is there that the brand buys digital advertising or sponsorships today?
+    weight: 0.30
+    fields: [ad_signals, sponsorships]
+    anchors:
+      1: No ad-platform tags on its site and no sponsorships found.
+      2: Analytics tags only, or a single sponsorship that has ended.
+      3: One ad-platform pixel or tag manager on its site, or one current sponsorship.
+      4: Several ad-platform pixels, or current sponsorships of creators, teams or events.
+      5: Several ad-platform pixels and current sponsorships of creators, esports teams or events.
+  - id: budget_capacity
+    name: Budget capacity
+    question: >-
+      How large is the brand, as a sign of the marketing budget it could spend with a
+      publisher?
+    weight: 0.20
+    fields: [employee_count, revenue_usd, ownership, parent]
+    anchors:
+      1: 50 to 99 employees, with no larger parent company.
+      2: 100 to 249 employees, with no larger parent company.
+      3: 250 to 999 employees, or a smaller brand owned by a larger group.
+      4: 1,000 to 4,999 employees, or a public company.
+      5: 5,000 or more employees, or annual revenue above US$1 billion.
+  - id: recent_launches
+    name: Recent launches
+    question: >-
+      Has the brand launched or announced products recently, creating campaign moments a
+      publisher could sell against?
+    weight: 0.15
+    fields: [recent_launches]
+    anchors:
+      1: No launch found in the last 12 months.
+      2: One minor product refresh in the last 12 months.
+      3: One notable launch in the last 12 months.
+      4: Several launches in the last 12 months.
+      5: A major launch or new product line in the last 6 months, or one announced as coming.
+null_reasons: {}

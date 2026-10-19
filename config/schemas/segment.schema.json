@@ -1,6 +1,58 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "Criterion": {
+      "additionalProperties": false,
+      "description": "One score criterion: a 1-5 rating against written anchors, weighted by code.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "question": {
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "weight": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Weight",
+          "type": "number"
+        },
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "anchors": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Anchors",
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "question",
+        "weight",
+        "fields",
+        "anchors"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
     "Exclusions": {
       "additionalProperties": false,
       "properties": {
@@ -70,10 +122,10 @@
     }
   },
   "additionalProperties": false,
-  "description": "One segment and its ideal-customer rules. Undecided fields are null with a reason.",
+  "description": "One segment and its ideal-customer rules. Undecided fields are null with a reason.\n\nThe score routes a lead: at or above `score_threshold` to research; from `near_miss_min`\nup to the threshold to a person as a near miss; below `near_miss_min` out.",
   "properties": {
     "schema_version": {
-      "const": "1",
+      "const": "2",
       "title": "Schema Version",
       "type": "string"
     },
@@ -124,6 +176,8 @@
     "score_threshold": {
       "anyOf": [
         {
+          "maximum": 100,
+          "minimum": 0,
           "type": "number"
         },
         {
@@ -131,6 +185,33 @@
         }
       ],
       "title": "Score Threshold"
+    },
+    "near_miss_min": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Near Miss Min"
+    },
+    "criteria": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Criteria"
     },
     "null_reasons": {
       "additionalProperties": {
@@ -150,7 +231,9 @@
     "categories",
     "size_range",
     "exclusions",
-    "score_threshold"
+    "score_threshold",
+    "near_miss_min",
+    "criteria"
   ],
   "title": "SegmentConfig",
   "type": "object"
