@@ -13,6 +13,7 @@ from adscout.config import SeedRow, SegmentConfig
 from adscout.export import ExportLine
 from adscout.llm.prices import PriceTable
 from adscout.pipeline.stubs import StubScript
+from adscout.sources.site_list import SiteList
 
 ROOT = Path(__file__).resolve().parents[2]
 JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
@@ -30,6 +31,7 @@ def schema_files() -> dict[str, type[BaseModel]]:
         "config/schemas/seed-row.schema.json": SeedRow,
         "config/schemas/stub-script.schema.json": StubScript,
         "config/schemas/price-table.schema.json": PriceTable,
+        "config/schemas/site-list.schema.json": SiteList,
         "src/adscout/schemas/run-export.schema.json": ExportLine,
     }
 

@@ -1,0 +1,27 @@
+# Synthetic site list for tests: fictional companies on reserved test domains.
+schema_version: "1"
+segment_id: synthetic-demo
+checked_by: tests (synthetic fixture; no site was read)
+approval:
+  approved_by: owner
+  approved_on: 2026-10-19
+  note: Synthetic fixture approval for tests.
+sites:
+  - domain: alpha.test
+    decision: fetch
+    robots_url: https://alpha.test/robots.txt
+    robots_checked_on: 2026-10-19
+    robots_summary: Allows all paths.
+    terms_url: https://alpha.test/terms
+    terms_checked_on: 2026-10-19
+    terms_summary: No clause on automated access.
+    reason: Robots and terms allow reading the home, news and store pages.
+  - domain: bravo.test
+    decision: skip
+    robots_url: https://bravo.test/robots.txt
+    robots_checked_on: 2026-10-19
+    robots_summary: Disallows all paths for every agent.
+    terms_url: null
+    terms_checked_on: null
+    terms_summary: No terms page found.
+    reason: robots.txt disallows every path.

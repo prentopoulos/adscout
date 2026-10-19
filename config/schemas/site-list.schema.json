@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Approval": {
+      "additionalProperties": false,
+      "description": "The owner's approval of the whole list; null until given, with the reason why.",
+      "properties": {
+        "approved_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Approved By"
+        },
+        "approved_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Approved On"
+        },
+        "note": {
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approved_by",
+        "approved_on",
+        "note"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "SiteCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "title": "Domain",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "fetch",
+            "skip"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "robots_url": {
+          "pattern": "^https?://",
+          "title": "Robots Url",
+          "type": "string"
+        },
+        "robots_checked_on": {
+          "format": "date",
+          "title": "Robots Checked On",
+          "type": "string"
+        },
+        "robots_summary": {
+          "minLength": 1,
+          "title": "Robots Summary",
+          "type": "string"
+        },
+        "terms_url": {
+          "anyOf": [
+            {
+              "pattern": "^https?://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Terms Url"
+        },
+        "terms_checked_on": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Terms Checked On"
+        },
+        "terms_summary": {
+          "minLength": 1,
+          "title": "Terms Summary",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain",
+        "decision",
+        "robots_url",
+        "robots_checked_on",
+        "robots_summary",
+        "terms_summary",
+        "reason"
+      ],
+      "title": "SiteCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "checked_by": {
+      "minLength": 1,
+      "title": "Checked By",
+      "type": "string"
+    },
+    "approval": {
+      "$ref": "#/$defs/Approval"
+    },
+    "sites": {
+      "items": {
+        "$ref": "#/$defs/SiteCheck"
+      },
+      "title": "Sites",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "segment_id",
+    "checked_by",
+    "approval",
+    "sites"
+  ],
+  "title": "SiteList",
+  "type": "object"
+}

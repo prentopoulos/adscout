@@ -17,7 +17,7 @@
 ## 3. Enrichment
 
 - [x] 3.1 Polite fetcher (User-Agent, robots.txt, pacing, limits, redirects, retries) on an in-process transport with fixture sites; `source_calls` rows
-- [ ] 3.2 Site-list model and `config/site-checks/` loader; live refusal of unapproved domains
+- [x] 3.2 Site-list model and `config/site-checks/` loader; live refusal of unapproved domains
 - [ ] 3.3 Wikidata and SEC EDGAR clients against recorded fixtures; pixel and tag detection; Haiku extraction; field validators; the real `enrich` step with key-field exits
 
 ## 4. Rules and scoring
