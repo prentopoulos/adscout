@@ -164,16 +164,17 @@ def _categories(candidate: Candidate, categories: Sequence[str], today: date) ->
 
 
 def _sells_in(candidate: Candidate, categories: Sequence[str], today: date) -> Result:
-    items = _strings(candidate.value)
+    items = [item.upper() for item in _strings(candidate.value)]
     kept = sorted({item for item in items if item in ALPHA_2})
     rejected = sorted({item for item in items if item not in ALPHA_2})
     return kept or None, rejected, "not ISO 3166-1 alpha-2 codes"
 
 
 def _hq_country(candidate: Candidate, categories: Sequence[str], today: date) -> Result:
-    if candidate.value not in ALPHA_2:
+    code = candidate.value.upper() if isinstance(candidate.value, str) else candidate.value
+    if code not in ALPHA_2:
         raise Invalid(f"{candidate.value!r} is not an ISO 3166-1 alpha-2 code")
-    return candidate.value, None, None
+    return code, None, None
 
 
 def _ownership(candidate: Candidate, categories: Sequence[str], today: date) -> Result:

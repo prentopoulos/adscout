@@ -10,7 +10,13 @@ whenever its logic changes.
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Literal
+
+from adscout.config import SegmentConfig, load_segment
+from adscout.rules import apply_rules
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 @dataclass(frozen=True)
@@ -43,7 +49,7 @@ def count(inputs: dict[str, Any], key: str) -> int:
     return value
 
 
-def funnel_conservation(inputs: dict[str, Any]) -> Outcome:
+def funnel_conservation(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
     """Per step, kept plus dropped equals the step's input count."""
     entering, kept, dropped = (count(inputs, key) for key in ("entering", "kept", "dropped"))
     metrics: dict[str, float | int | None] = {
@@ -56,7 +62,7 @@ def funnel_conservation(inputs: dict[str, Any]) -> Outcome:
     return Outcome("fail", f"kept {kept} + dropped {dropped} != entering {entering}", metrics)
 
 
-def cost_per_qualified_lead(inputs: dict[str, Any]) -> Outcome:
+def cost_per_qualified_lead(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
     """Reported cost per qualified lead equals spend / qualified, and is null at zero."""
     spend, qualified = amount(inputs, "spend_usd"), count(inputs, "qualified_leads")
     reported = inputs["reported_cost_per_qualified_lead"]
@@ -76,7 +82,38 @@ def cost_per_qualified_lead(inputs: dict[str, Any]) -> Outcome:
     return Outcome("fail", f"reported {reported}, expected {correct}", metrics, reasons)
 
 
-EVALUATORS: dict[str, tuple[str, Callable[[dict[str, Any]], Outcome]]] = {
+def profile_rules(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
+    """The real profile rules on a lead's fields give the case's expected outcome."""
+    path = ROOT / "config" / "segments" / f"{inputs['segment']}.yaml"
+    segment = load_segment(path)
+    if inputs.get("segment_changes"):
+        segment = SegmentConfig.model_validate(
+            segment.model_dump() | inputs["segment_changes"], strict=False
+        )
+    result = apply_rules(segment, inputs["fields"])
+    got = {
+        "outcome": "kept" if result.passed else "exited",
+        "reason": None if result.passed else result.outcome("x" * 36).reason,
+        "failed_rules": sorted(result.failed),
+        "missing": result.missing,
+    }
+    want = {
+        "outcome": expected["outcome"],
+        "reason": expected.get("reason"),
+        "failed_rules": sorted(expected.get("failed_rules", [])),
+        "missing": expected.get("missing", []),
+    }
+    metrics: dict[str, float | int | None] = {"failed_rules": len(result.failed)}
+    detail = "; ".join(result.reasons) or (
+        f"missing {result.missing}" if result.missing else "passes every rule"
+    )
+    if got == want:
+        return Outcome("pass", f"as expected: {detail}", metrics)
+    return Outcome("fail", f"expected {want}, got {got}: {detail}", metrics)
+
+
+EVALUATORS: dict[str, tuple[str, Callable[[dict[str, Any], dict[str, Any]], Outcome]]] = {
     "funnel_conservation": ("2", funnel_conservation),
     "cost_per_qualified_lead": ("2", cost_per_qualified_lead),
+    "profile_rules": ("1", profile_rules),
 }

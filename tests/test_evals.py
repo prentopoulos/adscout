@@ -128,7 +128,7 @@ def test_outcome_that_cannot_be_recorded_is_an_error_record(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     metrics: dict[str, Any] = {"entering": "five"}
-    unrecordable = ("test", lambda inputs: Outcome("pass", "looks fine", metrics))
+    unrecordable = ("test", lambda inputs, expected: Outcome("pass", "looks fine", metrics))
     monkeypatch.setitem(runner.EVALUATORS, "funnel_conservation", unrecordable)
     record = run_case(load_cases(SCAFFOLD)[0], new_run_id(), repetition=0)
     assert record.status == "error"
@@ -141,7 +141,7 @@ def test_input_hash_names_the_case_inputs(monkeypatch: pytest.MonkeyPatch) -> No
     case = load_cases(SCAFFOLD)[0]
     expected = runner.sha256_hex(json.dumps(case.inputs, sort_keys=True).encode("utf-8"))
 
-    def mutating(inputs: dict[str, Any]) -> Outcome:
+    def mutating(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
         inputs.pop("dropped")
         return Outcome("pass", "changed its inputs")
 

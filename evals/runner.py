@@ -90,7 +90,7 @@ def run_case(case: Case, run_id: str, repetition: int, root: Path = ROOT) -> Res
     else:
         version, evaluate = EVALUATORS[case.evaluator]
         try:
-            outcome = evaluate(copy.deepcopy(case.inputs))
+            outcome = evaluate(copy.deepcopy(case.inputs), copy.deepcopy(case.expected))
             status, detail, metrics = outcome.status, outcome.detail, outcome.metrics
             metric_null_reasons = outcome.null_reasons
         except Exception as error:  # an evaluator crash is an error result, not a lost run

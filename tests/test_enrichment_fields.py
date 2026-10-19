@@ -51,7 +51,9 @@ def test_invalid_country_code_is_dropped_and_the_rest_kept() -> None:
     rows = checked("sells_in", ["USA", "CA"])
     assert statuses(rows) == [("valid", ["CA"]), ("dropped", ["USA"])]
     assert rows[1].detail == "not ISO 3166-1 alpha-2 codes"
-    assert statuses(checked("sells_in", ["Canada"])) == [("dropped", ["Canada"])]
+    assert statuses(checked("sells_in", ["Canada"])) == [("dropped", ["CANADA"])]
+    assert statuses(checked("sells_in", ["us", "ca"])) == [("valid", ["CA", "US"])]
+    assert statuses(checked("hq_country", "tw")) == [("valid", "TW")]
 
 
 def test_categories_come_from_the_segment_list() -> None:
