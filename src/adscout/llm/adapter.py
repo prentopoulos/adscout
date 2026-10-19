@@ -84,6 +84,8 @@ class ModelRequest:
     tools: list[ToolUnionParam] = field(default_factory=list)
     output_schema: dict[str, Any] | None = None
     effort: Effort | None = None
+    # Forcing a tool is refused by Sonnet 5.5; only Haiku requests may set it.
+    tool_choice: dict[str, Any] | None = None
 
     def params(self) -> dict[str, Any]:
         params: dict[str, Any] = {
@@ -94,6 +96,8 @@ class ModelRequest:
         }
         if self.tools:
             params["tools"] = self.tools
+        if self.tool_choice is not None:
+            params["tool_choice"] = self.tool_choice
         output_config: dict[str, Any] = {}
         if self.effort:
             output_config["effort"] = self.effort

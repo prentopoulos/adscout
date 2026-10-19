@@ -377,6 +377,40 @@ the grilling round; question numbers are those the owner answered.
     cost per brief is ≤3×; otherwise single-agent becomes the default and multi-agent stays
     as `--research-design multi`. Every repeat is reported.
 
+**As built, research (tasks 5.2–5.5, 2026-10-19).** Refinements within decisions 24–29:
+- **Worker loop.** Each turn is one adapter call with the role's exact registry tools; the
+  web search tool's `max_uses` is the worker's remaining searches (at least 1, so a last
+  turn may overshoot the search cap by one, recorded as a cap hit). Near a cap the worker is
+  told to submit, and a Haiku worker's last turn forces `submit_findings`; Sonnet refuses a
+  forced tool, so a Sonnet worker is told only. A refused `fetch_page` (provenance, blocked
+  domain, page cap) is answered as a tool error and recorded as a refused `source_calls`
+  row. Pages on the company's own site are always fetchable; any other URL must have come
+  from this worker's searches or the seed URLs, which are the home page and the enriched
+  launches' source URLs. Third-party pages keep robots.txt.
+- **Fan-out.** LangGraph `Send` runs the workers at most three at once; per-lead state (run
+  ID, the shared lead budget) travels in the graph state, so one `Researcher` serves many
+  leads. A worker that crashes becomes a failed worker; a budget stop ends the run.
+- **Verification** uses every page fetched for the lead by any worker. Numbers are compared
+  after removing thousands separators, and digits glued to a preceding letter ("K1") are
+  names, not numbers. **People:** a claim whose text or quote has a role word ("CEO",
+  "founder", "said", "according to") next to a capitalized name pair that is not the
+  company's name is dropped as naming a person, and is stored with its text and quote
+  withheld, so the name never reaches the database (PROJECT.md §5). The test is a
+  heuristic: it may drop company claims, and it cannot catch every name, which the owner's
+  spot-check (task 10.7) also watches for. Migration 0002 was amended for this
+  (`names_individual`, `drop_reason`) before any database applied it: no `data/` folder
+  existed on 2026-10-19.
+- **Plan and merge.** The plan's unknown workers are ignored, URLs are stripped from its
+  questions, and a worker it omits gets the code's default questions; a failed plan uses
+  the defaults. The merge may cite only verified claim IDs and use only their numbers; a
+  failed merge leaves the brief partial with no summary points.
+- **Open for the owner before the comparison plan (task 9.4):** this decision gives the
+  baseline "the same total budget (9 searches, 6 pages, 12 steps)", while the team's
+  per-lead caps allow 20 calls (3 workers × 6, plus plan and merge), and the research-team
+  spec scenario says the designs' step caps are equal. The build follows the numbers above:
+  equal searches and pages, 12 steps for the baseline and 20 calls for the team. The plan
+  should either accept that difference or set one step cap for both.
+
 ### Drafts
 
 30. **Draft loop (owner, R3 Q5).** The writer outputs structured sentences, each with

@@ -92,7 +92,7 @@ def search_launches(
         ]
         result = adapter.call(replace(request, messages=paused), context, "retry")
     blocks = [block.model_dump() for block in result.message.content]
-    audits = _audit(adapter, context, result, blocks)
+    audits = audit_searches(adapter, context, result, blocks)
     allowed = {url: call_id for call_id, urls in audits for url in urls}
     launches = next(
         (
@@ -125,7 +125,7 @@ def search_launches(
     return SearchOutcome(rows, f"one web search; {len(launches)} launches submitted")
 
 
-def _audit(
+def audit_searches(
     adapter: ModelAdapter, context: CallContext, result: ModelResult, blocks: list[dict[str, Any]]
 ) -> list[tuple[str, list[str]]]:
     """One `source_calls` row per search, at $0; returns each row's ID and result URLs."""

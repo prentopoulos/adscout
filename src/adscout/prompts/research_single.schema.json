@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "topic": {"type": "string", "enum": ["audience_channels", "ad_activity", "launches"]},
+          "text": {"type": "string"},
+          "source_url": {"type": "string"},
+          "quote": {"type": "string"}
+        },
+        "required": ["topic", "text", "source_url", "quote"],
+        "additionalProperties": false
+      }
+    },
+    "gaps": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["claims", "gaps"],
+  "additionalProperties": false
+}

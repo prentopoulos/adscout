@@ -47,7 +47,9 @@ erDiagram
         INTEGER url_fetched_in_run
         INTEGER quote_found
         INTEGER numbers_ok
+        INTEGER names_individual
         INTEGER verified
+        TEXT drop_reason
         TEXT verifier_version
         TEXT created_at
     }

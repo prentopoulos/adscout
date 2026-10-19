@@ -271,7 +271,8 @@ CREATE TABLE enrichment_fields (
 CREATE INDEX enrichment_fields_by_lead ON enrichment_fields (lead_id, run_id);
 
 -- Every claim a research agent emitted, kept or dropped by the verifier (design decision 27).
--- claim_key is the ID the merge and the writer cite, unique within the brief.
+-- claim_key is the ID the merge and the writer cite, unique within the brief. A claim that
+-- names a person is kept only as a count: its text and quote are withheld (PROJECT.md §5).
 CREATE TABLE claims (
     claim_id INTEGER PRIMARY KEY,
     brief_id INTEGER NOT NULL REFERENCES briefs (brief_id),
@@ -285,12 +286,16 @@ CREATE TABLE claims (
     url_fetched_in_run INTEGER NOT NULL CHECK (url_fetched_in_run IN (0, 1)),
     quote_found INTEGER NOT NULL CHECK (quote_found IN (0, 1)),
     numbers_ok INTEGER NOT NULL CHECK (numbers_ok IN (0, 1)),
+    names_individual INTEGER NOT NULL DEFAULT 0 CHECK (names_individual IN (0, 1)),
     verified INTEGER NOT NULL CHECK (verified IN (0, 1)),
+    drop_reason TEXT,
     verifier_version TEXT NOT NULL,
     created_at TEXT NOT NULL,
     UNIQUE (brief_id, claim_key),
-    CHECK (verified = (url_fetched_in_run AND quote_found AND numbers_ok)),
-    CHECK (verified = 0 OR (fetch_call_id IS NOT NULL AND length(quote) >= 20))
+    CHECK (verified = (url_fetched_in_run AND quote_found AND numbers_ok AND NOT names_individual)),
+    CHECK ((verified = 1) = (drop_reason IS NULL)),
+    CHECK (verified = 0 OR (fetch_call_id IS NOT NULL AND length(quote) >= 20)),
+    CHECK (names_individual = 0 OR quote = '')
 ) STRICT;
 
 -- Phase 2 drafts: structured sentences with supports, rule-check results, critic notes.

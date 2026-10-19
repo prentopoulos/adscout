@@ -29,10 +29,10 @@
 ## 5. Research team
 
 - [ ] 5.1 Agent registry and the pipeline, research and draft graphs built from it
-- [ ] 5.2 Worker loop: pinned `web_search` with direct callers, `max_uses`, blocked domains and location; `fetch_page` with the provenance and egress rules; `submit_findings`; per-worker and per-lead caps
-- [ ] 5.3 Lead plan and merge calls and the strict handoff models
-- [ ] 5.4 Claim verifier, `claims` storage and the verifier case set
-- [ ] 5.5 Brief outcomes (`research_failed`, `research_partial`) and `--research-design single`
+- [x] 5.2 Worker loop: pinned `web_search` with direct callers, `max_uses`, blocked domains and location; `fetch_page` with the provenance and egress rules; `submit_findings`; per-worker and per-lead caps
+- [x] 5.3 Lead plan and merge calls and the strict handoff models
+- [x] 5.4 Claim verifier, `claims` storage and the verifier case set
+- [x] 5.5 Brief outcomes (`research_failed`, `research_partial`) and `--research-design single` (the step takes the design; the `adscout run` flag is wired with the real pipeline in 5.1)
 
 ## 6. Drafts
 

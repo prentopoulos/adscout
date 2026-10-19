@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "worker": {"type": "string"},
+          "questions": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["worker", "questions"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["assignments"],
+  "additionalProperties": false
+}

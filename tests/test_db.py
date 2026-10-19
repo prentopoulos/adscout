@@ -471,9 +471,9 @@ def insert_brief(connection: sqlite3.Connection) -> int:
 def insert_claim(connection: sqlite3.Connection, brief_id: int, quote: str, key: str) -> None:
     connection.execute(
         "INSERT INTO claims (brief_id, claim_key, agent_name, topic, text, source_url, quote, "
-        "url_fetched_in_run, quote_found, numbers_ok, verified, verifier_version, created_at) "
-        "VALUES (?, ?, 'worker_ads', 'ad_activity', 'Runs ads.', 'https://example.test/a', ?, "
-        "1, 0, 1, 0, 'v1', 't')",
+        "url_fetched_in_run, quote_found, numbers_ok, verified, drop_reason, verifier_version, "
+        "created_at) VALUES (?, ?, 'worker_ads', 'ad_activity', 'Runs ads.', "
+        "'https://example.test/a', ?, 1, 0, 1, 0, 'quote not on the page', 'v1', 't')",
         (brief_id, key, quote),
     )
 
@@ -587,3 +587,18 @@ def test_step_spans_are_roots_and_agent_spans_are_named(tmp_path: Path) -> None:
         span("3" * 16, "invoke_agent", SPAN, None)
     with pytest.raises(sqlite3.IntegrityError, match="UNIQUE"):
         span("4" * 16, "step", None, None)
+
+
+def test_a_claim_naming_a_person_keeps_no_quote(tmp_path: Path) -> None:
+    connection = migrated(tmp_path)
+    insert_lead(connection)
+    brief_id = insert_brief(connection)
+    insert = (
+        "INSERT INTO claims (brief_id, claim_key, agent_name, topic, text, source_url, quote, "
+        "url_fetched_in_run, quote_found, numbers_ok, names_individual, verified, drop_reason, "
+        "verifier_version, created_at) VALUES (?, ?, 'worker_ads', 'ad_activity', 'withheld', "
+        "'https://example.test/a', ?, 1, 1, 1, 1, 0, 'it names a person', 'v1', 't')"
+    )
+    connection.execute(insert, (brief_id, "D1", ""))
+    with pytest.raises(sqlite3.IntegrityError, match="CHECK"):
+        connection.execute(insert, (brief_id, "D2", "the founder Jane Example said so"))

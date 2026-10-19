@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Any, Literal
 
 from adscout.config import SegmentConfig, load_segment
+from adscout.research.handoffs import Claim
+from adscout.research.verifier import FetchedPage, drop_reason, normalize_url, verify
 from adscout.rules import apply_rules
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,8 +114,24 @@ def profile_rules(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
     return Outcome("fail", f"expected {want}, got {got}: {detail}", metrics)
 
 
+def claim_verifier(inputs: dict[str, Any], expected: dict[str, Any]) -> Outcome:
+    """The real claim verifier keeps or drops the claim as the case expects, for its reason."""
+    pages = {
+        normalize_url(page["url"]): FetchedPage(page["url"], page["text"], f"call-{number}")
+        for number, page in enumerate(inputs["pages"])
+    }
+    [checked] = verify(inputs["worker"], [Claim(**inputs["claim"])], pages, inputs["company"])
+    got = {"verified": checked.verified, "reason": drop_reason(checked)}
+    want = {"verified": expected["verified"], "reason": expected.get("reason")}
+    metrics: dict[str, float | int | None] = {"verified": int(checked.verified)}
+    if got == want:
+        return Outcome("pass", f"as expected: {got['reason'] or 'kept'}", metrics)
+    return Outcome("fail", f"expected {want}, got {got}", metrics)
+
+
 EVALUATORS: dict[str, tuple[str, Callable[[dict[str, Any], dict[str, Any]], Outcome]]] = {
     "funnel_conservation": ("2", funnel_conservation),
     "cost_per_qualified_lead": ("2", cost_per_qualified_lead),
     "profile_rules": ("1", profile_rules),
+    "claim_verifier": ("1", claim_verifier),
 }

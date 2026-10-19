@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "summary_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {"type": "string"},
+          "claim_ids": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["text", "claim_ids"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["summary_points"],
+  "additionalProperties": false
+}
