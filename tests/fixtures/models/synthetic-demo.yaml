@@ -1,0 +1,31 @@
+# Scripted model answers for the synthetic fixture companies (fake mode). Every rating,
+# reason and token count here is made up for tests; none is a measurement of a real model.
+answers:
+  score:
+    alpha.test:
+      - input_tokens: 1800
+        output_tokens: 160
+        data:
+          ratings:
+            - {criterion: audience, rating: 5, reason: Gaming peripherals first., cited_fields: [categories]}
+            - {criterion: ad_activity, rating: 4, reason: Ad pixels on the site., cited_fields: [ad_signals]}
+            - {criterion: budget_capacity, rating: 4, reason: About 1500 employees., cited_fields: [employee_count]}
+            - {criterion: recent_launches, rating: 3, reason: One launch this year., cited_fields: [recent_launches]}
+    foxtrot.test:
+      - input_tokens: 1700
+        output_tokens: 150
+        data:
+          ratings:
+            - {criterion: audience, rating: 4, reason: A gaming line., cited_fields: [categories]}
+            - {criterion: ad_activity, rating: 4, reason: Several ad pixels., cited_fields: [ad_signals]}
+            - {criterion: budget_capacity, rating: 3, reason: About 300 employees., cited_fields: [employee_count]}
+            - {criterion: recent_launches, rating: 1, reason: No launch found., cited_fields: []}
+    golf.test:
+      - input_tokens: 1700
+        output_tokens: 150
+        data:
+          ratings:
+            - {criterion: audience, rating: 3, reason: Some gaming products., cited_fields: [categories]}
+            - {criterion: ad_activity, rating: 2, reason: Analytics only., cited_fields: [ad_signals]}
+            - {criterion: budget_capacity, rating: 2, reason: About 120 employees., cited_fields: [employee_count]}
+            - {criterion: recent_launches, rating: 1, reason: No launch found., cited_fields: []}

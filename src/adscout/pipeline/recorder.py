@@ -42,7 +42,7 @@ BUDGETS: dict[str, float] = {"model_calls": 0, "network_calls": 0}
 class Snapshot:
     """Validated content a run used, stored once per content hash."""
 
-    kind: Literal["segment", "seed_list", "stub_script"]
+    kind: Literal["segment", "seed_list", "stub_script", "site_list", "media_kit", "price_table"]
     content_hash: str
     content: Any
 
@@ -131,6 +131,7 @@ class Run:
         calls: CallSink | None = None,
         budgets: dict[str, float] | None = None,
         prompt_version: str = PROMPT_VERSION,
+        options: dict[str, object] | None = None,
     ) -> None:
         self.connection = connection
         # Model call records from the adapter, written with each step, failed ones included.
@@ -138,6 +139,8 @@ class Run:
         self.budgets = budgets if budgets is not None else dict(BUDGETS)
         # The prompt set's version, which every lead this run creates carries (decision 21).
         self.prompt_version = prompt_version
+        # Choices that shape a run's outputs: model tier, score repeats, spend cap, design.
+        self.options = options or {}
         self.kind = kind
         self.segment_id = segment_id
         self.source = source
@@ -177,8 +180,10 @@ class Run:
                 "INSERT INTO runs (run_id, kind, segment_id, status, started_at, source, "
                 "code_revision, code_dirty, lock_digest, package_version, agent_version, "
                 "prompt_version, python_version, platform, schema_version, icp_config_hash, "
-                "seed_list_hash, stub_script_hash, budgets_json, null_reasons_json, pid, host) "
-                "VALUES (?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "seed_list_hash, stub_script_hash, budgets_json, null_reasons_json, pid, host, "
+                "site_list_hash, media_kit_hash, price_table_hash, options_json) "
+                "VALUES (?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                "?, ?, ?, ?)",
                 (
                     self.run_id,
                     self.kind,
@@ -201,6 +206,10 @@ class Run:
                     json.dumps(self.null_reasons, sort_keys=True),
                     os.getpid(),
                     platform.node(),
+                    self.hashes.get("site_list_hash"),
+                    self.hashes.get("media_kit_hash"),
+                    self.hashes.get("price_table_hash"),
+                    json.dumps(self.options, sort_keys=True),
                 ),
             )
         return self.run_id

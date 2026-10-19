@@ -7,6 +7,7 @@ import subprocess
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from decimal import Decimal
 from importlib.metadata import version
 from pathlib import Path
 
@@ -15,7 +16,11 @@ from adscout.config import ConfigError, load_segment
 from adscout.db.connection import connect, resolve_db_path
 from adscout.db.migrate import MigrationError, upgrade
 from adscout.export import ExportRefused, export_lines, write_export
+from adscout.llm.adapter import LiveModeRefused
+from adscout.llm.invoke import HAIKU, SONNET
+from adscout.pipeline.models import ModelChoice, ModelsNotChosen
 from adscout.pipeline.recorder import RunFailed, RunInProgress
+from adscout.pipeline.rescore import run_rescore
 from adscout.pipeline.run import (
     DatabaseNotReady,
     SegmentFiles,
@@ -25,6 +30,8 @@ from adscout.pipeline.run import (
     run_stub_approval,
 )
 from adscout.report import funnel, list_runs
+
+MODELS = {"haiku": HAIKU, "sonnet": SONNET}
 
 Handler = Callable[[argparse.Namespace], int]
 DEFAULT_CONFIG_DIR = Path("config")
@@ -155,6 +162,41 @@ def export(args: argparse.Namespace) -> int:
     return 0
 
 
+def rescore(args: argparse.Namespace) -> int:
+    try:
+        segment = load_segment(args.config_dir / "segments" / f"{args.segment}.yaml")
+        choice = model_choice(args)
+        with database(args) as connection:
+            run_id = run_rescore(
+                connection, segment, choice, model=MODELS[args.model], repeats=args.score_repeats
+            )
+    except (*EXPECTED_ERRORS, ModelsNotChosen, LiveModeRefused, ValueError) as error:
+        return fail("rescore", error)
+    print(f"rescore run {run_id} finished")
+    return 0
+
+
+def model_choice(args: argparse.Namespace) -> ModelChoice:
+    cap = Decimal(args.max_spend_usd) if args.max_spend_usd is not None else None
+    return ModelChoice(
+        live=args.live,
+        cap_usd=cap,
+        replay_run_id=args.replay,
+        scripted=args.fixture_models,
+    )
+
+
+def add_model_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--live", action="store_true", help="call the Anthropic API (paid)")
+    parser.add_argument(
+        "--max-spend-usd", help="this run's spend cap in US dollars; required with --live"
+    )
+    parser.add_argument("--replay", metavar="RUN_ID", help="replay a recorded live run at $0")
+    parser.add_argument(
+        "--fixture-models", type=Path, help="scripted model answers for synthetic fixtures"
+    )
+
+
 def add_db_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--db", help="database file (default: $ADSCOUT_DB, else data/adscout.db)")
 
@@ -202,6 +244,15 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser = commands.add_parser("sync", help="write approved leads to the CRM")
     add_segment_options(sync_parser)
     sync_parser.set_defaults(handler=sync)
+
+    rescore_parser = commands.add_parser(
+        "rescore", help="score a segment's stored enrichments again (no enrichment calls)"
+    )
+    add_segment_options(rescore_parser)
+    add_model_options(rescore_parser)
+    rescore_parser.add_argument("--model", choices=sorted(MODELS), default="sonnet")
+    rescore_parser.add_argument("--score-repeats", type=int, default=1)
+    rescore_parser.set_defaults(handler=rescore)
 
     runs_parser = commands.add_parser("runs", help="list recorded runs")
     runs_parser.add_argument("--segment", help="only this segment's runs")
