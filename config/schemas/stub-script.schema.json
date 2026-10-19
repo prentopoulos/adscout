@@ -108,7 +108,10 @@
             "excluded",
             "out_of_profile",
             "missing_key_fields",
+            "score_failed",
+            "near_miss",
             "below_threshold",
+            "research_failed",
             "draft_failed",
             "rejected"
           ],
