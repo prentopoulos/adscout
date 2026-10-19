@@ -44,7 +44,7 @@
 
 - [x] 7.1 Context builders per role, adapter tool-allowlist enforcement, the no-write-tool test, the canary test and the `LANGSMITH_TRACING` guard
 - [x] 7.2 Ten planted-injection pages with clean twins and their offline tests through the code paths
-- [ ] 7.3 Check the OWASP Agentic item names against the official 2026 document and update the design's map
+- [x] 7.3 Check the OWASP Agentic item names against the official 2026 document and update the design's map
 
 ## 8. Observability and diagrams
 

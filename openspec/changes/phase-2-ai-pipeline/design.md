@@ -564,32 +564,37 @@ The CRM writer and the Phase 3 send function are code, not agents, and act only 
 person approves. The system as a whole holds all three legs, separated by agent sessions and
 human approval.
 
-| OWASP item | Control and test |
+| OWASP item (2026 LLM ID) | Control and test |
 |---|---|
-| LLM01 prompt injection | Fixed roster and tools, data delimiters, planted pages |
-| LLM02 sensitive information disclosure | No B in any context, canary test, company-level guards |
-| LLM03 supply chain | `uv.lock`, pip-audit, pinned model IDs and tool versions, no MCP |
-| LLM04 data and model poisoning | Labels hash, versioned cases, quotes required |
-| LLM05 improper output handling | Strict schemas; model-proposed URLs pass the provenance rule; Phase 3 escapes UI |
-| LLM06 excessive agency | Registry allowlists, read-only workers, human approval |
-| LLM07 system prompt leakage | Prompts are committed and hold no secret |
-| LLM08 vector and embedding weaknesses | Not applicable (no index) |
-| LLM09 misinformation | Verifier, owner spot-check, draft rule checker |
-| LLM10 unbounded consumption | `max_tokens`, step, page and search caps, run cap, workspace limit |
+| LLM01 prompt injection (LLM01) | Fixed roster and tools, data delimiters, hidden elements skipped, claims carrying a link dropped, planted pages |
+| LLM02 sensitive information disclosure (LLM02) | No B in any context, canary test, company-level guards |
+| LLM03 supply chain (LLM04) | `uv.lock`, pip-audit, pinned model IDs and tool versions, no MCP |
+| LLM04 data and model poisoning (LLM05) | Labels hash, versioned cases, quotes required |
+| LLM05 improper output handling (LLM10) | Strict schemas; model-proposed URLs pass the provenance rule; Phase 3 escapes UI |
+| LLM06 excessive agency (LLM03) | Registry allowlists, read-only workers, human approval |
+| LLM07 system prompt leakage (LLM08 hidden context exposure) | Prompts, schemas and tool definitions are committed and hold no secret, credential or private data; no control relies on their secrecy |
+| LLM08 vector and embedding weaknesses (LLM09) | Not applicable (no index) |
+| LLM09 misinformation (LLM07) | Verifier, owner spot-check, draft rule checker |
+| LLM10 unbounded consumption (LLM06) | `max_tokens`, step, page and search caps, run cap, workspace limit |
 | ASI01 agent goal hijack | Roster and tools fixed in code; goal-change page |
 | ASI02 tool misuse and exploitation | Caps, URL provenance, SSRF guard |
 | ASI03 identity and privilege abuse | Key only in the adapter; approver kind recorded |
-| ASI04 agentic supply chain | No dynamic tool discovery; pinned tool versions; prompt digest |
-| ASI05 unexpected code execution | No code-execution tool; dynamic filtering off |
+| ASI04 agentic supply chain vulnerabilities | No dynamic tool discovery; pinned tool versions; prompt digest |
+| ASI05 unexpected code execution (RCE) | No code-execution tool; dynamic filtering off |
 | ASI06 memory and context poisoning | No long-term memory; fresh context per lead; cache keyed by hash |
 | ASI07 insecure inter-agent communication | In-process typed handoffs |
 | ASI08 cascading failures | Failed worker makes a partial brief; bounded retries; one fallback |
 | ASI09 human-agent trust exploitation | Verification status, quotes and critic notes shown to the approver |
 | ASI10 rogue agents | Caps, run cap as kill switch, a record per call |
 
-OWASP LLM items are from the Top 10 for LLM Applications 2025 (genai.owasp.org/llm-top-10,
-current); ASI items from the Top 10 for Agentic Applications 2026 (published 2025-12-09;
-item names from secondary summaries, to be checked against the official PDF in task 6.1).
+OWASP LLM items are from the Top 10 for LLM Applications 2025, as the agent-security spec
+requires; the 2026 edition (version 2026, dated 2026-08-04, genai.owasp.org/resource/
+owasp-genai-llm-top-10-2026) superseded it, reranking the same risks and re-scoping
+System Prompt Leakage as Hidden Context Exposure, so each row also gives its 2026 ID.
+ASI items are from the Top 10 for Agentic Applications 2026 (version 2026, December 2025,
+genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026); task 7.3
+checked every name against that PDF's contents on 2026-10-19, correcting ASI04 and ASI05.
+Moving the spec to the 2026 LLM list is the owner's call.
 
 ## Data model
 
