@@ -78,8 +78,11 @@ secrets, documentation, specifications and deterministic evaluation cases. Provi
 and billing need separate authorized live evaluations. The local MVP does not claim those
 results. A sandbox message is local simulated delivery, not proof of email deliverability.
 
+Private recruiter slides and a captioned two-minute walkthrough are prepared; their
+script and demo disclosures are in [the walkthrough](docs/walkthrough.md).
+
 Deferred: the 30-company labelled study, live model/design comparisons, cloud CRM/inbox
-and tracing, container packaging, hosted CI and a walkthrough video. Existing live adapters
+and tracing, container packaging and hosted CI. Existing live adapters
 remain behind the account, source-access and spend gates in [PROJECT.md](PROJECT.md).
 
 This repository is private and has no publication licence yet. Python dependencies and

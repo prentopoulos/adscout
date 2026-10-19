@@ -5,5 +5,5 @@
 - [x] 3. Build the local review/dashboard and one-command offline demo.
 - [x] 4. Finish local architecture diagrams with drift checks and documentation.
 - [x] 5.1 Verify negative paths, run the gate and review changes (518 tests, 90 eval tests, 94.81% coverage; manual self-review and clean dependency audit).
-- [ ] 5.2 Inspect browser flows and desktop/narrow layouts (tool loopback timeout; local-file preview blocked by browser policy; pending in a normal local browser).
+- [x] 5.2 Inspect browser flows and desktop/narrow layouts (current build on loopback port 8767: approval, CRM sync, inbox, unsubscribe refusal, warnings, simulated deal and rejection verified; 390 px viewport fits with table scrolling inside its container).
 - [x] 6. Record evidence, limitations and follow-up work in HANDOFF and AI_OPS.

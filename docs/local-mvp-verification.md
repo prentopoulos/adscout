@@ -60,13 +60,17 @@ after the live-study work. No merge or phase archive has occurred.
   review/evidence page to a client in the same process. The raw probe is ignored locally.
   The socket-blocked tests exercise the full POST workflow through the real HTTP handler.
 
-## Browser limitation and evidence limits
+## Browser verification and evidence limits
 
 Chrome navigation to the running loopback server timed out in this tool environment.
 A static local-file preview was then explicitly blocked by browser URL policy; no bypass
-was attempted. Visual desktop/mobile inspection and a click-through in a normal browser
-remain unverified. This is recorded as pending, not a browser pass. Run the README's five
-steps at http://127.0.0.1:8765 from the owner's normal session to finish that check.
+was attempted. In the subsequent showcase session, Chrome reached the current build on
+a fresh loopback port (8767), avoiding an older server on 8765. The actual browser flow
+passed: review, approval, CRM sync, sandbox placement, unsubscribe, refused re-delivery,
+visible research/critic warnings, simulated deal and rejection. Independent database reads
+confirm one sandbox message, one suppression and a simulated won deal of $2,500 USD.
+At 390 px, body width is 375 px; the table scrolls inside its 341 px container and review
+columns stack. Captures are preserved privately with the recruiter media build.
 
 All model outputs, company pages and demo scores are fixtures, not provider observations.
 No live accuracy, billing agreement, model-tier winner, multi-agent improvement, email

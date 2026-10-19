@@ -60,7 +60,8 @@ companies and the existing fixture publisher. Standard-library HTTP and SQLite r
 current stack; no new service is required. See `openspec/changes/local-mvp/`.
 
 The 30-company study, owner labels, live runs, model/design comparisons, real publisher
-kit, hosted CRM/inbox/tracing, CI hosting, Docker and walkthrough video are deferred.
+kit, hosted CRM/inbox/tracing, CI hosting and Docker are deferred. The walkthrough video
+was subsequently requested by the owner and prepared privately with recruiter slides.
 Original Phase 2 tasks remain open as follow-up; a local MVP is not live validation or
 completion of the original phase. All constitution rules and operator gates still apply.
 The next implementation is authorized on the current branch without another phase session.

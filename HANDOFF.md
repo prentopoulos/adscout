@@ -12,8 +12,10 @@ No remote, push, merge, paid call or account creation has occurred.
 
 The local implementation is built: real pipeline code using synthetic sites and scripted
 model responses; a loopback workspace for human review, local CRM sync, local sandbox
-messages/unsubscribe and simulated deals; generated diagrams and a README. Browser visual
-inspection remains pending because the tool environment could not reach the loopback URL.
+messages/unsubscribe and simulated deals; generated diagrams and a README. Browser flows
+and desktop/narrow layouts are now verified. The owner subsequently requested recruiter
+slides and a video; six editable Figma slides, a PDF and a captioned two-minute MP4 were
+created privately using actual app captures and the owner's supplied artifact styling.
 See [verification and review](docs/local-mvp-verification.md).
 
 ## Run the MVP
@@ -68,8 +70,11 @@ No credentials needed. The inbox is SQLite, not an email service; all revenue is
   no known vulnerabilities found; editable AdScout skipped. No dependency changed for MVP.
 - Actual loopback HTTP smoke in an isolated process: HTTP 200 with review and evidence
   content. Full POST workflow tested through the real handler with sockets blocked.
-  Chrome timed out on loopback; file preview was explicitly blocked by browser URL policy.
-  No visual desktop/mobile or actual browser click-through pass is claimed.
+  Earlier Chrome loopback timeouts and the blocked file preview are retained in the record.
+  The subsequent browser pass used the current build on a fresh loopback port (8767),
+  avoiding an older server still bound to 8765. Actual approval, CRM sync, inbox placement,
+  unsubscribe plus refused re-delivery, review warnings, simulated deal and rejection pass.
+  At 390 px, body width is 375 px and the table scrolls inside its 341 px container.
 - Manual self-review against local spec and constitution completed; findings/regressions
   recorded in `docs/local-mvp-verification.md`. No independent reviewer available here.
   Original whole-phase closure review is still open.
@@ -88,7 +93,10 @@ comparison's unequal step caps (single 12 versus team 20) before its plan is com
 The person-name detector is heuristic and needs owner scrutiny on live claims. No tier
 winner, multi-agent advantage or measured business outcome has been established.
 
-Deferred from original Phase 3: cloud CRM/inbox/tracing, hosted CI, Docker and video.
+Deferred from original Phase 3: cloud CRM/inbox/tracing, hosted CI and Docker. Recruiter
+slides and video are prepared privately; the MP4 is not committed or published. The timed
+script is `docs/walkthrough.md`; final files and verification are in ignored
+`.local/showcase/deliverables` and `.local/showcase/delivery.json`.
 No real outreach or personal-contact data is available. Publication and exposure gates
 remain unresolved. The local inbox is for software tests, not approval of an email service.
 
@@ -115,8 +123,7 @@ not AI behavior. Detailed historical evidence is retained in Git history.
 
 ## Exact next action
 
-From a normal local terminal, run `adscout demo` and follow the README's five browser steps;
-inspect desktop and narrow-screen layout. That is the remaining local verification item.
-Then choose whether to resume deferred live validation or keep the offline MVP as the
-portfolio cut. Do not merge/archive original Phase 2 merely because the local demo works;
+The local browser check is complete. The owner can review the private recruiter deck/PDF
+and captioned video. Next choose whether to resume deferred live validation or keep the
+offline MVP as the portfolio cut. Do not merge/archive original Phase 2 because the demo works;
 its original gated tasks and whole-branch closure review remain open.
