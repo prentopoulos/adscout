@@ -4,8 +4,25 @@ Read PROJECT.md and current user instructions. Inspect actual Git/OpenSpec state
 
 ## Current checkpoint
 
-Phase 2 (AI pipeline) is specified, not built. Branch `phase-2/ai-pipeline`, OpenSpec change
-`phase-2-ai-pipeline`; no task has started.
+Phase 2 (AI pipeline) is in progress on branch `phase-2/ai-pipeline`, OpenSpec change
+`phase-2-ai-pipeline`. Tasks 1.1–1.4, 2.1–2.6 and 3.1 are done (13 of 46), each in its own
+commit with the gate green; `tasks.md` is the record.
+
+- Built so far: runtime dependencies anthropic 1.15.0, httpx2 2.14.0 and langgraph 1.2.16
+  (pip-audit clean); the LangGraph spike passed, so LangGraph stays (outcome in design
+  decision 24); migration 0002; segment config v2 with the rubric; the dated price table;
+  the model adapter (fake, replay and live modes, spend reservation, budget errors,
+  retry and fallback, record-and-replay cache, prompt files with versions); the polite
+  fetcher with robots.txt, pacing and egress rules. As-built notes are in the design under
+  decisions 24 and 21 and the data model.
+- Owner to review before the first live run: the score anchor wording in
+  `config/segments/gaming-hardware-na.yaml` was drafted by the agent (criteria, weights,
+  threshold and band are the owner's).
+- Found by the spike: any of `LANGSMITH_TRACING`, `LANGSMITH_TRACING_V2`, `LANGCHAIN_TRACING`
+  or `LANGCHAIN_TRACING_V2` set to `true` makes LangGraph post graph state to LangSmith;
+  task 7.1's guard must refuse all four.
+- Open for task 5.4: a claim quote copied from a page could contain a person's name, which
+  §5 forbids storing; the verifier or the claims writer needs a rule for it.
 
 - Grilling ran on 2026-10-18 in three rounds; the owner accepted every recommendation. On the
   way the owner merged the playbook's Phases 2–6 into two MVP phases (Phase 2: every model
@@ -140,7 +157,7 @@ its verification record is in commit 8c79625's HANDOFF.md.
 
 ## Next action
 
-On `phase-2/ai-pipeline`, start the OpenSpec apply workflow at task 1.1, then the LangGraph
-spike (1.2), whose result decides how the registry drives orchestration. Offline tasks need no
-gate; live tasks (section 10) wait for the owner's account, credit and approvals in PROJECT.md
-§6.
+On `phase-2/ai-pipeline`, continue the OpenSpec apply workflow at task 3.2 (the site-list
+model and loader). Offline tasks need no gate; desk research (9.1, 9.2) runs under the
+owner's scoped decisions in PROJECT.md §6; live tasks (section 10) wait for the owner's
+account, credit and approvals.
