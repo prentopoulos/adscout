@@ -290,6 +290,16 @@ the grilling round; question numbers are those the owner answered.
     `near_miss` to a person with no research spend; below 55 exits `below_threshold`;
     invalid output after retry and fallback exits `score_failed`.
 
+    **As built (task 4.2, 2026-10-19).** The scorer runs at effort `low` (settled: decision
+    14 fixes no effort for scoring, the prompt asks for short reasons, and the tier
+    evaluation measures quality, so the cheapest effort is the baseline). Code refuses an
+    answer that misses or repeats a criterion, rates outside 1 to 5, gives no reason, or cites
+    a field the criterion does not allow or the lead does not have; each is invalid output,
+    retried once with the problem stated and then sent to Haiku. The criteria, anchors and
+    allowed fields are fixed text before the cache breakpoint; the lead's fields follow as
+    data. Scores are rounded to four decimals; a repeat's samples are each stored, and the
+    first decides the route.
+
 ### Research team
 
 24. **Framework (owner, R3 Q1).** LangGraph as orchestration only: one `StateGraph` for the

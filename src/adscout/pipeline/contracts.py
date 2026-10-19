@@ -17,11 +17,21 @@ ExitReason = Literal[
     "excluded",
     "out_of_profile",
     "missing_key_fields",
+    "score_failed",
+    "near_miss",
     "below_threshold",
+    "research_failed",
     "draft_failed",
     "rejected",
 ]
-Flag = Literal["research_partial", "crm_conflict"]
+# Exits a person reviews (Phase 2 spec, pipeline-run): the approval queue lists them.
+FOR_A_PERSON: tuple[ExitReason, ...] = (
+    "score_failed",
+    "near_miss",
+    "research_failed",
+    "draft_failed",
+)
+Flag = Literal["research_partial", "critic_unresolved", "crm_conflict"]
 Implementation = Literal["stub", "real"]
 
 
