@@ -13,6 +13,7 @@ records every response into the replay cache. Robots, pacing and limits run in a
 
 import hashlib
 import json
+import re
 import sqlite3
 import threading
 import time
@@ -169,22 +170,33 @@ def live_contact(env_file: Path = ENV_FILE) -> str:
 
 
 class FixtureTransport(httpx2.BaseTransport):
-    """Serves `<root>/<host>/<path>` files; `/` is `index.html`. Missing files are 404."""
+    """Serves `<root>/<host>/<path>` files; `/` is `index.html`. Missing files are 404.
+
+    A query string becomes `__<query>` after the path, and characters Windows forbids in
+    file names (such as `:` in `Special:EntityData`) become `_`. A `.json` path or one with a
+    `__format=json`-style query is served as JSON.
+    """
 
     def __init__(self, root: Path) -> None:
         self.root = root.resolve()
 
     def handle_request(self, request: httpx2.Request) -> httpx2.Response:
         path = request.url.path.lstrip("/") or "index.html"
-        if request.url.query:
-            path += "?" + request.url.query.decode()
-        target = (self.root / request.url.host / path).resolve()
+        query = request.url.query.decode()
+        if query:
+            path += "__" + query
+        safe = re.sub(r'[\\:*?"<>|]', "_", path)
+        target = (self.root / request.url.host / safe).resolve()
         if not target.is_relative_to(self.root) or not target.is_file():
             return httpx2.Response(404, text="not found")
-        content_type = {
-            ".json": "application/json",
-            ".txt": "text/plain; charset=utf-8",
-        }.get(target.suffix.lower(), "text/html; charset=utf-8")
+        json_body = target.suffix.lower() == ".json" or "format=json" in query
+        content_type = (
+            "application/json"
+            if json_body
+            else "text/plain; charset=utf-8"
+            if target.suffix.lower() == ".txt"
+            else "text/html; charset=utf-8"
+        )
         return httpx2.Response(
             200, headers={"content-type": content_type}, content=target.read_bytes()
         )
