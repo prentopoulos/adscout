@@ -4,62 +4,26 @@
 ![Status: local MVP](https://img.shields.io/badge/status-local%20MVP-blue)
 ![Licence: MIT](https://img.shields.io/badge/licence-MIT-green)
 
-**Which brands fit a publisher's audience, and what should the first pitch to each one say?**
+**Which brands should a publisher's sales team call first, and what should they say?**
 
-AdScout is an advertiser research and pitch review tool for a gaming and tech publisher. It
-takes a market segment, such as gaming hardware brands in North America, and for each brand it
-gathers company facts, scores how well the brand fits the publisher's audience, researches it
-with a small team of AI agents, and drafts a first pitch backed by source quotes. A person
-approves or rejects every draft. Approved prospects flow into a local CRM sandbox, a sandbox
-inbox and a funnel dashboard with simulated revenue.
+AdScout researches brands that could buy ads from a gaming and tech publisher. It ranks them,
+writes a cited research brief for the best ones, and drafts a first pitch. A person approves
+every pitch.
 
-- **Start here:** [the six-slide deck](docs/adscout-deck.pdf) explains what the project is, why
-  it matters and how it works.
-- **Watch:** [the walkthrough video](docs/adscout-walkthrough.mp4) (2:00, with captions).
-- **Read:** [the architecture](docs/architecture/agents.md) and
-  [operations and evaluation notes](AI_OPS.md).
+- **Start here:** [six-slide deck](docs/adscout-deck.pdf)
+- **Watch:** [2-minute walkthrough](docs/adscout-walkthrough.mp4) (captions, no sound needed)
 
-The research and pitch steps are AI-powered: Claude agents research each brand and draft the
-pitch, and a separate check matches every claim to a quote from its source page.
+![Review screen: the pitch draft beside its source quotes](docs/assets/review-screen.png)
 
-![The review screen: a pitch draft beside its verified source quotes](docs/assets/review-screen.png)
-
-*The review screen on the demo: the pitch draft on the left, the source quote behind each claim
-on the right, and the approval controls. Synthetic company, fixture publisher.*
-
-## What you get
-
-- A **ranked list of prospects** with a fit score and the reasons behind it, including the
-  brands that dropped out and why (missing data, poor fit, failed research).
-- **Cited research** for each brand: every claim links to a source URL and a matching quote.
-- A **pitch draft** written by one agent, checked by a rule checker and reviewed by a critic
-  agent, with any unresolved concerns shown before approval.
-- **Human approval** tied to the exact subject and body reviewed. Editing either one needs a
-  new approval.
-- A **local CRM sandbox** and **sandbox inbox** with a working unsubscribe link, plus a
-  **funnel dashboard** that connects approved prospects to simulated deals.
-- **Cost and trace records** for every model and source call, and a spend cap checked in code
-  before any paid call.
-
-It is **not** an email sender, a real CRM integration or evidence of sales results. The demo
-uses synthetic companies and scripted model responses. **No email is sent**, and revenue is
-simulated.
-
-| Term | Plain meaning |
+| | |
 | --- | --- |
-| Segment | The market being prospected, with rules for which companies qualify. |
-| Fit score | A 0–100 score from the segment rules and a rated rubric, with the reasons kept. |
-| Research team | A lead agent and three read-only worker agents that search and read company pages. |
-| Claim check | Code that confirms each research claim appears, quoted, on its source page. |
-| Critic | A second agent that reviews the pitch draft and flags concerns for the reviewer. |
-| Sandbox | A local SQLite stand-in for a CRM or inbox. Nothing leaves your machine. |
-| Simulated revenue | A demo deal value entered by the user, not a measured sales result. |
+| **Who uses it** | A sales or partnerships rep at a digital publisher |
+| **What goes in** | A market segment, e.g. gaming hardware brands in North America, and the rules for a good customer |
+| **What comes out** | A scored list, a cited brief for each strong fit, and a draft pitch waiting for approval |
 
-## Try it — no account or key needed
+## Try it (no account or API key)
 
-You need **Git** and **[uv](https://docs.astral.sh/uv/getting-started/installation/)**. uv
-installs Python 3.13 and the locked packages on first use, so the first run needs internet
-access. The demo then runs offline.
+Needs Git and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```bash
 git clone https://github.com/prentopoulos/adscout.git
@@ -67,116 +31,164 @@ cd adscout
 uv run --locked adscout demo
 ```
 
-Open **http://127.0.0.1:8765**. Stop it with Ctrl+C. The first run creates `data/demo.db`;
-later runs reuse it and keep your decisions. Use `--db data/another-demo.db` for a fresh demo.
+Open **http://127.0.0.1:8765**, then:
 
-1. Select **Alpha Gear** and read its draft beside its source quotes.
-2. Click **Approve draft**, then **Sync approved to local CRM**.
-3. Click **Place in sandbox** and open the local message and its unsubscribe link.
-4. Click **Simulate $2,500 won** to see the revenue view update.
-5. Open **Hotel Gear**, whose critic concerns are still unresolved, and approve or reject it.
+1. Open **Alpha Gear**: read the draft and its source quotes.
+2. **Approve draft**, then **Sync approved to local CRM**.
+3. **Place in sandbox** and check the message's unsubscribe link.
+4. **Simulate $2,500 won** and watch the revenue view update.
 
-The demo runs the real pipeline code for validation, scoring, claim checks and draft rules.
-Only the model responses and company pages are scripted, so demo scores say nothing about live
-model quality.
+Demo companies are synthetic and model replies are scripted. **No email is sent.** Revenue is
+simulated.
 
-## Inspect a run
-
-```bash
-uv run --locked adscout runs --db data/demo.db
-uv run --locked adscout funnel RUN_ID --db data/demo.db
-uv run --locked adscout trace RUN_ID --db data/demo.db --lead alpha.test
-uv run --locked adscout export RUN_ID --db data/demo.db
-uv run --locked adscout check RUN_ID --db data/demo.db
-```
-
-`runs` lists pipeline runs, `funnel` shows how many prospects reached each stage, `trace` shows
-every step, call and cost for one company, `export` writes the run's records, and `check`
-re-verifies a run's stored results.
-
-## How it works
+## How one run works
 
 ```mermaid
 flowchart LR
-    S[Seed companies] --> E[Enrich and validate]
-    E --> Q[Rules and fit score]
-    Q --> R[Research team and claim check]
-    R --> D[Writer, rule checker and critic]
-    D --> H[Human review]
-    H --> C[Local CRM sandbox]
-    C --> I[Local sandbox inbox]
-    C --> F[Funnel and simulated revenue]
+    SEG([Segment and rules]) --> EN
+    EN["Enrich<br/><i>Haiku</i>"] --> RU["Check rules<br/><i>code</i>"]
+    RU --> SC["Score<br/><i>Sonnet + code</i>"]
+    SC -- "60+" --> RT
+    SC -- "55–59" --> P1([Person decides])
+    SC -- "under 55" --> X([Stop])
+    subgraph RT [Research team]
+        direction TB
+        L["Lead<br/><i>Sonnet</i>"] --> W1["Audience<br/><i>Haiku</i>"] & W2["Ad activity<br/><i>Haiku</i>"] & W3["Launches<br/><i>Haiku</i>"]
+        W1 & W2 & W3 --> CC["Claim check<br/><i>code</i>"]
+    end
+    RT --> DL
+    subgraph DL [Draft loop]
+        direction TB
+        WR["Writer<br/><i>Sonnet</i>"] --> RC["Rule checker<br/><i>code</i>"] --> CR["Critic<br/><i>Sonnet</i>"]
+        CR -. "rejected, max 2 rewrites" .-> WR
+    end
+    DL --> AP([Person approves])
+    AP --> CRM[(CRM sandbox)] --> INB[(Sandbox inbox)]
+    CRM --> FUN[(Revenue funnel)]
+
+    classDef model fill:#F6E8DC,stroke:#B4520F,color:#16202B
+    classDef code fill:#E3E9F7,stroke:#2453C9,color:#16202B
+    classDef person fill:#FBE9F0,stroke:#B5346A,color:#16202B
+    class EN,SC,L,W1,W2,W3,WR,CR model
+    class RU,CC,RC code
+    class SEG,P1,AP,X person
 ```
 
-1. **Enrich and validate.** Each seed company gets its public facts, and code rejects missing
-   or malformed fields instead of guessing.
-2. **Score.** Fixed rules screen out companies outside the segment. A model rates the rest
-   against a rubric, and code does the arithmetic for the final fit score.
-3. **Research.** A lead agent splits the work across three read-only workers that search and
-   read company pages. Every claim they return must carry a URL and a quote, and code checks
-   the quote is really on the page.
-4. **Draft.** A writer agent drafts the pitch from verified research and the publisher's media
-   kit. A rule checker enforces the required content, and a critic agent reviews the draft.
-5. **Review and follow-through.** A person approves or rejects each draft. Approved prospects
-   sync to the CRM sandbox, can be placed in the sandbox inbox, and feed the funnel dashboard.
+Orange: AI model call. Blue: plain code. Pink: a person.
 
-The agent workflow runs on LangGraph with Claude models through the Anthropic API. Agents only
-get read-only tools, with limits on steps, pages and workers enforced in code. Every model and
-source call records its tokens, cost and trace ID, and a run reserves budget before a paid call.
-Company pages are fetched politely: the fetcher follows `robots.txt` and treats page text as
-data, never as instructions.
+1. **Enrich.** Read each brand's own site, Wikidata and SEC filings. Code validates every field.
+2. **Check rules.** Drop brands that miss size, region or category.
+3. **Score.** A model rates four criteria from 1 to 5. Code turns them into a score out of 100.
+4. **Research.** A lead agent splits the work among three workers. Code keeps a claim only if
+   its quote is on a page fetched in this run.
+5. **Draft.** A writer drafts from checked facts only. A rule checker and a critic review it.
+6. **Approve.** A person approves or rejects. Only then does code write to the CRM sandbox.
 
-More detail:
-- [Agent flow](docs/architecture/agent-flow.html) and [agent registry](docs/architecture/agents.md)
-- [C4 architecture model](docs/architecture/workspace.dsl) and [data model](docs/architecture/erd.md)
-- [Operations, evaluation and recovery](AI_OPS.md)
+## For technical readers
 
-## Limits
+**Four agent patterns, each where it fits**
 
-- **Data:** demo companies are synthetic and the publisher is a fixture. Personal contact data
-  is never real.
-- **Quality:** the offline evaluation suite tests rules, claim checks, draft rules and
-  prompt-injection pages with scripted responses. A labelled 30-company study of live model
-  quality and cost per qualified lead has not been run yet.
-- **Delivery:** the CRM and inbox are local sandboxes. A sandbox message is not proof of email
-  deliverability.
-- **Scope:** single user, local only. The server listens on 127.0.0.1.
+| Step | Pattern | Why |
+| --- | --- | --- |
+| Enrich | Prompt chaining | Fixed steps in a fixed order |
+| Score | Routing | The score decides where each brand goes next |
+| Research | Orchestrator–workers | The path depends on what the agents find |
+| Draft | Evaluator–optimizer | One model writes, another reviews |
 
-Next: run the labelled live study (qualification precision, citation accuracy, cost per
-qualified lead and minutes per account), then connect a hosted CRM sandbox and package the app.
+**Stack choices**
+
+| Part | Choice | Instead of |
+| --- | --- | --- |
+| Orchestration | LangGraph, for the flow only | crewAI |
+| Model access | Own adapter on the Anthropic SDK: fake, replay and live modes | OpenAI SDK |
+| Models | Haiku workers, Sonnet lead: cheapest tier that meets the bar | One tier for all |
+| Fit score | 1–5 ratings, code does the maths, so every score is explainable | One model number |
+| Database | SQLite; SQL views feed the dashboard | DuckDB |
+| Review UI | Local web page on 127.0.0.1 | Streamlit |
+| Evaluation | pytest cases with JSON Schema, offline on every change | promptfoo |
+| Tracing | Local spans and cost table | LangSmith |
+| Diagrams | C4 as code; the build fails if they drift | Hand-drawn |
+
+**Guardrails, enforced in code and tests**
+
+- **Read-only agents.** Research agents can search and read. They have no send, CRM or file tools.
+- **Web pages are data.** Page text is never followed as an instruction. Ten planted attack
+  pages, each with a clean twin, test this.
+- **Every claim cited.** A pitch can only use facts that passed the claim check.
+- **Approval is exact.** It covers the subject and body; any later edit blocks sending.
+- **One way to write.** One CRM writer and one send function, every write logged.
+- **Spend caps.** Each paid call reserves its cost first. Past the run's cap, the run stops.
+  Per company, research is capped at 20 calls, 9 searches, 6 pages and $0.30 on Haiku.
+- **No real personal data.** Contact data is synthetic. Only one adapter reads the API key.
+
+**Cost and tracing.** Every model and source call records tokens, search fees, cost from a
+dated price table and a trace ID. Replays of recorded calls cost $0.
+
+```bash
+uv run --locked adscout runs   --db data/demo.db           # list runs
+uv run --locked adscout funnel RUN_ID --db data/demo.db    # counts per step and exit reasons
+uv run --locked adscout trace  RUN_ID --db data/demo.db    # each lead's calls, tokens, cost, time
+uv run --locked adscout check  RUN_ID --db data/demo.db    # re-validate a run independently
+```
+
+**The revenue loop**
+
+```mermaid
+flowchart LR
+    A["Lead tagged<br/>segment, source,<br/>prompt and agent version"] --> B["CRM record<br/>with score, brief<br/>and approved pitch"]
+    B --> C["Deals joined to leads<br/>in SQL views"]
+    C --> D["Targeting, score weights<br/>and spend follow<br/>what pays"]
+    D --> A
+```
+
+More: [agent flow](docs/architecture/agent-flow.html) ·
+[agent registry](docs/architecture/agents.md) · [C4 model](docs/architecture/workspace.dsl) ·
+[data model](docs/architecture/erd.md) · [operations](AI_OPS.md)
+
+## Testing
+
+| 518 tests | 90 evaluation cases | 94.8% coverage | 12-check quality gate |
+| :---: | :---: | :---: | :---: |
+
+| Evaluation cases | Count |
+| --- | ---: |
+| Profile rules: size, region, category | 31 |
+| Claim check against source pages | 21 |
+| Draft rules: every fact supported | 30 |
+| Planted injection pages, with clean twins | 10 |
+
+```bash
+uv run --locked python scripts/gate.py
+```
+
+The gate runs formatting, strict types, tests with the network blocked, coverage, a secrets
+scan, link checks, specs and the evaluation cases. Gate run of 19 October 2026.
+
+All of this is offline, on synthetic companies and scripted model replies. It proves the logic
+and the safety rules, **not live model quality**.
+
+## Next
+
+1. Live run on 5 real brands, then 30, under a $45 spending cap.
+2. Label 30 brands by hand; measure precision in the top 10 and cost per qualified lead.
+3. Compare Haiku with Sonnet, and the agent team with a single agent.
+4. HubSpot test account, Langfuse tracing and hosted CI.
 
 ## Project layout
 
 ```text
-src/adscout/     Pipeline, agents, scoring, research, drafts, CRM sandbox, workspace UI and CLI
-config/          Segments, seed lists, schemas, model prices and demo fixtures
-evals/           Offline evaluation cases
-tests/           Unit and end-to-end tests; no network
-openspec/        Requirements, and each phase's proposal, design decisions and tasks
-docs/            Deck, video, screenshots, architecture diagrams and walkthrough script
-scripts/         The quality gate
+src/adscout/   Pipeline, agents, scoring, research, drafts, CRM sandbox, review UI, CLI
+config/        Segments, seed lists, schemas, model prices, demo fixtures
+evals/         Offline evaluation cases
+tests/         Unit and end-to-end tests, no network
+openspec/      Specs and each phase's proposal, design decisions and tasks
+docs/          Deck, video, screenshots, architecture diagrams
 ```
 
-## Development
+Built phase by phase with [OpenSpec](https://github.com/Fission-AI/OpenSpec).
 
-```bash
-uv sync --locked
-uv run --locked python scripts/gate.py
-```
+## Licence
 
-The gate checks formatting and strict types, runs the tests with network access blocked and at
-least 90% coverage, scans for secrets, checks documentation links, validates the specs and
-commit messages, and runs the offline evaluation cases. Tests use fixtures, so they need no
-account or key.
-
-The project was built phase by phase with [OpenSpec](https://github.com/Fission-AI/OpenSpec):
-each phase's decisions are in `openspec/changes/`.
-
-## Licence and credits
-
-This project's code and documentation are released under the [MIT License](LICENSE).
-Python dependencies keep their own licences, recorded in the lockfile. The vendored grilling
-skill is MIT-licensed by its author; see [its licence](.agents/skills/grilling/LICENSE).
-
-AdScout is a portfolio project. It is not affiliated with or endorsed by any company or
-publisher named in its inputs.
+[MIT](LICENSE). Dependencies keep their own licences (see the lockfile). The vendored grilling
+skill is MIT-licensed by its author ([licence](.agents/skills/grilling/LICENSE)).
+A portfolio project, not affiliated with any company named in its inputs.
