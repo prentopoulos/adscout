@@ -3,7 +3,6 @@
 import argparse
 import contextlib
 import hmac
-import json
 import secrets
 import sqlite3
 from functools import partial
@@ -23,7 +22,6 @@ from adscout.workspace import (
     ActionRefused,
     claim_rows,
     decide,
-    draft_notes,
     get_draft,
     leads,
     review_digest,
@@ -70,14 +68,6 @@ FLAGS = {
     "critic_unresolved": "Critic concern unresolved",
     "research_partial": "Research partly failed",
 }
-STEPS = {
-    "source": "Sourced",
-    "enrich": "Enriched",
-    "rules": "Passed rules",
-    "score": "Qualified",
-    "research": "Researched",
-    "draft": "Drafted",
-}
 
 
 def pill(key: str) -> str:
@@ -117,10 +107,11 @@ def review(connection: sqlite3.Connection, draft_id: int, csrf: str) -> str:
         "".join(
             f'<li><span class="key">{e(c["claim_key"])}</span>'
             f'<span class="claim">{e(c["text"])}</span>'
-            f"<blockquote>{e(c['quote'])}</blockquote>{source_link(c['source_url'])}</li>"
+            + ("" if c["quote"] == c["text"] else f"<blockquote>{e(c['quote'])}</blockquote>")
+            + f"{source_link(c['source_url'])}</li>"
             for c in claims
         )
-        or '<li><span class="claim">No verified claims in this draft run.</span></li>'
+        or '<li><span class="claim">No verified claims.</span></li>'
     )
     flags = connection.execute(
         "SELECT flag, detail FROM lead_step_outcomes WHERE lead_id=? AND run_id=? "
@@ -152,14 +143,13 @@ def review(connection: sqlite3.Connection, draft_id: int, csrf: str) -> str:
     return (
         f'<section id="review" class="panel"><div class="review-head"><div>'
         f"<h2>{e(draft['name'])}</h2><p>{e(draft['domain'])} · Revision {draft['revision']}"
-        f" · {e(draft['data_mode'])} data</p></div>{pill(draft['status'])}</div>"
+        f"</p></div>{pill(draft['status'])}</div>"
         + (f'<div class="warnings">{warnings}</div>' if warnings else "")
         + '<div class="review-grid"><article><p class="label">Pitch draft</p>'
         f'<h3 class="subject">{e(draft["subject"])}</h3>'
         f'<pre class="message">{e(draft["body"])}</pre>{actions}</article>'
         f'<article><p class="label">Verified research</p><ol class="sources">{sources}</ol>'
-        "<details><summary>Checks and critic notes</summary>"
-        f'<pre class="notes">{e(draft_notes(draft))}</pre></details></article></div></section>'
+        "</article></div></section>"
     )
 
 
@@ -178,14 +168,10 @@ def render(
         (segment,),
     ).fetchone()
     mode = run["source"] if run else "no run"
-    demo_label = (
-        "Synthetic demo · scripted model responses" if mode in ("fixture", "stub") else mode
-    )
+    demo_label = "Synthetic data" if mode in ("fixture", "stub") else mode.capitalize()
     pending = sum(r["status"] == "pending_approval" for r in rows)
     crm = sum(bool(r["in_crm"]) for r in rows)
     won = sum(r["amount_cents"] or 0 for r in rows if r["stage"] == "won")
-    cost = json.loads(run["cost_summary_json"] or "{}") if run else {}
-    total_cost = cost.get("total", {}).get("cost_usd", 0)
     if draft_id is None:
         draft_id = next((r["draft_id"] for r in rows if r["status"] == "pending_approval"), None)
     if draft_id is not None and get_draft(connection, draft_id)["segment_id"] != segment:
@@ -206,7 +192,7 @@ def render(
                 "Place in sandbox",
                 style="secondary small",
             )
-        if row["in_crm"]:
+        if row["in_crm"] and row["stage"] != "won":
             actions += form(
                 "deal",
                 csrf,
@@ -219,35 +205,21 @@ def render(
         else:
             fit = f"<b>{row['score']:g}</b>" + bar(row["score"] / 100, muted=row["score"] < 60)
         key = row["status"] or row["exit_reason"] or "sourced"
-        detail = STATUS.get(key, ("", "", ""))[2]
         if row["stage"] == "won":
-            detail = f"Simulated deal won · ${(row['amount_cents'] or 0) / 100:,.0f}"
-        crm_cell = (
-            '<span class="crm synced">Synced</span>'
-            if row["in_crm"]
-            else '<span class="crm">—</span>'
-        )
+            crm_cell = (
+                f'<span class="crm synced">Won ${(row["amount_cents"] or 0) / 100:,.0f}</span>'
+            )
+        elif row["in_crm"]:
+            crm_cell = '<span class="crm synced">Synced</span>'
+        else:
+            crm_cell = '<span class="crm">—</span>'
         selected = ' class="is-selected"' if row["draft_id"] == draft_id else ""
         table_rows.append(
             f'<tr{selected}><td><div class="fit">{fit}</div></td>'
             f'<td><div class="company">{name}<small>{e(row["domain"])}</small></div></td>'
-            f'<td>{pill(key)}<span class="detail">{e(detail)}</span></td>'
+            f"<td>{pill(key)}</td>"
             f'<td>{crm_cell}</td><td><div class="row-actions">{actions}</div></td></tr>'
         )
-    steps = connection.execute(
-        "SELECT step, entering, kept FROM step_runs WHERE run_id=? ORDER BY seq",
-        (run["run_id"] if run else "",),
-    ).fetchall()
-    top = max([s["entering"] or 0 for s in steps] + [1])
-    bars = (
-        "".join(
-            f'<div class="funnel-row"><span class="step">{e(STEPS.get(s["step"], s["step"]))}'
-            f"</span>{bar((s['kept'] or 0) / top)}<b>{s['kept'] or 0}</b>"
-            f'<span class="muted">of {s["entering"] or 0}</span></div>'
-            for s in steps
-        )
-        or '<p class="empty">No run yet. Start with <code>adscout demo</code>.</p>'
-    )
     messages = connection.execute(
         "SELECT m.*, EXISTS(SELECT 1 FROM sandbox_suppressions s WHERE s.lead_id=m.lead_id) "
         "suppressed FROM sandbox_messages m JOIN leads l ON l.lead_id=m.lead_id "
@@ -265,12 +237,10 @@ def render(
             + f'</summary><div class="inbox-body"><p class="inbox-meta">To {e(m["destination"])}'
             f" · From {e(m['sender'])} · {e(str(m['created_at'])[:16].replace('T', ' '))}</p>"
             f'<pre class="message">{e(m["body"])}</pre>'
-            f'<a href="/unsubscribe?id={e(m["message_id"])}">'
-            "Unsubscribe this synthetic lead</a></div></details>"
+            f'<a href="/unsubscribe?id={e(m["message_id"])}">Unsubscribe</a></div></details>'
             for m in messages
         )
-        or '<p class="empty">No messages yet. Approve a draft, sync it to the local CRM, '
-        "then place it in the sandbox.</p>"
+        or '<p class="empty">No messages.</p>'
     )
     review_html = review(connection, draft_id, csrf) if draft_id is not None else ""
     banner = (
@@ -278,51 +248,33 @@ def render(
         if notice
         else ""
     )
-    sync = form("sync", csrf, {}, "Sync approved to local CRM", style="secondary")
-    table_body = (
-        "".join(table_rows)
-        or '<tr><td class="empty" colspan="5">No prospects yet. Run the demo.</td></tr>'
-    )
-    run_status = e(run["status"] if run else "none")
-    cost_label = "Estimated fixture model cost" if mode != "live" else "Recorded model spend"
+    sync = form("sync", csrf, {}, "Sync approved to CRM", style="secondary")
+    table_body = "".join(table_rows) or '<tr><td class="empty" colspan="5">No prospects.</td></tr>'
     title = segment.replace("-", " ").capitalize()
     attention = " attention" if pending else ""
     return page(
-        "AdScout workspace",
+        "AdScout",
         f"""<aside class="sidebar">
 <a class="brand" href="/"><span class="brand-mark">A</span>AdScout</a>
-<p class="workspace-name">Segment<strong>{e(title)}</strong></p>
 <nav class="nav" aria-label="Workspace">
 <a href="#prospects">Prospects<span class="count">{len(rows)}</span></a>
 <a href="#review">Review<span class="count{attention}">{pending}</span></a>
-<a href="#funnel">Funnel</a>
-<a href="#inbox">Sandbox inbox<span class="count">{len(messages)}</span></a></nav>
-<div class="sidebar-foot"><span>Local MVP · single user</span><span>No email is sent</span></div>
+<a href="#inbox">Inbox<span class="count">{len(messages)}</span></a></nav>
 </aside><main>
-<header class="topbar"><div><h1>Prospects</h1><p>{e(title)} · ranked by fit score</p></div>
-<span class="mode">{e(demo_label)}</span></header>{banner}
+<header class="topbar"><h1>{e(title)}</h1><span class="mode">{e(demo_label)}</span></header>
+{banner}
 <dl class="stats"><div class="stat"><dt>Companies</dt><dd>{len(rows)}</dd></div>
 <div class="stat"><dt>Awaiting review</dt><dd>{pending}</dd></div>
-<div class="stat"><dt>In local CRM</dt><dd>{crm}</dd></div>
+<div class="stat"><dt>In CRM</dt><dd>{crm}</dd></div>
 <div class="stat"><dt>simulated won revenue</dt><dd>${won / 100:,.0f}<small>USD</small></dd></div>
 </dl>
-<section id="prospects"><div class="section-head"><div><h2>Ranked prospects</h2>
-<p>Open a company to review its draft and sources.</p></div>{sync}</div>
-<div class="panel panel-scroll"><table><thead><tr><th>Fit score</th><th>Company</th>
-<th>Status</th><th>Local CRM</th><th><span class="row-actions">Sandbox actions</span></th>
+<section id="prospects"><div class="section-head"><h2>Prospects</h2>{sync}</div>
+<div class="panel panel-scroll"><table><thead><tr><th>Fit</th><th>Company</th>
+<th>Status</th><th>CRM</th><th></th>
 </tr></thead><tbody>{table_body}</tbody></table></div></section>
 {review_html}
-<section id="funnel"><div class="section-head"><div><h2>Run funnel</h2>
-<p>Companies kept at each step of the latest pipeline run · {run_status}</p></div></div>
-<div class="panel"><div class="funnel">{bars}</div>
-<div class="panel-foot"><span>{cost_label}: <strong>${float(total_cost):.6f} USD</strong></span>
-<span>Revenue is a simulated scenario entered after CRM sync, not a sales result.</span></div>
-</div></section>
-<section id="inbox"><div class="section-head"><div><h2>Sandbox inbox</h2>
-<p>Synthetic messages stored on this PC. No email is sent.</p></div></div>
+<section id="inbox"><div class="section-head"><h2>Sandbox inbox</h2></div>
 <div class="panel inbox">{inbox}</div></section>
-<footer>AdScout portfolio MVP · synthetic companies and scripted model responses ·
-live quality studies and cloud integrations are deferred</footer>
 </main>""",
     )
 

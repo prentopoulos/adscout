@@ -179,7 +179,6 @@ def test_render_escapes_draft_and_evidence(db) -> None:
     assert "&lt;script&gt;" in page and "<script>" not in page
     assert "&lt;img onerror=boom&gt;" in page
     assert "https://alpha.test" in page and "Verified research" in page
-    assert "Estimated fixture model cost" in page and "$0.000000" not in page
     hotel = pending(connection, "hotel.test")
     page = render(connection, SEGMENT, "csrf", hotel["draft_id"])
     assert "<strong>Critic concern unresolved</strong>" in page

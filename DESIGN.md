@@ -7,12 +7,12 @@ actions, selection and progress, white panels with 1px borders and a faint shado
 #f6f6f7 page, a light grey sidebar with counts, and the system UI font at 14px with
 tabular numerals.
 
-Status is a pill with a dot and a plain label (Needs review, Approved, Near miss), toned
-blue, green, amber, red or grey, plus a one-line reason beneath. Codes never appear raw.
-An amber pill marks the synthetic demo; revenue is always labelled simulated.
+Status is a square-cornered pill with a plain label (Needs review, Approved, Near miss),
+toned blue, green, amber, red or grey. No dots, no explanatory captions; codes never appear
+raw. A plain "Synthetic data" badge marks the demo; revenue is always labelled simulated.
 
 The ranked table leads into a review panel: the draft on the left, keyed source quotes on
-the right, approve and reject at the foot of the draft. Funnel bars and the sandbox inbox
-follow on the same page. The page has no scripts and no inline styles (the content policy
-forbids them), so bar widths use 5% step classes. Under 860px the sidebar becomes a top
-row, review columns stack and the table scrolls in its own panel.
+the right, approve and reject at the foot of the draft. The sandbox inbox follows on the
+same page; there is no funnel or footer. The page has no scripts and no inline styles (the
+content policy forbids them), so bar widths use 5% step classes. Under 860px the sidebar
+becomes a top row, review columns stack and the table scrolls in its own panel.

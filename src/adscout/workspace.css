@@ -39,11 +39,10 @@ h1,h2,h3,h4,p{margin:0}
 
 /* Main */
 main{margin-left:232px;padding:28px 40px 48px;max-width:1440px}
-.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:24px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:24px}
 .topbar h1{font-size:22px;font-weight:650;letter-spacing:-.01em}
 .topbar p{margin-top:4px;color:var(--text-2)}
-.mode{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--amber-line);background:var(--amber-bg);color:var(--amber);border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
-.mode::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.mode{display:inline-flex;align-items:center;padding:4px 10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text-2);border-radius:var(--radius-sm);font-size:12px;font-weight:500;white-space:nowrap}
 
 /* Notices */
 .notice{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;margin-bottom:20px;border:1px solid #b7e4c7;background:var(--green-bg);color:var(--green);border-radius:var(--radius);font-weight:500}
@@ -96,8 +95,7 @@ tbody tr.is-selected td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
 .empty{padding:28px 20px;color:var(--text-2);text-align:center}
 
 /* Status pills */
-.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--grey-bg);color:var(--grey)}
-.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--grey-bg);color:var(--grey)}
 .pill.blue{background:var(--blue-bg);color:var(--blue)}
 .pill.green{background:var(--green-bg);color:var(--green)}
 .pill.amber{background:var(--amber-bg);color:var(--amber)}
