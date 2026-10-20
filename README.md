@@ -97,17 +97,17 @@ Orange: AI model call. Blue: plain code. Pink: a person.
 
 **Stack choices**
 
-| Part | Choice | Instead of |
-| --- | --- | --- |
-| Orchestration | LangGraph, for the flow only | crewAI |
-| Model access | Own adapter on the Anthropic SDK: fake, replay and live modes | OpenAI SDK |
-| Models | Haiku workers, Sonnet lead: cheapest tier that meets the bar | One tier for all |
-| Fit score | 1–5 ratings, code does the maths, so every score is explainable | One model number |
-| Database | SQLite; SQL views feed the dashboard | DuckDB |
-| Review UI | Local web page on 127.0.0.1 | Streamlit |
-| Evaluation | pytest cases with JSON Schema, offline on every change | promptfoo |
-| Tracing | Local spans and cost table | LangSmith |
-| Diagrams | C4 as code; the build fails if they drift | Hand-drawn |
+| Part | Choice |
+| --- | --- |
+| Orchestration | LangGraph, for the flow only |
+| Model access | Own adapter on the Anthropic SDK: fake, replay and live modes |
+| Models | Haiku workers, Sonnet lead: cheapest tier that meets the bar |
+| Fit score | 1–5 ratings, code does the maths, so every score is explainable |
+| Database | SQLite; SQL views feed the dashboard |
+| Review UI | Local web page on 127.0.0.1 |
+| Evaluation | pytest cases with JSON Schema, offline on every change |
+| Tracing | Local spans and cost table |
+| Diagrams | C4 as code; the build fails if they drift |
 
 **Guardrails, enforced in code and tests**
 
@@ -129,16 +129,6 @@ uv run --locked adscout runs   --db data/demo.db           # list runs
 uv run --locked adscout funnel RUN_ID --db data/demo.db    # counts per step and exit reasons
 uv run --locked adscout trace  RUN_ID --db data/demo.db    # each lead's calls, tokens, cost, time
 uv run --locked adscout check  RUN_ID --db data/demo.db    # re-validate a run independently
-```
-
-**The revenue loop**
-
-```mermaid
-flowchart LR
-    A["Lead tagged<br/>segment, source,<br/>prompt and agent version"] --> B["CRM record<br/>with score, brief<br/>and approved pitch"]
-    B --> C["Deals joined to leads<br/>in SQL views"]
-    C --> D["Targeting, score weights<br/>and spend follow<br/>what pays"]
-    D --> A
 ```
 
 More: [agent flow](docs/architecture/agent-flow.html) ·
