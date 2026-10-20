@@ -36,8 +36,7 @@ def test_version_command_prints_metadata_version() -> None:
 def test_metadata_guards_against_upload() -> None:
     meta = metadata.metadata("adscout")
     assert "Private :: Do Not Upload" in (meta.get_all("Classifier") or [])
-    assert meta.get("License") is None
-    assert meta.get("License-Expression") is None
+    assert meta.get("License-Expression") == "MIT"
 
 
 @pytest.mark.filterwarnings("ignore:A test tried to use socket")

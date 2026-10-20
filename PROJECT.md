@@ -307,9 +307,13 @@ side.
 
 ### ⛔ Before publishing
 
-- [ ] Operator confirms adding a Git remote, repository visibility, pushing, and publishing
+- [x] Operator confirms adding a Git remote, repository visibility, pushing, and publishing
   any README, deck or video, after the showcase skill's pre-publication check (no secrets, no
   real personal data, simulated revenue labelled, no claimed affiliation).
+- Decision (owner, 2026-10-19): publish the full repository and its Git history publicly on
+  GitHub as `prentopoulos/adscout` under the MIT licence, with the README, the six-slide deck,
+  the two-minute walkthrough and demo screenshots. The job playbook PDF, `data/`, `.local/`,
+  `.env` and `.codex/` stay private. History secret scan found only made-up test keys.
 - Decision (owner, 2026-10-18): a private claude.ai artifact shown only to the owner, such as
   the architecture diagrams, is not publishing; sharing its link is, and needs this gate.
 

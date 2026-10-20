@@ -106,8 +106,8 @@ remain unresolved. The local inbox is for software tests, not approval of an ema
   runs dirty. Do not stage, ignore or erase it. Clean-tree live evidence needs another checkout.
 - In this tool environment, use `.local/tmp` for TEMP, TMP and PYTEST_DEBUG_TEMPROOT, and
   `.local/uv-cache` for UV_CACHE_DIR. Default temp/cache permissions can break SQLite tests.
-- Structurizr exports use the already-installed JDK 21 and WAR under `C:/Users/Peter/tools`.
-  Existing Playwright browsers live under `C:/Users/Peter/AppData/Local/ms-playwright`;
+- Structurizr exports use the already-installed JDK 21 and WAR under the local tools folder.
+  Existing Playwright browsers live under the default Playwright cache;
   pass that as PLAYWRIGHT_BROWSERS_PATH rather than redownloading. Re-export before stamping.
 - Preserve failed runs, databases and caches. A dead local run is marked interrupted on
   retry. Another-host running records require operator investigation. Old code cannot

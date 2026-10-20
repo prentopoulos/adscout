@@ -4,7 +4,8 @@ version = "0.2.0"
 description = "Advertiser prospecting and qualification agent (portfolio project)"
 requires-python = ">=3.13"
 authors = [{ name = "Peter Rentopoulos" }]
-# No licence until the publishing gate (PROJECT.md §6); PyPI rejects "Private ::" uploads.
+license = "MIT"
+# Not published to PyPI; PyPI rejects "Private ::" uploads.
 classifiers = [
     "Private :: Do Not Upload",
     "Programming Language :: Python :: 3.13",
