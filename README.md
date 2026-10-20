@@ -13,7 +13,7 @@ every pitch.
 - **Start here:** [six-slide deck](docs/adscout-deck.pdf)
 - **Watch:** [2-minute walkthrough](docs/adscout-walkthrough.mp4) (captions, no sound needed)
 
-![Review screen: the pitch draft beside its source quotes](docs/assets/review-screen.png)
+![The workspace: prospects ranked by fit score, with a plain status for each](docs/assets/overview.png)
 
 | | |
 | --- | --- |
@@ -83,6 +83,8 @@ Orange: AI model call. Blue: plain code. Pink: a person.
    its quote is on a page fetched in this run.
 5. **Draft.** A writer drafts from checked facts only. A rule checker and a critic review it.
 6. **Approve.** A person approves or rejects. Only then does code write to the CRM sandbox.
+
+![Review panel: the pitch draft beside the source quote behind each claim](docs/assets/review-screen.png)
 
 ## For technical readers
 

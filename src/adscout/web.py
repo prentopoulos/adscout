@@ -50,6 +50,46 @@ def form(action: str, csrf: str, fields: dict[str, Any], label: str, *, style: s
     )
 
 
+# Labels and tones for every draft status, exit reason and review flag the workspace shows.
+STATUS = {
+    "pending_approval": ("Needs review", "blue", "Draft ready for your decision"),
+    "approved": ("Approved", "green", "Approved by you"),
+    "rejected": ("Rejected", "grey", "Rejected by you"),
+    "failed_checks": ("Failed checks", "red", "Draft failed the rule checker"),
+    "draft_failed": ("Draft failed", "red", "No draft passed the checks"),
+    "research_failed": ("Research failed", "red", "No claim could be verified"),
+    "near_miss": ("Near miss", "amber", "Scored 55 to 59; not researched"),
+    "missing_key_fields": ("Missing data", "amber", "Key company facts are missing"),
+    "below_threshold": ("Below threshold", "grey", "Scored under 55"),
+    "out_of_profile": ("Out of profile", "grey", "Outside size, region or category"),
+    "excluded": ("Excluded", "grey", "On the segment's exclusion list"),
+    "duplicate": ("Duplicate", "grey", "Already in this list"),
+    "sourced": ("Sourced", "grey", "Waiting for the next step"),
+}
+FLAGS = {
+    "critic_unresolved": "Critic concern unresolved",
+    "research_partial": "Research partly failed",
+}
+STEPS = {
+    "source": "Sourced",
+    "enrich": "Enriched",
+    "rules": "Passed rules",
+    "score": "Qualified",
+    "research": "Researched",
+    "draft": "Drafted",
+}
+
+
+def pill(key: str) -> str:
+    label, tone, _ = STATUS.get(key, (key.replace("_", " ").capitalize(), "grey", ""))
+    return f'<span class="pill {tone}">{e(label)}</span>'
+
+
+def bar(fraction: float, *, muted: bool = False) -> str:
+    step = max(0, min(100, round(fraction * 20) * 5))
+    return f'<span class="bar{" muted" if muted else ""}"><i class="w{step}"></i></span>'
+
+
 def source_link(url: str) -> str:
     try:
         parts = urlsplit(url)
@@ -57,54 +97,69 @@ def source_link(url: str) -> str:
         return e(url)
     if parts.scheme not in ("https", "http") or not parts.hostname or parts.username:
         return e(url)
-    return f'<a href="{e(url)}" target="_blank" rel="noreferrer noopener">{e(url)}</a>'
+    shown = f"{parts.hostname}{parts.path.rstrip('/')}"
+    return f'<a href="{e(url)}" target="_blank" rel="noreferrer noopener">{e(shown)}</a>'
+
+
+def page(title: str, body: str) -> str:
+    return (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f'<title>{e(title)}</title><link rel="stylesheet" href="/workspace.css"></head>'
+        f"<body>{body}</body></html>"
+    )
 
 
 def review(connection: sqlite3.Connection, draft_id: int, csrf: str) -> str:
     draft = get_draft(connection, draft_id)
     claims = claim_rows(connection, draft)
-    citations = (
+    sources = (
         "".join(
-            f"<li><strong>{e(c['claim_key'])}</strong> {e(c['text'])}"
+            f'<li><span class="key">{e(c["claim_key"])}</span>'
+            f'<span class="claim">{e(c["text"])}</span>'
             f"<blockquote>{e(c['quote'])}</blockquote>{source_link(c['source_url'])}</li>"
             for c in claims
         )
-        or "<li>No verified claims in this draft run.</li>"
+        or '<li><span class="claim">No verified claims in this draft run.</span></li>'
     )
-    actions = ""
     flags = connection.execute(
         "SELECT flag, detail FROM lead_step_outcomes WHERE lead_id=? AND run_id=? "
         "AND flag IS NOT NULL ORDER BY outcome_id",
         (draft["lead_id"], draft["run_id"]),
     ).fetchall()
     warnings = "".join(
-        f'<p class="notice error"><strong>{e(row["flag"])}</strong>: {e(row["detail"])}</p>'
+        f'<p class="warning"><strong>{e(FLAGS.get(row["flag"], row["flag"]))}</strong>: '
+        f"{e(row['detail'])}</p>"
         for row in flags
     )
     if draft["status"] == "pending_approval":
-        fields = {"draft": draft_id, "reviewed": review_digest(draft)}
-        actions = form("approve", csrf, fields, "Approve draft")
+        reviewed = review_digest(draft)
         options = "".join(f"<option>{e(reason)}</option>" for reason in REASONS)
-        actions += (
-            '<form method="post" action="/action">'
+        actions = (
+            '<div class="actions">'
+            + form("approve", csrf, {"draft": draft_id, "reviewed": reviewed}, "Approve draft")
+            + '<form class="reject" method="post" action="/action">'
             f'<input type="hidden" name="csrf" value="{e(csrf)}">'
             '<input type="hidden" name="action" value="reject">'
             f'<input type="hidden" name="draft" value="{draft_id}">'
-            f'<input type="hidden" name="reviewed" value="{e(review_digest(draft))}">'
+            f'<input type="hidden" name="reviewed" value="{e(reviewed)}">'
             f'<label>Rejection reason <select name="reason">{options}</select></label>'
-            '<button class="secondary" type="submit">Reject draft</button></form>'
+            '<button class="secondary" type="submit">Reject draft</button></form></div>'
         )
+    else:
+        label = STATUS.get(draft["status"], (draft["status"], "", ""))[0]
+        actions = f'<p class="decided">Decision recorded: {e(label)}.</p>'
     return (
-        f'<section id="review"><div class="section-title"><h2>Review · {e(draft["name"])}</h2>'
-        f'<span class="badge">{e(draft["status"])}</span></div>'
-        f'<p class="muted">Source mode: {e(draft["data_mode"])} · Revision {draft["revision"]}</p>'
-        f"{warnings}"
-        '<div class="review-grid"><article><h3>Pitch draft</h3>'
-        f'<h4>{e(draft["subject"])}</h4><pre class="message">{e(draft["body"])}</pre>'
-        f'<div class="actions">{actions}</div></article>'
-        f'<article><h3>Verified research</h3><ol class="citations">{citations}</ol>'
-        f"<details><summary>Checks and critic notes</summary><pre>{e(draft_notes(draft))}</pre>"
-        "</details></article></div></section>"
+        f'<section id="review" class="panel"><div class="review-head"><div>'
+        f"<h2>{e(draft['name'])}</h2><p>{e(draft['domain'])} · Revision {draft['revision']}"
+        f" · {e(draft['data_mode'])} data</p></div>{pill(draft['status'])}</div>"
+        + (f'<div class="warnings">{warnings}</div>' if warnings else "")
+        + '<div class="review-grid"><article><p class="label">Pitch draft</p>'
+        f'<h3 class="subject">{e(draft["subject"])}</h3>'
+        f'<pre class="message">{e(draft["body"])}</pre>{actions}</article>'
+        f'<article><p class="label">Verified research</p><ol class="sources">{sources}</ol>'
+        "<details><summary>Checks and critic notes</summary>"
+        f'<pre class="notes">{e(draft_notes(draft))}</pre></details></article></div></section>'
     )
 
 
@@ -131,53 +186,67 @@ def render(
     won = sum(r["amount_cents"] or 0 for r in rows if r["stage"] == "won")
     cost = json.loads(run["cost_summary_json"] or "{}") if run else {}
     total_cost = cost.get("total", {}).get("cost_usd", 0)
+    if draft_id is None:
+        draft_id = next((r["draft_id"] for r in rows if r["status"] == "pending_approval"), None)
+    if draft_id is not None and get_draft(connection, draft_id)["segment_id"] != segment:
+        raise ActionRefused("Draft belongs to a different segment")
     table_rows = []
     for row in rows:
         name = (
             f'<a href="/?draft={row["draft_id"]}#review">{e(row["name"])}</a>'
             if row["draft_id"]
-            else e(row["name"])
+            else f"<span>{e(row['name'])}</span>"
         )
-        delivery = (
-            form(
+        actions = ""
+        if row["status"] == "approved" and row["in_crm"]:
+            actions += form(
                 "send",
                 csrf,
                 {"approval": row["approval_id"]},
                 "Place in sandbox",
-                style="secondary",
+                style="secondary small",
             )
-            if row["status"] == "approved" and row["in_crm"]
-            else ""
-        )
-        deal = ""
         if row["in_crm"]:
-            deal = form(
+            actions += form(
                 "deal",
                 csrf,
                 {"lead": row["lead_id"], "stage": "won", "cents": 250000},
                 "Simulate $2,500 won",
-                style="secondary",
+                style="secondary small",
             )
-        score = "—" if row["score"] is None else f"{row['score']:g}"
+        if row["score"] is None:
+            fit = '<span class="none">—</span>'
+        else:
+            fit = f"<b>{row['score']:g}</b>" + bar(row["score"] / 100, muted=row["score"] < 60)
+        key = row["status"] or row["exit_reason"] or "sourced"
+        detail = STATUS.get(key, ("", "", ""))[2]
+        if row["stage"] == "won":
+            detail = f"Simulated deal won · ${(row['amount_cents'] or 0) / 100:,.0f}"
+        crm_cell = (
+            '<span class="crm synced">Synced</span>'
+            if row["in_crm"]
+            else '<span class="crm">—</span>'
+        )
+        selected = ' class="is-selected"' if row["draft_id"] == draft_id else ""
         table_rows.append(
-            f'<tr><td>{name}<small>{e(row["domain"])}</small></td><td class="number">{score}</td>'
-            f'<td><span class="badge">{e(row["status"] or row["exit_reason"] or "sourced")}</span>'
-            f"<small>{e(row['exit_reason'])}</small></td>"
-            f"<td>{'Synced' if row['in_crm'] else '—'}</td>"
-            f'<td class="row-actions">{delivery}{deal}</td></tr>'
+            f'<tr{selected}><td><div class="fit">{fit}</div></td>'
+            f'<td><div class="company">{name}<small>{e(row["domain"])}</small></div></td>'
+            f'<td>{pill(key)}<span class="detail">{e(detail)}</span></td>'
+            f'<td>{crm_cell}</td><td><div class="row-actions">{actions}</div></td></tr>'
         )
     steps = connection.execute(
         "SELECT step, entering, kept FROM step_runs WHERE run_id=? ORDER BY seq",
         (run["run_id"] if run else "",),
     ).fetchall()
+    top = max([s["entering"] or 0 for s in steps] + [1])
     bars = (
         "".join(
-            f'<div class="funnel-row"><span>{e(s["step"])}</span><meter min="0" '
-            f'max="{max(1, len(rows))}" value="{s["kept"] or 0}"></meter>'
-            f'<b>{s["kept"] or 0}</b><span class="muted">of {s["entering"] or 0}</span></div>'
+            f'<div class="funnel-row"><span class="step">{e(STEPS.get(s["step"], s["step"]))}'
+            f"</span>{bar((s['kept'] or 0) / top)}<b>{s['kept'] or 0}</b>"
+            f'<span class="muted">of {s["entering"] or 0}</span></div>'
             for s in steps
         )
-        or "<p>No run yet. Start with <code>adscout demo</code>.</p>"
+        or '<p class="empty">No run yet. Start with <code>adscout demo</code>.</p>'
     )
     messages = connection.execute(
         "SELECT m.*, EXISTS(SELECT 1 FROM sandbox_suppressions s WHERE s.lead_id=m.lead_id) "
@@ -187,57 +256,75 @@ def render(
     ).fetchall()
     inbox = (
         "".join(
-            f"<details><summary>{e(m['subject'])} · "
-            f"{'Unsubscribed' if m['suppressed'] else 'Placed locally'}</summary>"
-            f"<p>To {e(m['destination'])} · From {e(m['sender'])}</p>"
+            f"<details><summary><span>{e(m['subject'])}</span>"
+            + (
+                '<span class="pill">Unsubscribed</span>'
+                if m["suppressed"]
+                else '<span class="pill green">Placed locally</span>'
+            )
+            + f'</summary><div class="inbox-body"><p class="inbox-meta">To {e(m["destination"])}'
+            f" · From {e(m['sender'])} · {e(str(m['created_at'])[:16].replace('T', ' '))}</p>"
             f'<pre class="message">{e(m["body"])}</pre>'
             f'<a href="/unsubscribe?id={e(m["message_id"])}">'
-            "Unsubscribe this synthetic lead</a></details>"
+            "Unsubscribe this synthetic lead</a></div></details>"
             for m in messages
         )
-        or '<p class="muted">No messages yet. Approve a draft, then sync and place it here.</p>'
+        or '<p class="empty">No messages yet. Approve a draft, sync it to the local CRM, '
+        "then place it in the sandbox.</p>"
     )
-    if draft_id is None:
-        draft_id = next((r["draft_id"] for r in rows if r["status"] == "pending_approval"), None)
     review_html = review(connection, draft_id, csrf) if draft_id is not None else ""
-    if draft_id is not None and get_draft(connection, draft_id)["segment_id"] != segment:
-        raise ActionRefused("Draft belongs to a different segment")
     banner = (
         f'<p class="notice {"error" if error else ""}" role="status">{e(notice)}</p>'
         if notice
         else ""
     )
     sync = form("sync", csrf, {}, "Sync approved to local CRM", style="secondary")
-    table_body = "".join(table_rows) or '<tr><td colspan="5">No prospects. Run the demo.</td></tr>'
+    table_body = (
+        "".join(table_rows)
+        or '<tr><td class="empty" colspan="5">No prospects yet. Run the demo.</td></tr>'
+    )
     run_status = e(run["status"] if run else "none")
     cost_label = "Estimated fixture model cost" if mode != "live" else "Recorded model spend"
-    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>AdScout workspace</title>
-<link rel="stylesheet" href="/workspace.css"></head><body>
-<aside><a class="brand" href="/">AdScout<span>Prospecting workspace</span></a>
-<nav aria-label="Workspace"><a href="#prospects">Prospects</a><a href="#review">Review drafts</a>
-<a href="#funnel">Funnel</a><a href="#inbox">Sandbox inbox</a></nav>
-<p>Local MVP<br>Single-user workspace</p></aside><main>
-<header><div><h1>Your prospect pipeline</h1><p class="muted">{e(segment)}</p></div>
+    title = segment.replace("-", " ").capitalize()
+    attention = " attention" if pending else ""
+    return page(
+        "AdScout workspace",
+        f"""<aside class="sidebar">
+<a class="brand" href="/"><span class="brand-mark">A</span>AdScout</a>
+<p class="workspace-name">Segment<strong>{e(title)}</strong></p>
+<nav class="nav" aria-label="Workspace">
+<a href="#prospects">Prospects<span class="count">{len(rows)}</span></a>
+<a href="#review">Review<span class="count{attention}">{pending}</span></a>
+<a href="#funnel">Funnel</a>
+<a href="#inbox">Sandbox inbox<span class="count">{len(messages)}</span></a></nav>
+<div class="sidebar-foot"><span>Local MVP · single user</span><span>No email is sent</span></div>
+</aside><main>
+<header class="topbar"><div><h1>Prospects</h1><p>{e(title)} · ranked by fit score</p></div>
 <span class="mode">{e(demo_label)}</span></header>{banner}
-<div class="summary"><p><strong>{len(rows)}</strong> companies</p>
-<p><strong>{pending}</strong> awaiting review</p><p><strong>{crm}</strong> in local CRM</p>
-<p><strong>${won / 100:,.0f}</strong> simulated won revenue · USD</p></div>
-<section id="prospects"><div class="section-title"><h2>Ranked prospects</h2>{sync}</div>
-<div class="table-scroll"><table><thead><tr><th>Company</th><th>Fit score</th><th>Status</th>
-<th>Local CRM</th><th>Sandbox actions</th></tr></thead><tbody>
-{table_body}
-</tbody></table></div></section>{review_html}
-<section id="funnel"><h2>Run funnel</h2><p class="muted">Latest pipeline run · {run_status}</p>
-{bars}<p>{cost_label}: ${float(total_cost):.6f} USD</p>
-<p class="muted">Simulated revenue is a scenario you enter after CRM sync.
-It is not a measured sales result.
-Use the CLI trace and export commands for call-level usage and costs.</p></section>
-<section id="inbox"><h2>Local sandbox inbox</h2>
-<p class="muted">Synthetic messages stored on this PC. No email is sent.</p>{inbox}</section>
-<footer>AdScout portfolio MVP · fixture outcomes are scripted ·
-cloud integrations and live quality studies are deferred</footer>
-</main></body></html>"""
+<dl class="stats"><div class="stat"><dt>Companies</dt><dd>{len(rows)}</dd></div>
+<div class="stat"><dt>Awaiting review</dt><dd>{pending}</dd></div>
+<div class="stat"><dt>In local CRM</dt><dd>{crm}</dd></div>
+<div class="stat"><dt>simulated won revenue</dt><dd>${won / 100:,.0f}<small>USD</small></dd></div>
+</dl>
+<section id="prospects"><div class="section-head"><div><h2>Ranked prospects</h2>
+<p>Open a company to review its draft and sources.</p></div>{sync}</div>
+<div class="panel panel-scroll"><table><thead><tr><th>Fit score</th><th>Company</th>
+<th>Status</th><th>Local CRM</th><th><span class="row-actions">Sandbox actions</span></th>
+</tr></thead><tbody>{table_body}</tbody></table></div></section>
+{review_html}
+<section id="funnel"><div class="section-head"><div><h2>Run funnel</h2>
+<p>Companies kept at each step of the latest pipeline run · {run_status}</p></div></div>
+<div class="panel"><div class="funnel">{bars}</div>
+<div class="panel-foot"><span>{cost_label}: <strong>${float(total_cost):.6f} USD</strong></span>
+<span>Revenue is a simulated scenario entered after CRM sync, not a sales result.</span></div>
+</div></section>
+<section id="inbox"><div class="section-head"><div><h2>Sandbox inbox</h2>
+<p>Synthetic messages stored on this PC. No email is sent.</p></div></div>
+<div class="panel inbox">{inbox}</div></section>
+<footer>AdScout portfolio MVP · synthetic companies and scripted model responses ·
+live quality studies and cloud integrations are deferred</footer>
+</main>""",
+    )
 
 
 def apply_action(
@@ -311,13 +398,18 @@ class Handler(BaseHTTPRequestHandler):
         try:
             query = parse_qs(url.query)
             if url.path == "/unsubscribe":
-                body = "<h1>Unsubscribe from the local sandbox</h1>" + form(
-                    "unsubscribe",
-                    self.csrf,
-                    {"id": query.get("id", [""])[0]},
-                    "Confirm unsubscribe",
+                body = (
+                    '<main class="single panel"><h1>Unsubscribe from the local sandbox</h1>'
+                    "<p>This synthetic lead will receive no further sandbox messages.</p>"
+                    + form(
+                        "unsubscribe",
+                        self.csrf,
+                        {"id": query.get("id", [""])[0]},
+                        "Confirm unsubscribe",
+                    )
+                    + "</main>"
                 )
-                self.reply(200, body)
+                self.reply(200, page("Unsubscribe · AdScout", body))
             else:
                 chosen = int(query["draft"][0]) if "draft" in query else None
                 self.reply(200, render(connection, self.segment, self.csrf, chosen))

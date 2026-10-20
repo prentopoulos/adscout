@@ -182,8 +182,8 @@ def test_render_escapes_draft_and_evidence(db) -> None:
     assert "Estimated fixture model cost" in page and "$0.000000" not in page
     hotel = pending(connection, "hotel.test")
     page = render(connection, SEGMENT, "csrf", hotel["draft_id"])
-    assert "<strong>critic_unresolved</strong>" in page
-    assert "<strong>research_partial</strong>" in page
+    assert "<strong>Critic concern unresolved</strong>" in page
+    assert "<strong>Research partly failed</strong>" in page
 
 
 def test_dashboard_uses_the_routing_sample_of_latest_scoring_run(db) -> None:
